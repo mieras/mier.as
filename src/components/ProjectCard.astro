@@ -1,0 +1,276 @@
+---
+// Import Components
+import { Image, getImage } from 'astro:assets';
+import TagGroup from '../components/TagGroup.astro'
+import {slugify} from '../lib/utils.js';
+import { urlForImage } from '../sanity/lib/image';
+
+// Type Definitions
+type Services = {
+  title: string
+}
+
+type ProjectProps = {
+  clientname?: string
+  title?: string
+  imgsrc?: string
+  imgalt?: string
+  vidsrc?: string
+  link?: string
+  size?: string
+  services?: Services[]
+  fitCards?: boolean
+  aspectRatio?: string
+  // Sanity specific props
+  thumbnail?: any
+  client?: any
+}
+
+// Extract props
+const { 
+  clientname, 
+  title, 
+  imgsrc, 
+  imgalt, 
+  vidsrc, 
+  link, 
+  size, 
+  services, 
+  fitCards,
+  aspectRatio = '16:9',
+  thumbnail,
+  client
+} = Astro.props as ProjectProps
+
+// Normalize values - Sanity data takes precedence over direct props
+// This prevents duplication by using Sanity structure when available
+const clientName = client?.title || clientname || '';
+const projectTitle = title || '';
+const projectLink = link || '#';
+const projectServices = services || [];
+const projectSize = thumbnail?.size || size;
+const projectFitCards = fitCards ?? false;
+const projectAspectRatio = thumbnail?.aspectRatio || aspectRatio;
+
+// Generate image URL - prefer Sanity thumbnail (more flexible), fallback to pre-generated imgsrc
+// Only generate from Sanity if imgsrc wasn't already provided
+let imageSrc = imgsrc || '';
+let imageAlt = imgalt || projectTitle || '';
+
+if (!imageSrc && thumbnail?.image?.asset) {
+  try {
+    const sanityImageUrl = urlForImage(thumbnail.image)?.width(800).height(600).url();
+    if (sanityImageUrl) {
+      imageSrc = sanityImageUrl;
+    }
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn('⚠️ Failed to generate Sanity image URL:', error);
+    }
+  }
+}
+
+// Alt text from thumbnail takes precedence if available
+if (thumbnail?.alt) {
+  imageAlt = thumbnail.alt;
+}
+
+// Video source - Sanity takes precedence
+const videoSrc = thumbnail?.video || vidsrc;
+
+// Generate poster image for video if needed
+const posterImage = videoSrc && imageSrc 
+  ? await getImage({
+      src: imageSrc, 
+      inferSize: true, 
+      widths: [540, 960, 1440, 1920],
+      sizes: "(max-width: 360px) 540px, (max-width: 720px) 960px, (max-width: 1600px) 1440px, 1920px",
+      alt: imageAlt,
+      title: projectTitle,
+      format: 'webp'
+    }) 
+  : null;
+
+// Calculate card classes based on size
+// Mobile: all cards full width (1 column grid)
+// Tablet (md): 2 column grid
+// Desktop (lg): 12 column grid
+let cardClasses = '';
+if (!projectFitCards) {
+  switch (projectSize) {
+    case 'small':
+      cardClasses = 'md:col-span-1 lg:col-span-4';
+      break;
+    case 'large':
+      cardClasses = 'md:col-span-2 lg:col-span-8';
+      break;
+    case 'full':
+      cardClasses = 'md:col-span-2 lg:col-span-12';
+      break;
+    default:
+      cardClasses = 'md:col-span-2 lg:col-span-6';
+  }
+} else {
+  cardClasses = 'md:col-span-1 lg:col-span-2';
+}
+
+// Service titles for filtering
+const serviceTitles = projectServices.map(service => slugify(service.title)).join(' ') || '';
+
+// Aspect ratio CSS class
+const aspectRatioClass = `aspect-${projectAspectRatio.replace(':', '-')}`;
+
+// DEBUG: Log in development
+if (import.meta.env.DEV) {
+  console.log('🎨 ProjectCard:', {
+    title: projectTitle,
+    clientname: clientName,
+    size: projectSize,
+    link: projectLink,
+    servicesCount: projectServices.length,
+    hasVideo: !!videoSrc,
+    hasImage: !!imageSrc
+  });
+}
+---
+
+<div 
+  class={`project-card ${cardClasses}`}
+  data-services={serviceTitles}
+>
+  <div class={`overflow-hidden project-media ${aspectRatioClass}`}>
+    {videoSrc ? (
+      <div class="project-video">
+        <video
+          preload="metadata"
+          tabindex="-1"
+          disablepictureinpicture
+          playsinline
+          loop
+          title={projectTitle}
+          src={videoSrc}
+          poster={posterImage?.src || imageSrc || undefined}
+          autoplay={true}
+          muted
+        />
+      </div>
+    ) : (
+      imageSrc && (
+        <div class="project-image">
+          <Image 
+            src={imageSrc}
+            inferSize
+            widths={[540, 960, 1440, 1920]}
+            sizes="(max-width: 360px) 540px, (max-width: 720px) 960px, (max-width: 1600px) 1440px, 1920px"
+            format="avif"
+            alt={imageAlt}
+            title={projectTitle}
+          />
+        </div>
+      )
+    )}
+  </div>
+
+  <div class="flex justify-between pt-6 mb-0 align-middle project-meta">
+    {clientName && (
+      <h3 class="font-medium opacity-80 project-client self-baseline">
+        {clientName}
+      </h3>
+    )}
+    {projectServices.length > 0 && <TagGroup tags={projectServices} />}
+  </div>
+
+  {projectTitle && (
+    <a 
+      href={projectLink} 
+      class="project-card-link"
+      data-astro-reload
+    >
+      <h2 class="leading-4 project-title">
+        {projectTitle}
+      </h2>
+    </a>
+  )}
+</div>
+
+  <style is:global>
+    /* Position context for the link's pseudo-element */
+    .project-card {    
+      position: relative;
+      color: var(--font-color);
+      transition: transform 0.4s var(--easing-easeOutExpo);
+    }
+
+    .project-card:hover {
+      transform: translateY(-4px);
+    }
+
+    /* Link styling */
+    .project-card-link {
+      text-decoration: none;
+      color: inherit;
+    }
+
+  
+
+    /* Expand hitbox of link over whole card using pseudo-element */
+    /* Positioned relative to .project-card (nearest positioned ancestor) */
+    /* Following accessibility best practices: link only the heading text semantically,
+       but extend the clickable area visually over the entire card */
+    .project-card-link::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+
+    /* Ensure nested interactive elements (like buttons) stay above the pseudo-element */
+    .project-card button,
+    .project-card a:not(.project-card-link) {
+      position: relative;
+      z-index: 20;
+    }
+
+    .project-client {
+      font-size: var(--fs--3);
+      letter-spacing: -0.0125em;
+      line-height: 112.5%;
+    }
+
+    .project-title {
+      font-size: var(--fs-2);
+      letter-spacing: -0.0125em;
+      line-height: 100%;
+      font-weight: 300;
+      margin: 0;
+      padding: 0;
+      position: relative;
+    }
+
+    /* Aspect ratio classes */
+    .aspect-16-9 { aspect-ratio: 16 / 9; }
+    .aspect-5-4 { aspect-ratio: 5 / 4; }
+    .aspect-4-3 { aspect-ratio: 4 / 3; }
+    .aspect-3-2 { aspect-ratio: 3 / 2; }
+    .aspect-1-1 { aspect-ratio: 1 / 1; }
+    .aspect-2-3 { aspect-ratio: 2 / 3; }
+    .aspect-3-4 { aspect-ratio: 3 / 4; }
+    .aspect-4-5 { aspect-ratio: 4 / 5; }
+    .aspect-9-16 { aspect-ratio: 9 / 16; }
+
+    /* Ensure media content fills the aspect ratio container */
+    .project-media img,
+    .project-media video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Ensure video container fills the aspect ratio */
+    .project-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  </style>
+</div>

@@ -1,0 +1,90 @@
+---
+import type { Details } from '../types/projectdetails'
+type Props = {
+  data: Details
+}
+
+const { data } = Astro.props
+
+const isCover = data.coverMedia
+const heroTitle = data.title
+// const heroSubtitle = data.subtitle
+const heroClients = data.clients
+const heroDescription = data.intro
+const heroBackgroundColor = data.color
+---
+
+<section class:list={['hero page', { is_cover: isCover }]}>
+    <div class="grid gap-4 mt-40 lg:mt-0 lg:gap-12 md:grid-cols-12 lg:grid-cols-16 md:gap-4">
+       <div class="order-1 md:col-span-8 lg:order-2 lg:col-span-7 title">
+        <h3 class="hero-meta">Title</h3>
+        {heroTitle && <h1 class="hero-title">{heroTitle}</h1>}
+      </div>
+      {heroClients &&
+      <div class="order-2 md:col-span-4 lg:order-1 lg:col-span-3 hero-client">
+        <h3 class="hero-meta">Client</h3>
+        {heroClients.map((client:any) =>  <span class=""> {client.title} </span>)}
+        
+     </div>
+}
+      <div class="order-3 md:col-span-12 lg:order-3 lg:col-span-6">
+       <p class="hero-meta">Description</p>
+      {heroDescription && <p class="text-xs md:text-xl hero-description">{heroDescription}</p>}
+      </div>
+  </div>
+  <!-- hero cover media -->
+</section>
+
+<style define:vars={{ heroBackgroundColor }}>
+  .hero {
+    display: flex;
+    align-items:end;
+    justify-content: center;
+    
+    min-height: 60vh;
+    text-wrap: balance;
+    
+    
+  }
+  .is_cover {
+    /* background-color: red;  */
+    /* wat was het idee ook alweer hier? */
+  }
+ 
+
+  .hero-meta {
+    opacity: 0.6;
+    font-size: var(--fs--1);
+    font-weight: 600;
+    line-height: 1;
+    margin-block: 1rem;
+    }
+
+  .hero-title {
+    font-size: var(--fs-6);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.05rem;
+    text-wrap: balance;
+  }
+  
+  .hero-client, .hero-description {
+    font-size: var(--fs--1);
+    line-height: 120%;
+    letter-spacing: -0.0125rem;
+    
+    text-wrap: balance;
+  }
+
+@media (max-width: 768px) {
+
+  .hero-title {
+    font-size: var(--fs-6);
+  }
+  .hero-description {
+    font-size: var(--fs--2);
+  }
+}
+
+
+</style>

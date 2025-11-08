@@ -1,0 +1,42 @@
+---
+// Import Components & Scripts
+
+// Define Types
+interface Props{
+  title: string;
+  clients: any;
+}
+
+// Define Vars
+const {title, clients} = Astro.props;
+---
+
+<!-- ClientsBlock -->
+<div class:list={['clientsblock','full']}>
+  <h2 class="clientsblock-title">{title}</h2>
+
+  <div class="flex gap-2 client-list">
+    {clients &&
+      clients.map((client:any)=>( // service
+
+        <!-- Client -->
+        
+          <h4 class="client">{client.title}</h4>
+        
+      ))
+    } 
+  </div> 
+</div>
+
+<style>
+.clientsblock-title {
+  font-size: var(--fs-6);
+    line-height: 112.5%;
+    margin-bottom: var(--space-xl);
+    font-weight: 500;
+}
+
+.client {
+  font-size: var(--fs-0);
+}
+</style>

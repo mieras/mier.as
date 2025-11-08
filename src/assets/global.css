@@ -1,0 +1,32 @@
+/*---------------------*/
+/* TAILWIND            */
+/*---------------------*/
+
+/* Note: install PostCSS Language Support for VScode, to remove "Unknown at Rule" */
+/* Copy & Paste the following command in your browser: vscode:extension/csstools.postcss   */
+/* @tailwind base;
+@tailwind components;
+@tailwind utilities; */
+
+/*---------------------*/
+/* VARIABLES           */
+/*---------------------*/
+
+/* Dark mode is now handled by DarkMode.astro component */
+
+/* Color scheme and dark mode are now handled by SCSS and DarkMode.astro component */
+
+/* HTML and body styling is now handled by SCSS reset */
+
+/* Body styling is now handled by SCSS reset and font modules */
+
+/* Main styling is now handled by SCSS and default.css */
+
+/* Image styling is now handled by SCSS reset */
+
+/* Grid system is now handled by default.css breakout grid */
+
+/* Image block styling is now handled by SCSS components */
+/* Footer styling is now handled by SCSS components */
+
+/* Typography is now handled by SCSS font module */

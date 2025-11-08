@@ -1,0 +1,84 @@
+---
+// Import Components & Scripts
+import { PortableText } from 'astro-portabletext';
+
+// Define Types
+interface Props{
+  title: string;
+  services: Array<{
+    _id: string;
+    title: string;
+    content?: any[]; // Portable Text
+  }>;
+  layout?: 'list' | 'grid' | 'cards';
+  showDescriptions?: boolean;
+}
+
+// Define Vars
+const { title, services, showDescriptions = true } = Astro.props;
+
+// PortableText components
+const components = {
+  types: {},
+  marks: {},
+  block: {},
+  list: {},
+  listItem: {},
+};
+---
+
+<!-- ServicesBlock -->
+<div class:list={['servicesblock','page']}>
+  <h2 class="servicesblock-title">{title}</h2>
+  
+  <div class="mt-8">
+    {services &&
+      services.map((service) => (
+        <!-- Service -->
+        <div class="grid gap-2 py-12 md:gap-8 service-item service md:grid-cols-2">
+          <h3 class="service-name">{service.title}</h3>
+          {showDescriptions && service.content && (
+            <div class="service-desc">
+              <PortableText value={service.content} components={components} />
+            </div>
+          )}
+        </div>
+      ))
+    } 
+  </div> 
+</div>
+
+<style>
+  .servicesblock-title {
+    font-size: var(--fs-6);
+    line-height: 112.5%;
+    margin-bottom: var(--space-xl);
+    font-weight: 500;
+  }
+
+  .service-item {
+    padding-block: var(--space-xs);
+    border-top: 1px solid rgba(var(--clr-front-rgb), 0.2);
+  }
+  .service-name {
+    font-size: var(--fs-0);
+    font-weight: 500;
+    line-height: 112.5%;
+  }
+
+  .service-desc {
+    font-size: var(--fs--1);
+    opacity: 0.7;
+    font-weight: 400;
+    line-height: 112.5%;
+    
+  }
+
+ :global(.service-desc p) {
+    margin-top: 1rem;
+  }
+
+  :global(.service-item p:first-child) {
+    margin: 0!important;
+  }
+</style>

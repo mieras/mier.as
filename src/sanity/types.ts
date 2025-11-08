@@ -1,0 +1,367 @@
+// Basis Sanity types
+export interface SanityImage {
+  _type: 'image';
+  asset: {
+    _ref: string;
+    _type: 'reference';
+  };
+  alt?: string;
+  caption?: string;
+  crop?: {
+    top: number;
+    bottom: number;
+    left: number;
+    right: number;
+  };
+  hotspot?: {
+    x: number;
+    y: number;
+    height: number;
+    width: number;
+  };
+}
+
+export interface SanityFile {
+  _type: 'file';
+  asset: {
+    _ref: string;
+    _type: 'reference';
+  };
+  url?: string;
+}
+
+export interface SanityReference {
+  _type: 'reference';
+  _ref: string;
+}
+
+// Homepage types
+export interface SanitySlide {
+  _type: 'slide';
+  _key: string;
+  title: string;
+  subtitle?: string;
+  image?: SanityImage;
+  videoUrl?: string;
+  link?: {
+    linkType: 'internal' | 'external';
+    url?: string;
+    internalLink?: {
+      _type: 'reference';
+      slug: {
+        current: string;
+      };
+    };
+  };
+}
+
+export interface SanityHome {
+  _type: 'page';
+  _id: string;
+  title: string;
+  pageType?: 'homepage';
+  intro: string;
+  statement: string;
+  introCols?: Array<{
+    _key: string;
+    content: any[]; // Portable Text
+  }>;
+  slides: SanitySlide[];
+  featuredProjects: SanityProject[];
+  seo?: SanitySEO;
+}
+
+// Project types
+export interface SanityProject {
+  _type: 'work';
+  _id: string;
+  title: string;
+  slug: {
+    current: string;
+  };
+  subtitle?: string;
+  intro?: string;
+  hero?: {
+    title?: string;
+    subtitle?: string;
+    intro?: string;
+    coverMedia?: SanityImage;
+    color?: string;
+  };
+  thumbnail?: {
+    image?: SanityImage;
+    size?: 'small' | 'default' | 'large';
+    aspectRatio?: string;
+  };
+  client?: {
+    _type: 'reference';
+    title: string;
+  };
+  services?: Array<{
+    _type: 'reference';
+    title: string;
+  }>;
+  credits?: string;
+  relatedProjects?: SanityProject[];
+  content?: SanityBlock[];
+  seo?: SanitySEO;
+}
+
+// Page types
+export interface SanityPage {
+  _type: 'page';
+  _id: string;
+  title: string;
+  slug: {
+    current: string;
+  };
+  pageType: 'default' | 'about' | 'services' | 'contact' | 'work';
+  hero?: {
+    title?: string;
+    col1?: string;
+    col2?: string;
+  };
+  introCols?: Array<{
+    _key: string;
+    content: any[]; // Portable Text
+  }>;
+  content?: SanityBlock[];
+  seo?: SanitySEO;
+  work?: {
+    nodes: SanityProject[];
+  };
+}
+
+// Type for ALL_SLUGS_QUERY response
+export interface SanityAllSlugs {
+  pages?: string[];
+  projects?: string[];
+  homepage?: string;
+}
+
+// Block types
+export interface SanityBlock {
+  _type: string;
+  _key: string;
+  [key: string]: any;
+}
+
+export interface SanityTextBlock extends SanityBlock {
+  _type: 'textBlock';
+  text: string;
+  size?: 'content' | 'popout' | 'feature' | 'page';
+}
+
+export interface SanityImageBlock extends SanityBlock {
+  _type: 'imageBlock';
+  image: SanityImage;
+  showCaption?: boolean;
+  size?: 'content' | 'popout' | 'feature' | 'page' | 'full';
+}
+
+export interface SanityVideoBlock extends SanityBlock {
+  _type: 'videoBlock';
+  videoType?: 'upload' | 'youtube' | 'vimeo';
+  id?: string;
+  title?: string;
+  params?: string;
+  thumbnail?: SanityImage;
+  ratio?:
+    | '1:1'
+    | '2:1'
+    | '3:2'
+    | '5:2'
+    | '4:3'
+    | '16:9'
+    | '16:10'
+    | '20:9'
+    | '21:9'
+    | '9:16'
+    | '9:20';
+  autoscale?: boolean;
+  widget?: boolean;
+  size?:
+    | 'content'
+    | 'inline'
+    | 'popout'
+    | 'feature'
+    | 'page'
+    | 'full'
+    | 'inherit';
+  videoFile?: SanityFile;
+  autoplay?: boolean;
+  loop?: boolean;
+  muted?: boolean;
+}
+
+export interface SanityGalleryBlock extends SanityBlock {
+  _type: 'galleryBlock';
+  title?: string;
+  gallery?: SanityImage[];
+  layout?: 'grid' | 'masonry';
+  columns?: number;
+  showCaptions?: boolean;
+  showTitle?: boolean;
+}
+
+export interface SanityCarouselBlock extends SanityBlock {
+  _type: 'carouselBlock';
+  title?: string;
+  gallery?: SanityImage[];
+  size?: 'feature' | 'full';
+  showCaptions?: boolean;
+  showTitle?: boolean;
+  slidesPerView?: number;
+  slidesPerViewAuto?: boolean;
+}
+
+export interface SanityTestimonialBlock extends SanityBlock {
+  _type: 'testimonialBlock';
+  quote: string;
+  author?: string;
+  role?: string;
+  photo?: SanityImage;
+  size?: 'content' | 'popout' | 'feature' | 'page';
+}
+
+export interface SanityTextGridBlock extends SanityBlock {
+  _type: 'textGridBlock';
+  title?: string;
+  items?: Array<{
+    _key?: string;
+    title?: string;
+    text?: string;
+  }>;
+  media?: {
+    image?: SanityImage;
+    imgposition?: string;
+  };
+  columns?: number;
+}
+
+export interface SanityTeamBlock extends SanityBlock {
+  _type: 'teamBlock';
+  title?: string;
+  members?: Array<{
+    _id?: string;
+    title?: string;
+    roles?: Array<{
+      name?: string;
+      description?: string;
+    }>;
+    featuredImage?: SanityImage;
+  }>;
+  layout?: string;
+  columns?: number;
+}
+
+export interface SanityServicesBlock extends SanityBlock {
+  _type: 'servicesBlock';
+  title?: string;
+  services: Array<{
+    _type: 'reference';
+    title: string;
+    content?: any[];
+  }>;
+}
+
+export interface SanityClientsBlock extends SanityBlock {
+  _type: 'clientsBlock';
+  title?: string;
+  clients: Array<{
+    _type: 'reference';
+    title: string;
+    logo?: SanityImage;
+  }>;
+}
+
+// Site Settings types
+export interface SanitySiteSettings {
+  _type: 'siteSettings';
+  _id: string;
+  title: string;
+  description: string;
+  url: string;
+  logo?: SanityImage;
+  navigation?: {
+    menuItems: Array<{
+      _key: string;
+      label: string;
+      link: {
+        linkType: 'internal' | 'external';
+        url?: string;
+        internalLink?: {
+          _type: 'reference';
+          slug: {
+            current: string;
+          };
+          pageType?: string; // Added pageType for internal links
+        };
+      };
+      order?: number;
+    }>;
+  };
+  footer?: {
+    address?: {
+      company?: string;
+      street?: string;
+      city?: string;
+      country?: string;
+    };
+    contact?: {
+      phone?: string;
+      email?: string;
+    };
+    social?: {
+      instagram?: string;
+      behance?: string;
+      linkedin?: string;
+    };
+  };
+  openGraphSiteName?: string;
+  twitterSite?: string;
+  defaultSeo?: SanitySEO;
+}
+
+// SEO types - Updated for sanity-plugin-seofields
+export interface SanitySEO {
+  _type?: 'seoFields';
+  title?: string;
+  description?: string;
+  keywords?: string[];
+  canonicalUrl?: string;
+  metaImage?: SanityImage;
+  openGraph?: {
+    _type?: 'openGraph';
+    title?: string;
+    description?: string;
+    siteName?: string;
+    type?: 'website' | 'article' | 'profile' | 'book' | 'music' | 'video' | 'product';
+    imageType?: 'upload' | 'url';
+    image?: SanityImage;
+    imageUrl?: string;
+  };
+  twitter?: {
+    _type?: 'twitter';
+    card?: 'summary' | 'summary_large_image' | 'app' | 'player';
+    site?: string;
+    title?: string;
+    description?: string;
+    imageType?: 'upload' | 'url';
+    image?: SanityImage;
+    imageUrl?: string;
+  };
+  robots?: {
+    noIndex?: boolean;
+    noFollow?: boolean;
+  };
+}
+
+// Columns Block types
+export interface SanityColumnsBlock {
+  _type: 'columnsBlock';
+  _key: string;
+  title?: string;
+  size: 'page' | 'feature';
+  columns: Array<SanityTextBlock | SanityImageBlock | SanityVideoBlock>;
+}

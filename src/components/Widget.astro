@@ -1,0 +1,17 @@
+---
+const {title} = Astro.props;
+---
+<div class="widget col">
+  {title &&
+    <h5 class="font-medium widget-title">{title}</h5>
+  }
+  <slot />
+</div>
+
+<style>
+.widget-title {
+  font-size: var(--fs--1);
+  line-height: 112.5%;
+  margin-bottom: var(--space-2xs);
+}
+</style>

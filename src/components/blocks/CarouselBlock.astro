@@ -1,0 +1,371 @@
+---
+// Import Components
+import Image from 'astro/components/Image.astro'
+import { urlForImage } from '../../sanity/lib/image'
+import type { SanityImage } from '../../sanity/types'
+
+// Define Types
+interface Props {
+  title?: string;
+  gallery?: SanityImage[];
+  size?: 'feature' | 'full';
+  showCaptions?: boolean;
+  showTitle?: boolean;
+}
+
+const { 
+  title, 
+  gallery, 
+  size = 'feature', 
+  showCaptions = false,
+  showTitle = false
+} = Astro.props;
+
+// DEBUG: Log gallery data
+if (import.meta.env.DEV) {
+  console.log('🎠 CarouselBlock received:', {
+    title,
+    size,
+    showCaptions,
+    imagesCount: gallery?.length || 0
+  });
+}
+
+// Process gallery images into slides format
+const backgroundSlides = gallery?.map((image: SanityImage) => {
+  let imageUrl = "";
+  let imageAlt = "";
+  let imageCaption = "";
+
+  if (image?.asset) {
+    try {
+      imageUrl = urlForImage(image)?.width(1920).url() || '';
+      imageAlt = image.alt || '';
+      imageCaption = image.caption || '';
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.warn('⚠️ Failed to generate image URL in CarouselBlock:', error);
+      }
+      // Fallback: imageUrl blijft leeg als urlForImage faalt
+      imageUrl = "";
+    }
+  }
+
+  return {
+    imgsrc: imageUrl,
+    imgalt: imageAlt,
+    caption: imageCaption,
+  };
+}).filter(slide => slide.imgsrc) || [];
+
+if (import.meta.env.DEV) {
+  console.log('🎠 CarouselBlock processed slides:', backgroundSlides.length);
+}
+---
+
+<!--CarouselBlock-->
+<section class={`carouselblock-gallery ${size}`}>
+  {showTitle && title && <h2 class="carouselblock-title">{title}</h2>}
+  
+  <div class="carousels">
+    <!-- Background Carousel -->
+    <div class="carousel carousel-background swiper">
+      <!-- Slides -->
+      <div role="list" class="swiper-wrapper">
+        {backgroundSlides &&
+          backgroundSlides.map((slide: any) => (
+            <div role="listitem" class="swiper-slide">
+              {slide.imgsrc && (
+                <div class="slide-image-wrapper">
+                  <Image 
+                    src={slide.imgsrc}
+                    inferSize
+                    widths={[400, 800, 1200, 1600, 1920]}
+                    sizes="auto"
+                    format="avif"
+                    alt={slide.imgalt || ""}
+                    class="carouselblock-image"
+                  />
+                  {showCaptions && slide.caption && (
+                    <div class="carouselblock-caption">
+                      <p set:html={slide.caption} />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ))
+        }    
+      </div>
+    </div>
+
+    <!-- Carousel Controls -->
+    <div class="align-middle controls swiper-controls">
+      <div class="align-middle controls-wrapper">
+        <div class="control-indicator swiper-indicator">
+          <p class="swiper-counter">
+            <span class="swiper-number-current">00</span> &mdash;
+            <span class="swiper-number-total">00</span>
+          </p>
+        </div>
+        <button type="button" class="control-button swiper-button-prev" aria-label="Show previous slide">
+          <div class="control-button_icon is_reversed">
+            <svg
+              width="24px"
+              height="24px"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M5 12h14m0 0-7-7m7 7-7 7"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+        </button>
+        <button type="button" class="control-button swiper-button-next" aria-label="Show next slide">
+          <div class="control-button_icon">
+            <svg
+              width="24px"
+              height="24px"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M5 12h14m0 0-7-7m7 7-7 7"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="../../lib/swiper-carouselblock.js"></script>
+
+<style>
+  .carouselblock-gallery {
+    margin-block: 0;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Size-based grid positioning */
+  .carouselblock-gallery.feature {
+    grid-column: feature;
+  }
+
+  .carouselblock-gallery.full {
+    grid-column: full;
+  }
+
+  .carouselblock-title {
+    font-size: var(--fs-6);
+    line-height: 112.5%;
+    margin-bottom: var(--space-xl);
+    font-weight: 500;
+    padding: var(--site-padding);
+    position: relative;
+    z-index: 3;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  }
+  
+  .carousels {
+    padding: 0;
+    margin: 0;
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    /* Vaste hoogte - bepaalt hoeveel slides er naast elkaar passen */
+    height: 90vh;
+  }
+  
+  /* Achtergrond carousel instellingen */
+  .carousel-background {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .carousel-background .swiper-wrapper {
+    display: flex;
+    align-items: stretch;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 100%;
+  }
+  
+  .carousel-background .swiper-slide {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    overflow: hidden;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    /* margin: 0 !important; */
+    padding: 0 !important;
+    border: none;
+    /* Vaste hoogte - alle slides hebben dezelfde hoogte */
+    height: 100%;
+    /* Width wordt automatisch bepaald door Swiper op basis van aspect ratio van image */
+    width: auto;
+    align-self: stretch;
+  }
+  
+  /* Mobile: max 1 slide zichtbaar - min-width = 100% van container */
+  /* Dit zorgt ervoor dat Swiper max 1 slide laat zien */
+  @media (max-width: 767px) {
+    .carousel-background .swiper-slide {
+      min-width: 100% !important;
+      width: 100% !important;
+    }
+  }
+  
+  /* Tablet: max 2 slides zichtbaar - min-width = 50% van container */
+  /* Dit zorgt ervoor dat Swiper max 2 slides laat zien */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .carousel-background .swiper-slide {
+      min-width: 50% !important;
+      width: auto; /* Laat aspect ratio bepalen binnen 50% constraint */
+    }
+  }
+  
+  /* Desktop: laat Swiper bepalen op basis van aspect ratio */
+  /* Geen min-width constraint, Swiper bepaalt breedte op basis van aspect ratio */
+  @media (min-width: 1024px) {
+    .carousel-background .swiper-slide {
+      min-width: auto;
+      width: auto;
+    }
+  }
+
+  .slide-image-wrapper {
+    position: relative;
+    width: auto;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .carouselblock-image {
+    width: auto;
+    height: 100%;
+    /* Behoud aspect ratio zoals geupload - geen crop */
+    object-fit: contain;
+    display: block;
+    flex-shrink: 0;
+  }
+  
+  /* Zorg dat alle slides in dezelfde rij dezelfde hoogte hebben */
+  .carousel-background .swiper-wrapper {
+    align-items: stretch;
+  }
+
+  .carouselblock-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: var(--space-xs);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0));
+    color: white;
+    z-index: 2;
+  }
+
+  .carouselblock-caption p {
+    font-size: var(--fs--1);
+    line-height: 133%;
+    margin: 0;
+  }
+
+  /* Control instellingen */
+  .controls {
+    z-index: 10;
+    grid-column-gap: 0em;
+    grid-row-gap: 1.5em;
+    /* background-image: linear-gradient(rgba(0, 0, 0, 0), rgba(1, 1, 1, .6)); */
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    display: flex;
+    position: absolute;
+    top: auto;
+    bottom: 0%;
+    left: 0%;
+    right: 0%;
+    padding: var(--space-xs);
+  }
+
+  .controls-wrapper {
+    grid-column-gap: .5rem;
+    grid-row-gap: .5rem;
+    flex-wrap: wrap;
+    flex: 0 auto;
+    justify-content: flex-end;
+    align-items: center;
+    display: flex;
+  }
+
+  .control-button {
+    backdrop-filter: blur(30px);
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    flex: none;
+    justify-content: center;
+    align-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    transition: background-color 0.2s, color 0.2s;
+    display: flex;
+    border:none;
+  }
+
+  .control-button:hover {
+    color: #000;
+    background-color: #fff;
+  }
+
+  .control-button_icon {
+    flex: none;
+    align-self: center;
+  }
+
+  .control-button_icon svg {
+    transform: scale(0.75);
+  }
+
+  .control-indicator {
+    color: white;
+  }
+
+  .swiper-counter {
+    font-size: var(--fs--2);
+  }
+
+  .is_reversed {
+    transform: rotate(-180deg);
+  }
+</style>
+

@@ -1,0 +1,23 @@
+{
+  "name": "studio",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "sanity dev",
+    "build": "sanity build",
+    "deploy": "sanity deploy"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@sanity/icons": "^3.7.4",
+    "@sanity/vision": "^4.11.0",
+    "dotenv": "^17.2.3",
+    "sanity": "^4.11.0",
+    "sanity-plugin-link-field": "^1.4.2",
+    "sanity-plugin-seofields": "^1.0.8",
+    "styled-components": "^6.1.19"
+  }
+}

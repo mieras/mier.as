@@ -1,0 +1,63 @@
+---
+const { class: customClass } = Astro.props;
+---
+
+<section class={`page-intro page ${customClass}`}>
+  <div class="grid gap-4 md:gap-12 page md:grid-cols-2 content-baseline">
+    <div class="col-1 col self-baseline">
+      <slot name="column-one" />
+    </div>
+    <div class="self-auto col-2 col">
+      <slot name="column-two" />
+    </div>
+  </div>
+</section>
+
+<style>
+
+
+
+  .col-1 {
+    font-size: var(--fs-1);
+    line-height:112.5%;
+    color: var(--text); 
+    opacity: 0.7;
+  }
+
+  .col-2 {
+    font-size: calc(2* var(--fs-0));
+    line-height:112.5%;
+    font-weight:600;
+    letter-spacing: -0.0125em;
+    opacity: 0.7;
+  }
+
+  .page .col-1 {
+    font-size: var(--fs-1);
+    line-height:112.5%;
+    /* font-weight:600; */
+    /* letter-spacing: -0.0125em; */
+    color: var(--text);
+    
+  }
+  .page .col-2 {
+    font-size: var(--fs-0);
+    line-height:112.5%;
+    color: var(--text);
+    
+    font-weight: 400;
+  }
+
+  section div > div{
+    max-width: 70ch
+  }
+:global(.home .col p:first-child) {
+  margin-bottom: 2rem;
+  font-size: var(--fs-3xl);
+  line-height: 95%;
+  font-weight: 400;
+  color: var(--text);
+}
+
+ 
+</style>

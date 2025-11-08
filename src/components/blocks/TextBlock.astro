@@ -1,0 +1,106 @@
+---
+// Import Components & Scripts
+import { PortableText } from 'astro-portabletext';
+
+// Define Types
+interface Props{
+  title?: string;
+  content?: string | any[]; // Support both string and portable text
+  size?: "content" | "popout" | "feature" | "page" | "inherit";
+}
+
+// Define Vars
+const { title = "", content = "", size = "content" } = Astro.props;
+
+// Custom components for Portable Text rendering
+const components = {
+  types: {
+    // Add custom block types here if needed in the future
+  },
+  marks: {
+    // Custom mark components if needed
+  },
+  block: {
+    // Custom block components if needed
+  },
+  list: {
+    // Custom list components if needed
+  },
+  listItem: {
+    // Custom list item components if needed
+  }
+};
+
+if (import.meta.env.DEV) {
+  console.log('📝 TextBlock received:', {
+    title,
+    content: typeof content,
+    size,
+    isArray: Array.isArray(content),
+    contentLength: Array.isArray(content) ? content.length : 0
+  });
+}
+---
+
+<!--TextBlock -->
+<div class:list={['textblock', size]}>
+  {title &&
+    <h2 class="textblock-title" set:html={title} />
+  }
+  <div class="textblock-content">
+    {typeof content === 'string' ? (
+      <div set:html={content} />
+    ) : Array.isArray(content) ? (
+      <PortableText value={content} components={components} />
+    ) : null}
+  </div>
+</div>
+
+
+<style>
+  
+
+  .textblock p {
+    margin-bottom: 2em;
+  }
+
+  .textblock-content {
+    line-height: 133%;
+
+    h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 800;
+    line-height: 112.5%;
+    margin-block: 1em 0.25em;
+    
+  }
+  }
+
+  /* Size-based grid positioning and typography */
+  .textblock.content {
+    grid-column: content;
+    font-size: var(--fs-0);
+  }
+
+  .textblock.popout {
+    grid-column: popout;
+    font-size: var(--fs-1);
+  }
+
+  .textblock.feature {
+    grid-column: feature;
+    font-size: var(--fs-2);
+  }
+
+  .textblock.page {
+    grid-column: page;
+    font-size: var(--fs-3);
+  }
+
+  .textblock.inherit {
+    grid-column: inherit;
+  }
+</style>

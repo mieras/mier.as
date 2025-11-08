@@ -1,0 +1,111 @@
+---
+// Import Components & Scripts
+import { urlForImage } from '../../sanity/lib/image'
+import type { SanityImage } from '../../sanity/types'
+
+// Define Types
+interface Props {
+    quote?: string;
+    name?: string;
+    role?: string;
+    photo?: SanityImage;
+    size?: 'content' | 'popout' | 'feature' | 'page';
+}
+
+// Define Vars
+const { 
+    quote, 
+    name, 
+    role, 
+    photo, 
+    size = 'page'
+} = Astro.props;
+
+// Generate image URL - Sanity data only
+let finalPhotoUrl = '';
+
+if (photo?.asset) {
+    try {
+        finalPhotoUrl = urlForImage(photo)?.width(200).height(200).url() || '';
+    } catch (error) {
+        console.warn('Failed to generate photo URL:', error);
+    }
+}
+
+if (import.meta.env.DEV) {
+    console.log('💬 TestimonialBlock received:', {
+        quote: quote?.substring(0, 50) + '...',
+        name,
+        role,
+        hasPhoto: !!photo,
+        hasPhotoUrl: !!finalPhotoUrl,
+        size
+    });
+}
+---
+<!--TestimonialBlock-->
+<section class={`testimonialblock ${size}`}>
+   <blockquote class="testimonialblock-quote">{quote}</blockquote>
+    <div class="testimonialblock-details">
+        <!-- {finalPhotoUrl &&
+        <Image 
+            src={finalPhotoUrl}
+            inferSize
+            alt={finalAltText} 
+            title={finalTitleText}
+            class="testimonialblock-img"
+        />
+        } -->
+         <div class="flex justify-center items-center align-baseline col testimonialblock-person">
+            <h3 class="testimonialblock-name">{name}</h3>
+            <h4 class="testimonialblock-role">{role}</h4>
+        </div>
+    </div>
+</section>
+
+<style>
+    
+  .testimonial-block {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  blockquote {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-family-special);
+    font-size: var(--fs-5);
+    color: var(--color-neutral-100);
+    line-height: 112.5%;
+    text-wrap: balance;
+    text-align: center;
+  }
+
+  blockquote p {
+    margin: 0;
+  }
+
+  figcaption {
+    margin-top: 1.5rem;
+    font-size: 1rem;
+    color: var(--color-neutral-100);
+    text-align: center;
+  }
+
+  figcaption strong {
+    font-weight: bold;
+  }
+
+  .role {
+    font-style: normal;
+    opacity: 0.5;
+  }
+
+  .company {
+    font-style: normal;
+    opacity: 0.5;
+  }
+</style>

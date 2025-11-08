@@ -1,0 +1,122 @@
+---
+import {slugify} from '../lib/utils.js';
+
+const {services} = Astro.props;
+---
+<ul class="tag-filter">
+  {services &&
+    services.map((service:any) => (
+    <li>
+      <a class="tag-button" data-service={slugify(service)} >{service}</a>
+    </li>
+  ))}
+  <li class="tag-reset"></li>
+</ul>
+
+
+<script>
+  //@ts-nocheck
+  function filterProjects(service) {
+    const projectCards = document.querySelectorAll('.project-card');
+    projectCards.forEach(card => {
+      const dataServices = card.getAttribute('data-services');
+      if (!dataServices) {
+        // If no services attribute, show all or hide based on service filter
+        card.style.display = service === 'all' ? 'block' : 'none';
+        return;
+      }
+      const services = dataServices.split(' ').filter(Boolean);
+      if (services.includes(service) || service === 'all') {
+        card.style.display = 'block';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+  
+  document.addEventListener('astro:page-load', function() {
+    // Check of de benodigde elementen op de pagina aanwezig zijn
+    const serviceButtons = document.querySelectorAll('.tag-button');
+    const tagReset = document.querySelector('.tag-reset');
+  
+    if (serviceButtons.length === 0 || !tagReset) {
+      // Stop als de elementen niet aanwezig zijn
+      return;
+    }
+  
+    serviceButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const activeService = button.getAttribute('data-service');
+         // Verwijder de actieve klasse van alle knoppen
+      serviceButtons.forEach(btn => btn.classList.remove('active'));
+      
+      // Voeg de actieve klasse toe aan de geklikte knop
+      button.classList.add('active');
+      
+      filterProjects(activeService);
+      });
+    });
+  
+    // Voeg een knop toe om alle projecten te tonen
+    const showAllButton = document.createElement('a');
+    showAllButton.textContent = 'Reset';
+    showAllButton.addEventListener('click', () => {
+      filterProjects('all');
+
+       // Verwijder de actieve klasse van alle knoppen
+    serviceButtons.forEach(btn => btn.classList.remove('active'));
+    });
+    tagReset.append(showAllButton);
+  
+    // Reset bij het laden van de pagina
+    filterProjects('all');
+  
+  }, { once: false });
+  </script>
+  
+
+<style>
+
+  /* * {
+    border: 1px solid red;
+  } */
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap:0.25em 0.25em ;
+    font-size: var(--fs--1);
+    line-height: 120%;
+    font-weight: 400;
+  }
+
+  li {
+    
+  }
+
+  li::after {
+    content: "/";
+    font-weight:700;
+    opacity: 0.2;
+    padding: 0 0.125em
+    
+  }
+
+  li:last-child::after {
+    content: "";
+  }
+  a {
+    text-decoration: none!important;
+    padding:0;
+    cursor: pointer;
+    
+  }
+
+  .tag-button.active {
+    
+  
+  color: var(--text);
+
+  text-decoration: underline;
+}
+
+</style>

@@ -1,0 +1,71 @@
+---
+import Carousel from '../Carousel.astro'
+import PageIntro from '../PageIntro.astro'
+import ProjectList from '../ProjectList.astro'
+
+const { data } = Astro.props
+
+// DEBUG: Log de volledige data structuur
+if (import.meta.env.DEV) {
+  console.log('🏠 Home data received:', JSON.stringify(data, null, 2));
+  console.log('🏠 Data source:', data?.dataSource);
+  console.log('🏠 Data type:', data?._type);
+  console.log('🏠 Page type:', data?.pageType);
+}
+
+// Sanity data structure
+const slides = data?.slides || [];
+const projects = data?.featuredProjects || [];
+const introCols = data?.introCols || [];
+
+    // Extract intro en statement uit introCols
+    const intro = introCols[0]?.content || [];
+    const statement = introCols[1]?.content || [];
+
+    // Geen fallback - laat errors zien als data mist
+    if (import.meta.env.DEV) {
+      if (introCols.length === 0) {
+        console.error('❌ introCols is leeg in Sanity data');
+      }
+      if (projects.length === 0) {
+        console.error('❌ featuredProjects is leeg in Sanity data');
+      }
+    }
+
+if (import.meta.env.DEV) {
+  console.log('📊 Home data breakdown:', {
+    slidesCount: slides.length,
+    projectsCount: projects.length,
+    introColsCount: introCols.length,
+    introContent: intro,
+    statementContent: statement,
+    slides: (slides as Array<any>).map((slide: any) => ({
+      title: slide.title,
+      subtitle: slide.subtitle,
+      hasImage: !!slide.image,
+      // imageAsset: slide.image?.asset?._ref
+    })),
+  });
+}
+---
+<Carousel {slides} />
+
+    <PageIntro class="home">
+      <Fragment slot="column-one">
+        {intro.map((block: any) => (
+          <div class={`text-${block.style || 'normal'}`}>
+            {block.children?.map((child: any) => child.text).join('')}
+          </div>
+        ))}
+      </Fragment>
+      <Fragment slot="column-two">
+        {statement.map((block: any) => (
+          <div class={`text-${block.style || 'normal'}`}>
+            {block.children?.map((child: any) => child.text).join('')}
+          </div>
+        ))}
+      </Fragment>
+    </PageIntro>
+
+<ProjectList {projects} layout="grid" />
+

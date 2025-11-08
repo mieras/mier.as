@@ -1,0 +1,188 @@
+/* 
+| -------------------------------------------------------------
+| > Reset
+| -------------------------------------------------------------
+*/
+
+/* Box-sizing and layout defaults */
+html {
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+
+  @media (prefers-reduced-motion: reduce) {
+    scroll-behavior: auto;
+
+    body * {
+      animation-duration: 0s !important;
+      animation-delay: 0s !important;
+    }
+  }
+
+  -moz-text-size-adjust: none;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+body {
+  min-height: 100vh;
+  line-height: 1.5;
+  margin: 0;
+
+}
+
+/* Remove default margin and padding from common elements */
+blockquote,
+body,
+figure,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+hr,
+li,
+ol,
+p,
+pre,
+ul,
+dl,
+dd {
+  margin: 0;
+  padding: 0;
+}
+
+ul[role='list'],
+ul:where([class]),
+ol[role='list'] {
+  list-style: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+
+input[type="text"],
+textarea {
+  width: 100%;
+}
+
+textarea:not([rows]) {
+  min-height: 10em;
+}
+
+fieldset {
+  padding: 0;
+  border: none;
+}
+
+legend {
+  margin-bottom: 0.5rem;
+  max-width: 100%;
+}
+
+button,
+input,
+textarea {
+  border: 1px solid gray;
+}
+
+button {
+  padding: 0.75em 1em;
+  background-color: transparent;
+  border-radius: 0;
+  line-height: 1;
+  cursor: pointer;
+}
+
+button * {
+  pointer-events: none;
+}
+
+embed,
+iframe,
+img,
+object,
+svg,
+video,
+picture {
+  display: block;
+  max-width: 100%;
+}
+
+table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+noscript {
+  display: block;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+[tabindex="-1"] {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Headings and text elements */
+h1,
+h2,
+h3,
+h4 {
+  text-wrap: balance;
+  line-height: 1.1;
+}
+
+h1,
+h2,
+h3,
+h4,
+button,
+input,
+label {
+  line-height: 1.1;
+}
+
+/* Links */
+a:not([class]) {
+  text-decoration-skip-ink: auto;
+  color: currentColor;
+}
+
+/* Images */
+img,
+picture {
+  max-width: 100%;
+  display: block;
+}
+
+/* Inputs */
+input,
+button,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* Targeted elements */
+:target {
+  scroll-margin-block: 5ex;
+}

@@ -1,0 +1,98 @@
+query GetPageByUri($uri: String!) {
+  nodeByUri(uri: $uri) {
+    __typename
+    ... on Page {
+      id
+      status
+      title
+      content
+      isFrontPage
+      template {
+        templateName
+      }
+      pageContent {
+        content {
+          ... on PageContentContentTextLayout {
+            __typename
+            text {
+              text
+              size
+            }
+          }
+          ... on PageContentContentImageLayout {
+            __typename
+            showCaption
+            image {
+              node {
+                altText
+                title
+                sourceUrl
+              }
+            }
+            size
+          }
+          ... on PageContentContentVideoLayout {
+            __typename
+            embed
+            embedCopy
+            option
+            size
+            video {
+              node {
+                altText
+                title
+                sourceUrl
+              }
+            }
+          }
+          ... on PageContentContentTestimonialLayout {
+            __typename
+            name
+            photo {
+              node {
+                altText
+                title
+                sourceUrl
+              }
+            }
+            roleCompany
+            testimonial
+          }
+          ... on PageContentContentMultiColsLayout {
+            __typename
+            col {
+              contentType
+              showText
+              text
+              title
+              verticalAlign
+              video
+              image {
+                node {
+                  altText
+                  title
+                  sourceUrl
+                }
+              }
+            }
+          }
+          ... on PageContentContentColorModeLayout {
+            __typename
+            colorMode
+            fieldGroupName
+          }
+          ... on PageContentContentGalleryLayout {
+            __typename
+            gallery {
+              nodes {
+                altText
+                title
+                sourceUrl
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

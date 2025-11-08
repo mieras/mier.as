@@ -1,0 +1,125 @@
+---
+// Import Components & Scripts
+import { Image } from 'astro:assets';
+import { urlForImage } from '../../sanity/lib/image';
+import type { SanityImage } from '../../sanity/types';
+
+// Define Types
+interface textItem {
+  _key?: string;
+  title?: string;
+  text?: string;
+}
+interface Props{
+  title?: string;
+  media?: { 
+    image?: SanityImage; 
+    imgposition?: string; 
+  };
+  items?: textItem[];
+}
+
+// Define vars
+const {title, media, items} = Astro.props;
+
+// Generate image URL - Sanity data only
+let finalSourceUrl = '';
+let finalAltText = '';
+let imagePosition = media?.imgposition;
+
+if (media?.image?.asset) {
+  try {
+    // Optimaliseer afbeelding voor grid layout (max 960px breed op desktop, want 2 kolommen)
+    // De .auto('format') en .fit('max') worden al toegepast door urlForImage
+    finalSourceUrl = urlForImage(media.image)
+      ?.width(960)  // Max width voor grid afbeelding
+      .url() || '';
+    finalAltText = media.image.alt || '';
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn('Failed to generate image URL in TextGridBlock:', error);
+    }
+  }
+}
+
+if (import.meta.env.DEV) {
+  console.log('📋 TextGridBlock received:', {
+    title,
+    hasImage: !!media?.image,
+    imageUrl: finalSourceUrl,
+    itemsCount: items?.length || 0
+  });
+}
+---
+
+<!--TextGridBlock-->
+<div class="grid grid-cols-1 textgridblock page">
+  <h2 class="textgridblock-title">{title}</h2>
+  
+  <!-- Outer grid: 2 kolommen als er een afbeelding is, anders 1 kolom -->
+  <div class={`grid textgridblock-content items-start gap-8 ${finalSourceUrl ? 'lg:grid-cols-2 ' : ''}`}>
+
+    {finalSourceUrl && (
+      <Image 
+        src={finalSourceUrl}
+        inferSize
+        widths={[540, 960, 1440, 1920]}
+        sizes="(max-width: 360px) 540px, (max-width: 720px) 960px, (max-width: 1600px) 1440px, 1920px"
+        format="avif"
+        alt={finalAltText || ''} 
+        title={finalAltText || ''}
+        class={`content-image image-wrap img-align-${imagePosition}`}
+      />
+    )}
+
+    <!-- Inner grid: als er geen afbeelding is, dan 3 kolommen op desktop, 2 op tablet, 1 op mobiel -->
+    <div class={`grid gap-12 items 
+      ${finalSourceUrl 
+        ? '' 
+        : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'} 
+    `}>
+      {items && items.map((item: textItem) => (
+        <div class="flex flex-col gap-2 content-item md:gap-2">
+          {item.title && <h3 class="content-item-title" set:html={item.title} />}
+          {item.text && <div class="content-item-desc" set:html={item.text} />}
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
+
+<style>
+  .textgridblock-title {
+    font-size: var(--fs-6);
+    line-height: 112.5%;
+    margin-bottom: var(--space-xl);
+    font-weight: 500;
+  }
+
+  .textgridblock-content {
+    /* gap: var(--gap-default); */
+  }
+
+  .content-item-title,
+  .content-item-text {
+    font-size: var(--fs-0);
+    font-weight: 500;
+    line-height: 112.5%;
+  }
+
+  .content-item-desc {
+    font-size: var(--fs--1);
+    opacity: 0.7;
+    font-weight: 400;
+    line-height: 133%;
+    text-wrap: pretty;
+    max-width: 45ch;
+  }
+
+  .img-align-right {
+    order: 1;
+  }
+  .img-align-left {
+    order: 0;
+  }
+</style>

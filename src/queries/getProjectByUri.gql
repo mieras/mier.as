@@ -1,0 +1,142 @@
+query GetProjectByUri($uri: String!) {
+  nodeByUri(uri: $uri) {
+    __typename
+    ... on Project {
+      id
+      status
+      seo {
+        title
+        metaDesc
+        canonical
+      }
+      projectHero {
+        details {
+          color
+          coverMedia
+          intro
+          media {
+            coverImage {
+              node {
+                altText
+                title
+                sourceUrl
+              }
+            }
+          }
+          subtitle
+          title
+        }
+      }
+      projectContent {
+        content {
+          ... on ProjectContentContentTextLayout {
+            __typename
+            text {
+              text
+              size
+            }
+          }
+          ... on ProjectContentContentImageLayout {
+            __typename
+            showCaption
+            image {
+              node {
+                altText
+                title
+                sourceUrl
+              }
+            }
+            size
+          }
+          ... on ProjectContentContentVideoLayout {
+            __typename
+            embed
+            embedCopy
+            option
+            size
+            video {
+              node {
+                altText
+                title
+                sourceUrl
+              }
+            }
+          }
+          ... on ProjectContentContentTestimonialLayout {
+            __typename
+            name
+            photo {
+              node {
+                altText
+                title
+                sourceUrl
+              }
+            }
+            roleCompany
+            testimonial
+          }
+          ... on ProjectContentContentMultiColsLayout {
+            __typename
+            col {
+              contentType
+              showText
+              text
+              title
+              verticalAlign
+              video
+              image {
+                node {
+                  altText
+                  title
+                  sourceUrl
+                }
+              }
+            }
+          }
+          ... on ProjectContentContentColorModeLayout {
+            __typename
+            colorMode
+            fieldGroupName
+          }
+          ... on ProjectContentContentGalleryLayout {
+            __typename
+            gallery {
+              nodes {
+                altText
+                title
+                sourceUrl
+              }
+            }
+          }
+        }
+      }
+      projectMeta {
+        credits
+        projectClient {
+          nodes {
+            ... on Client {
+              id
+              title
+            }
+          }
+        }
+        related {
+          nodes {
+            ... on Project {
+              id
+              title
+            }
+          }
+        }
+        services {
+          nodes {
+            ... on Service {
+              id
+              title
+            }
+          }
+        }
+      }
+    }
+  }
+}

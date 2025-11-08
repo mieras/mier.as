@@ -1,0 +1,123 @@
+---
+import '../assets/global.css'
+import '../assets/scss/globals.scss'
+import '../assets/default.css'
+import SiteMeta from '../components/SiteMeta.astro'
+import SiteNavigation from '../components/SiteNavigation.astro'
+import SiteFooter from '../components/SiteFooter.astro'
+import CookieConsent from '../components/CookieConsent.astro'
+import DarkMode from '../components/DarkMode.astro'
+
+
+import { getNavigation } from '../lib/sanity'
+
+type Props = {
+  children?: any;
+  title: string;
+  description?: string;
+  image?: any;
+  author?: any;
+  seo?: any;
+  url?: string;
+}
+
+const { title, description, image = '/social-preview-image.png', author = 'Mier.as', seo, url } = Astro.props
+const { menus, generalSettings } = await getNavigation()
+const primaryMenu = menus.nodes[0]
+
+// Debug logging (uitgecomment - alleen nodig bij troubleshooting)
+// if (import.meta.env.DEV && seo) {
+//   console.log('🎯 Layout SEO:', { title: seo.title?.substring(0, 30), url });
+// }
+---
+
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <script is:inline>
+      // Carry current theme into the incoming document before swap
+      document.addEventListener('astro:before-swap', (event) => {
+        try {
+          const theme = localStorage.getItem('theme') || document.documentElement.getAttribute('data-theme') || 'light';
+          event.newDocument.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {}
+      });
+    </script>
+    <script is:inline>
+      (function () {
+        try {
+          const doc = document.documentElement;
+          const stored = localStorage.getItem('theme');
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const theme = stored || (prefersDark ? 'dark' : 'light');
+          doc.setAttribute('data-theme', theme);
+        } catch (e) {}
+      })();
+    </script>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml"  />
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    
+    <!-- Font imports -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700;1,800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    
+    <!-- CookieConsent CSS -->
+       
+    <!-- CookieConsent CSS -->
+    <link rel="stylesheet" href="/css/iframemanager.css" />
+    <link rel="stylesheet" href="/css/cookieconsent.css" />
+    
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/orestbida/cookieconsent@v3.0.1/dist/cookieconsent.css"
+    />
+
+    <SiteMeta
+      title={seo?.title || title}
+      description={seo?.description || description}
+      url={seo?.canonicalUrl || url || (Astro.site ? Astro.site.toString() : 'https://accessible-astro.dev')}
+      image={seo?.metaImage || seo?.openGraph?.image || image}
+      author={author}
+      seo={seo}
+    />
+  </head>
+
+  <body>
+    <SiteNavigation menu={primaryMenu} generalSettings={generalSettings} />
+    <main class="page-layout md:mb-[100vh]">
+      <slot />
+    </main>
+    <SiteFooter />
+    <CookieConsent />
+    <DarkMode />
+    <!-- JavaScript bestanden -->
+    <script src="/js/cookieconsent.umd.js" is:inline></script>
+    <script src="/js/iframemanager.js" is:inline></script>
+    <script is:inline>
+      // Re-scan embeds after Astro view transitions
+      const __rescanEmbeds = () => {
+        try { window.iframemanager && window.iframemanager.scan && window.iframemanager.scan(); } catch (e) {}
+      };
+      document.addEventListener('astro:page-load', __rescanEmbeds);
+      document.addEventListener('astro:after-swap', __rescanEmbeds);
+    </script>
+  </body>
+</html>
+
+<style>
+  main {
+    
+    padding-bottom: 20vh;
+    background-color: var(--white);
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Dark mode support */
+  :root[data-theme="dark"] main {
+    background-color: var(--dark-100);
+  }
+</style>

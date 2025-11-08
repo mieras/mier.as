@@ -1,0 +1,40 @@
+---
+// Import Components & Scripts
+import {getAspectRatioFromEmbedString} from "../../lib/utils";
+
+// Define Types
+interface Props{
+  code?: string;
+  size?: "inline" | "popout" | "feature" | "full" | "inherit";
+}
+
+// Define vars
+const {code, size} = Astro.props;
+
+// Code Start
+const aspectRatio = getAspectRatioFromEmbedString(code);
+---
+
+<!--EmbedBlock-->
+<div class:list={['embedblock', size]}>
+  <div class="embedblock-code" set:html={code} />
+</div>
+
+<style is:global define:vars={{aspectRatio}}>
+.embedblock{
+    position: relative;
+    aspect-ratio: var(--aspectRatio);
+    height: auto;
+    overflow: hidden;
+}
+.embedblock-code iframe {
+    position: absolute;
+    margin:0;
+    top: 0;
+    left: 0;
+    width: 100%!important;
+    height: 100%;
+    display: block;
+    
+}
+</style>

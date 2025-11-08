@@ -1,0 +1,81 @@
+---
+import { ClientRouter } from 'astro:transitions'
+import { getImageUrl } from '../lib/seo-helpers'
+
+const { title, description, url, image, author, seo } = Astro.props
+
+// Geen subtitle meer - gebruik alleen de SEO title
+
+// Use SEO data if available, otherwise fallback to props
+const seoTitle = seo?.title || title
+const seoDescription = seo?.description || description
+const seoImage = seo?.metaImage || seo?.openGraph?.image || image
+const imageUrl = seoImage?.asset 
+  ? getImageUrl(seoImage)
+  : (seoImage?.imageUrl || (Astro.site ? `${Astro.site}${seoImage}` : seoImage || '/social-preview-image.png'))
+const fullImageUrl = imageUrl?.startsWith('http') ? imageUrl : (Astro.site ? `${Astro.site}${imageUrl}` : imageUrl)
+
+// Open Graph
+const ogTitle = seo?.openGraph?.title || seoTitle
+const ogDescription = seo?.openGraph?.description || seoDescription
+const ogType = seo?.openGraph?.type || 'website'
+const ogSiteName = seo?.openGraph?.siteName || ''
+const ogImage = seo?.openGraph?.imageUrl || seo?.openGraph?.image?.asset 
+  ? getImageUrl(seo?.openGraph?.image)
+  : fullImageUrl
+
+// Twitter
+const twitterCard = seo?.twitter?.card || 'summary_large_image'
+const twitterSite = seo?.twitter?.site || ''
+const twitterTitle = seo?.twitter?.title || seoTitle
+const twitterDescription = seo?.twitter?.description || seoDescription
+const twitterImage = seo?.twitter?.imageUrl || seo?.twitter?.image?.asset
+  ? getImageUrl(seo?.twitter?.image)
+  : fullImageUrl
+
+// Canonical URL
+const canonicalUrl = seo?.canonicalUrl || url
+
+// Robots
+const robotsContent = [
+  seo?.robots?.noIndex ? 'noindex' : 'index',
+  seo?.robots?.noFollow ? 'nofollow' : 'follow'
+].join(', ')
+
+// Keywords
+const keywordsString = seo?.keywords?.join(', ')
+---
+
+<!-- General Meta Tags -->
+<meta name="title" content={seoTitle} />
+{seoDescription && <meta name="description" content={seoDescription} />}
+{author && <meta name="author" content={author} />}
+{keywordsString && <meta name="keywords" content={keywordsString} />}
+
+<!-- Robots -->
+{robotsContent && <meta name="robots" content={robotsContent} />}
+
+<!-- Canonical URL -->
+{canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+
+<!-- Open Graph -->
+<meta property="og:title" content={ogTitle} />
+{ogDescription && <meta property="og:description" content={ogDescription} />}
+<meta property="og:type" content={ogType} />
+{url && <meta property="og:url" content={url} />}
+{ogImage && <meta property="og:image" content={ogImage} />}
+{ogImage && <meta property="og:image:width" content="1200" />}
+{ogImage && <meta property="og:image:height" content="630" />}
+{ogSiteName && <meta property="og:site_name" content={ogSiteName} />}
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content={twitterCard} />
+{twitterSite && <meta name="twitter:site" content={twitterSite} />}
+<meta name="twitter:title" content={twitterTitle} />
+{twitterDescription && <meta name="twitter:description" content={twitterDescription} />}
+{twitterImage && <meta name="twitter:image" content={twitterImage} />}
+
+<!-- Page Title -->
+<title>{seoTitle}</title>
+
+<ClientRouter />

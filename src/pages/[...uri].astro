@@ -1,0 +1,52 @@
+---
+import DefaultLayout from "../layouts/DefaultLayout.astro";
+import { getAllUris } from "../lib/sanity";
+import { getNodeData, getTemplateByRoute } from "../lib/routes";
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+    return await getAllUris();
+}
+
+import { getSiteSettings } from '../lib/sanity';
+import { getSeoData } from '../lib/seo-helpers';
+
+// Dynamische parameter ophalen
+const { uri } = Astro.params;
+const slug = uri ? `/${uri}/` : "/";
+
+let node = await getNodeData(slug);
+const Template = getTemplateByRoute(node);
+
+// Haal site settings op voor SEO fallbacks
+const siteSettings = await getSiteSettings();
+
+// Build URL voor deze pagina
+const pageUrl = Astro.site
+  ? `${Astro.site}${slug === '/' ? '' : slug}`
+  : `https://accessible-astro.dev${slug === '/' ? '' : slug}`;
+
+// Get SEO data met fallbacks
+const seoData = getSeoData(
+  node.seo,
+  siteSettings,
+  node.title,
+  'Our amazing studio from Rotterdam',
+  pageUrl
+);
+
+// Debug logging (uitgecomment - alleen nodig bij troubleshooting)
+// if (import.meta.env.DEV) {
+//   console.log('📊 Page:', { slug, hasSeo: !!node.seo, seoKeys: node.seo ? Object.keys(node.seo) : [] });
+// }
+---
+
+<DefaultLayout
+  title={seoData.title}
+  description={seoData.description}
+  seo={seoData}
+  url={pageUrl}
+>
+  <Template data={node} />
+</DefaultLayout>

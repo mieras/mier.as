@@ -1,0 +1,12 @@
+query GetAllUris {
+  pages(first: 100) {
+    nodes {
+      uri
+    }
+  }
+  work(first: 100) {
+    nodes {
+      uri
+    }
+  }
+}

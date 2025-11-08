@@ -1,0 +1,45 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    svg {
+      max-width: 100px;
+    }
+    path:first-child {
+      fill: #000;
+    }
+    path:nth-child(2) {
+      fill: #fff;
+    }
+    circle {
+      fill: #000;
+    }
+    @media (prefers-color-scheme: dark) {
+      circle {
+        fill: #fff;
+      }
+      path:first-child {
+        fill: #fff;
+      }
+      path:nth-child(2) {
+        fill: #000;
+      }
+    }
+   
+    @keyframes circle-animation {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(0.5);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+    circle {
+      display: block;
+      animation: circle-animation 2s linear infinite;
+      transform-origin: 50% 50%;
+    }
+  </style>
+  <circle fill="currentColor" cx="50" cy="50" r="45" />
+</svg>

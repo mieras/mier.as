@@ -1,0 +1,130 @@
+---
+// import type { ContentField } from '../types/contentblocks'
+// Import Content Block Components
+import TextBlock from './blocks/TextBlock.astro'
+import TextGridBlock from './blocks/TextGridBlock.astro'
+import ImageBlock from './blocks/ImageBlock.astro'
+import VideoBlock from './blocks/VideoBlock.astro'
+import ColorBlock from './blocks/ColorBlock.astro'
+import TestimonialBlock from './blocks/TestimonialBlock.astro'
+import ColumnsBlock from './blocks/ColumnsBlock.astro'
+import EmbedBlock from './blocks/EmbedBlock.astro'
+import TeamBlock from './blocks/TeamBlock.astro'
+import ServicesBlock from './blocks/ServicesBlock.astro'
+import ClientsBlock from './blocks/ClientsBlock.astro'
+import GalleryBlock from './blocks/GalleryBlock.astro'
+import CarouselBlock from './blocks/CarouselBlock.astro'
+
+
+
+type Props = {
+  prefix: string;
+  blocks: any;
+}
+
+const { prefix, blocks } = Astro.props;
+
+
+---
+<div class="page-layout">
+  {blocks &&
+    blocks.map((block:any) => {
+      const blockType = block._type;
+      
+      if (import.meta.env.DEV) {
+        console.log('🧩 BlockRenderer processing block:', {
+          _type: block._type,
+          blockType: blockType,
+          prefix: prefix
+        });
+      }
+      
+      switch (blockType) {
+        // Sanity block types
+            case 'textBlock':
+              return <TextBlock content={block.text} size={block.size} />
+        case 'imageBlock':
+          return <ImageBlock 
+                    image={block.image}
+                    size={block.size}
+                    alt={block.alt} 
+                    title={block.title} 
+                    showCaption={block.showCaption}
+                    caption={block.caption} 
+                    />
+        case 'videoBlock':
+          return <VideoBlock video={block} size={block.size}/>
+        case 'colorBlock':
+          return <ColorBlock color={block.color} />
+        case 'testimonialBlock':
+          return <TestimonialBlock 
+                    quote={block.quote}
+                    name={block.name}
+                    role={block.role}
+                    photo={block.photo}
+                    size={block.size}
+                    />
+        case 'columnsBlock':
+          return <ColumnsBlock 
+                    title={block.title}
+                    size={block.size}
+                    columns={block.columns}
+                 />
+        case 'textGridBlock':
+          return <TextGridBlock title={block.title} media={block.media} items={block.items} />
+        case 'teamBlock':
+          return <TeamBlock 
+                    title={block.title} 
+                    members={block.members} />
+        case 'servicesBlock':
+          return <ServicesBlock 
+                    title={block.title} 
+                    services={block.services}
+                    layout={block.layout}
+                    showDescriptions={block.showDescriptions} />
+        case 'clientsBlock':
+          return <ClientsBlock 
+                    title={block.title} 
+                    clients={block.clients} />
+        case 'galleryBlock':
+          return <GalleryBlock 
+            title={block.title}
+            gallery={block.gallery}
+            layout={block.layout || 'grid'}
+            columns={block.columns}
+            showCaptions={block.showCaptions}
+            showTitle={block.showTitle}
+          />
+        case 'carouselBlock':
+          return <CarouselBlock 
+            title={block.title}
+            gallery={block.gallery}
+            size={block.size || 'feature'}
+            showCaptions={block.showCaptions}
+            showTitle={block.showTitle}
+          />
+        case 'embedBlock':
+          return <EmbedBlock code={block.code} size={block.size} />
+        
+        default:
+          if (import.meta.env.DEV) {
+            console.warn('🧩 Unknown block type:', blockType, block);
+          }
+          return null
+      }
+    })
+  }
+</div>
+
+
+<style>
+  .page-layout { 
+    display: grid;
+    grid-row-gap: calc(2vh + var(--space-m));
+  }
+
+</style>
+
+<script>
+
+</script>

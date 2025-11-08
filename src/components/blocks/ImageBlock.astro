@@ -1,0 +1,137 @@
+---
+// Import Components & Scripts
+import { Image } from 'astro:assets'
+import { urlForImage } from '../../sanity/lib/image'
+import type { SanityImage } from '../../sanity/types'
+
+// Define Types
+interface Props {
+  size?: "content" | "popout" | "feature" | "page" | "full" | "inherit";
+  showCaption?: boolean;
+  // Sanity props
+  image?: SanityImage;
+  alt?: string;
+  title?: string;
+  caption?: string;
+}
+
+// Define Vars
+const { 
+  size, 
+  showCaption, 
+  // Sanity props
+  image,
+  alt,
+  title,
+  caption
+} = Astro.props;
+
+// Generate image URL - Sanity data only
+let finalSourceUrl = '';
+let finalAltText = '';
+let finalTitleText = '';
+let finalCaptionText = '';
+
+// Map size to optimal width constraints
+function getWidthForSize(size?: string): number {
+  switch (size) {
+    case 'content':
+      return 800;
+    case 'popout':
+      return 1000;
+    case 'feature':
+      return 1200;
+    case 'page':
+      return 1400;
+    case 'full':
+      return 1920;
+    default:
+      return 1200; // Default voor content/unknown sizes
+  }
+}
+
+if (image?.asset) {
+  try {
+    const imageWidth = getWidthForSize(size);
+    const imageBuilder = urlForImage(image);
+    
+    if (size !== 'inherit') {
+      // Voeg width constraint toe voor alle sizes behalve inherit
+      finalSourceUrl = imageBuilder?.width(imageWidth).url() || '';
+    } else {
+      // Voor inherit, gebruik alleen base optimalisaties
+      finalSourceUrl = imageBuilder?.url() || '';
+    }
+    
+    finalAltText = image.alt || alt || '';
+    finalTitleText = image.caption || title || '';
+    finalCaptionText = image.caption || caption || '';
+  } catch (error) {
+    console.warn('Failed to generate image URL:', error);
+  }
+}
+
+if (import.meta.env.DEV) {
+  console.log('🖼️ ImageBlock received:', {
+    sourceUrl: finalSourceUrl,
+    size,
+    altText: finalAltText,
+    titleText: finalTitleText,
+    showCaption,
+    captionText: finalCaptionText,
+    hasSanityImage: !!image
+  });
+}
+---
+
+<!--ImageBlock -->
+{finalSourceUrl && 
+<div class:list={['imageblock', size]}>
+  <Image 
+    src={finalSourceUrl}
+    inferSize
+    alt={finalAltText} 
+    title={finalTitleText}
+    class="imageblock-img"
+  />
+  {(showCaption || finalCaptionText) &&
+    <p class="imageblock-caption" set:html={finalCaptionText} />
+  }
+</div>
+}
+<style>
+  .imageblock-img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Size-based grid positioning */
+  .imageblock.content {
+    grid-column: content;
+  }
+
+  .imageblock.popout {
+    grid-column: popout;
+  }
+
+  .imageblock.feature {
+    grid-column: feature;
+  }
+
+  .imageblock.page {
+    grid-column: page;
+  }
+
+  .imageblock.full {
+    grid-column: full;
+  }
+
+  .imageblock.inline {
+    grid-column: content;
+  }
+
+  .imageblock.inherit {
+    grid-column: inherit;
+  }
+</style>
