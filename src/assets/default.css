@@ -43,7 +43,7 @@
   --clr-genre-bg: var(--clr-black);
   --clr-genre-text: var(--clr-white);
 
-  --default-padding: var(--space-s-l);
+  --default-padding: var(--space-s-m);
 
   --gap-default: var(--space-m-l);
   --grid-gutter: var(--space-xl);

@@ -3,9 +3,9 @@ import { getAllProjects } from '../../lib/sanity';
 import { getAllPhotography } from '../../lib/sanity';
 import IntroSection from '../sections/IntroSection.astro';
 import ProjectsSection from '../sections/ProjectsSection.astro';
-import ThumbContainer from '../sections/ThumbContainer.astro';
+import ProjectsMedia from '../sections/ProjectsMedia.astro';
 import MusicSection from '../sections/MusicSection.astro';
-import SiteFooter from '../SiteFooter.astro';
+
 
 type Project = {
   _id: string;
@@ -29,7 +29,6 @@ const projects = (await getAllProjects()) as Project[];
 const photography = (await getAllPhotography()) as any[];
 ---
 
-<div class="grid full">
   <main class="main">
     <div class="left">
       <section class="hero">
@@ -41,37 +40,27 @@ const photography = (await getAllPhotography()) as any[];
     </div>
     <div class="right">
       <div class="project-image">
-        <ThumbContainer {projects} {photography} />
+        <ProjectsMedia {projects} {photography} />
       </div>
       <section class="music">
         <MusicSection />
       </section>
     </div>
   </main>
-  <SiteFooter />
-</div>
+
 
 <style>
-  .grid {
-    display: grid;
-    grid-template-rows: 1fr auto; /* header, main, footer */
-    height: 100%;
-    grid-template-areas:
-      
-      "main"
-      "footer";
-    background-color: var(--clr-bg);
-    overflow: hidden;
-  }
 
 
   .main {
-    grid-area: main;
+    
     display: grid;
     grid-template-columns: 1fr 1fr;
     border-top: 1px solid var(--clr-border);
     min-height: 0; /* Important for overflow to work */
+    height: 100%;
     overflow: hidden;
+    position: relative;
   }
 
 

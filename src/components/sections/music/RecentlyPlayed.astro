@@ -1,5 +1,6 @@
 ---
-import { getRecentlyPlayed } from '../../lib/lastfm';
+import { getRecentlyPlayed } from '../../../lib/lastfm';
+import MusicItem from './ui/MusicItem.astro';
 
 const lastfmUsername = import.meta.env.PUBLIC_LASTFM_USERNAME || '';
 const lastfmApiKey = import.meta.env.PUBLIC_LASTFM_API_KEY || '';
@@ -67,43 +68,37 @@ function getRelativeTime(dateText: string, uts?: string): string {
         <div class="ticker-track" style="--speed: 20s">
           {recentTracks.map((track) => {
             const artist = track.artist?.['#text'] || 'Unknown Artist';
-            const album = track.album?.['#text'] || '';
             const song = track.name || '';
+            const timestamp = track.date 
+              ? getRelativeTime(track.date['#text'], track.date.uts)
+              : undefined;
             
             return (
-              <div class="ticker-item">
-                <span class="track-text">
-                  {artist}
-                  {album && <><span class="track-separator"> • </span>{album}</>}
-                  {song && <><span class="track-separator"> • </span>{song}</>}
-                </span>
-                {track.date && (
-                  <span class="track-time">
-                    {getRelativeTime(track.date['#text'], track.date.uts)}
-                  </span>
-                )}
-              </div>
+              <MusicItem
+                thumbnail={track.imageUrl}
+                line1={artist}
+                line2={song}
+                timestamp={timestamp}
+                variant="ticker-thumbnail"
+              />
             );
           })}
           {/* Duplicate for seamless loop */}
           {recentTracks.map((track) => {
             const artist = track.artist?.['#text'] || 'Unknown Artist';
-            const album = track.album?.['#text'] || '';
             const song = track.name || '';
+            const timestamp = track.date 
+              ? getRelativeTime(track.date['#text'], track.date.uts)
+              : undefined;
             
             return (
-              <div class="ticker-item">
-                <span class="track-text">
-                  {artist}
-                  {album && <><span class="track-separator"> • </span>{album}</>}
-                  {song && <><span class="track-separator"> • </span>{song}</>}
-                </span>
-                {track.date && (
-                  <span class="track-time">
-                    {getRelativeTime(track.date['#text'], track.date.uts)}
-                  </span>
-                )}
-              </div>
+              <MusicItem
+                thumbnail={track.imageUrl}
+                line1={artist}
+                line2={song}
+                timestamp={timestamp}
+                variant="ticker-thumbnail"
+              />
             );
           })}
         </div>
@@ -151,32 +146,6 @@ function getRelativeTime(dateText: string, uts?: string): string {
     }
   }
 
-  .ticker-item {
-    flex-shrink: 0;
-    padding-right: var(--space-l);
-    display: flex;
-    align-items: center;
-    gap: var(--space-m);
-    white-space: nowrap;
-  }
-
-  .track-text {
-    font-size: var(--fs--1);
-    font-weight: 400;
-    color: var(--clr-text);
-    line-height: 1.4;
-  }
-
-  .track-separator {
-    opacity: 0.5;
-  }
-
-  .track-time {
-    font-size: var(--fs--3);
-    font-weight: 400;
-    color: var(--clr-text);
-    opacity: 0.6;
-  }
 
   .no-tracks {
     font-size: var(--fs--1);

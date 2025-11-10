@@ -8,6 +8,7 @@ import '@fontsource/tiktok-sans/index.css'
 import SiteMeta from '../components/SiteMeta.astro'
 import SiteNavigation from '../components/SiteNavigation.astro'
 import CookieConsent from '../components/CookieConsent.astro'
+import SiteFooter from '../components/SiteFooter.astro'
 
 import { getNavigation } from '../lib/sanity'
 
@@ -82,11 +83,11 @@ const primaryMenu = menus.nodes[0]
   <body>
     <div class="wrapper">
     <SiteNavigation menu={primaryMenu} generalSettings={generalSettings} />
-    <main class="">
+    
       <slot />
-    </main>
+    
+    <SiteFooter />
     </div>
-    <!-- <SiteFooter /> -->
     <CookieConsent />
     <!-- JavaScript bestanden -->
     <script src="/js/cookieconsent.umd.js" is:inline></script>
@@ -103,23 +104,18 @@ const primaryMenu = menus.nodes[0]
 </html>
 
 <style>
-
 .wrapper {
-  height: 100vh;
-  display: grid;
-  grid-template-rows: auto 1fr;
+   height: auto;
+    min-height: 100vh;
 }
-  
-  main {
-    
-    /* padding-bottom: 20vh; */
-    background-color: var(--white);
-    position: relative;
-    z-index: 1;
+
+/* Desktop: height constraint voor viewport */
+@media (min-width: 800px) {
+  .wrapper {
+    display: grid;
+  grid-template-rows: auto 1fr auto;
+    height: 100vh;
+    overflow: hidden;
   }
-  
-  /* Dark mode support */
-  :root[data-theme="dark"] main {
-    background-color: var(--dark-100);
-  }
+}
 </style>

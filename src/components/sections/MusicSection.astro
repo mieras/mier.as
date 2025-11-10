@@ -1,7 +1,7 @@
 ---
-import RecentlyPlayed from './RecentlyPlayed.astro';
-import Mixtapes from './Mixtapes.astro';
-import LatestRecords from './LatestRecords.astro';
+import RecentlyPlayed from './music/RecentlyPlayed.astro';
+import Mixtapes from './music/Mixtapes.astro';
+import LatestRecords from './music/LatestRecords.astro';
 ---
 
 <section class="music-section">
@@ -34,26 +34,38 @@ import LatestRecords from './LatestRecords.astro';
 </section>
 
 <script>
-  // Tab switching functionality
+  // Tab switching functionality - scoped to music section only
   document.addEventListener('DOMContentLoaded', () => {
-    const tabButtons = document.querySelectorAll('.music-tabs .tab-button');
-    const tabContents = document.querySelectorAll('.music-section .tab-content');
+    const musicSection = document.querySelector('.music-section');
+    if (!musicSection) return;
+
+    const tabButtons = musicSection.querySelectorAll('.music-tabs .tab-button');
+    const tabContents = musicSection.querySelectorAll('.tab-content');
 
     tabButtons.forEach((button) => {
       button.addEventListener('click', () => {
         const targetTab = button.getAttribute('data-tab');
 
-        // Update active button
+        // Update active button (only within music section)
         tabButtons.forEach((btn) => {
           btn.classList.remove('tab-active');
         });
         button.classList.add('tab-active');
 
-        // Update active content
+        // Update active content (only within music section)
         tabContents.forEach((content) => {
           content.classList.remove('tab-content-active');
           if (content.getAttribute('data-tab-content') === targetTab) {
             content.classList.add('tab-content-active');
+            
+            // Restart ticker animations when tab becomes visible
+            const tickerTracks = content.querySelectorAll('.ticker-track');
+            tickerTracks.forEach((track) => {
+              // Force reflow to restart animation
+              track.style.animation = 'none';
+              void track.offsetWidth; // Trigger reflow
+              track.style.animation = '';
+            });
           }
         });
       });

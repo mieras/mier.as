@@ -1,0 +1,264 @@
+---
+import { getRecentCloudcasts } from '../../../lib/mixcloud';
+import MusicItem from './ui/MusicItem.astro';
+
+const mixcloudUsername = import.meta.env.PUBLIC_MIXCLOUD_USERNAME || 'mieras';
+
+let mixtapes: any[] = [];
+let hasError = false;
+
+try {
+  mixtapes = await getRecentCloudcasts(mixcloudUsername, 5);
+} catch (error) {
+  console.error('Error fetching Mixcloud data:', error);
+  hasError = true;
+}
+
+// Helper function to format relative time
+function getRelativeTime(dateString: string): string {
+  if (!dateString) return '';
+  
+  try {
+    const now = new Date();
+    const uploadDate = new Date(dateString);
+    const diffMs = now.getTime() - uploadDate.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'zojuist geüpload';
+    if (diffMins < 60) return `${diffMins} min geleden geüpload`;
+    if (diffHours < 24) return `${diffHours} uur geleden geüpload`;
+    if (diffDays === 1) return 'gisteren geüpload';
+    if (diffDays < 7) return `${diffDays} dagen geleden geüpload`;
+    if (diffDays < 30) {
+      const weeks = Math.floor(diffDays / 7);
+      return `${weeks} ${weeks === 1 ? 'week' : 'weken'} geleden geüpload`;
+    }
+    if (diffDays < 365) {
+      const months = Math.floor(diffDays / 30);
+      return `${months} ${months === 1 ? 'maand' : 'maanden'} geleden geüpload`;
+    }
+    const years = Math.floor(diffDays / 365);
+    return `${years} ${years === 1 ? 'jaar' : 'jaren'} geleden geüpload`;
+  } catch (error) {
+    return '';
+  }
+}
+---
+
+<div class="mixtapes">
+  {mixtapes.length > 0 ? (
+    <ul class="mixtapes-list">
+      {mixtapes.map((mixtape, index) => {
+        const thumbnail = mixtape.thumbnail;
+        const mixcloudId = mixtape.mixcloudId;
+        const genres = mixtape.genres || [];
+        const timestamp = mixtape.createdTime 
+          ? getRelativeTime(mixtape.createdTime)
+          : undefined;
+        
+        return (
+          <li class="mixtape-item" data-mixcloud-id={mixcloudId} data-index={index}>
+            <MusicItem
+              thumbnail={thumbnail}
+              line1={mixtape.name}
+              genres={genres}
+              timestamp={timestamp}
+              variant="list"
+              showPlayButton={true}
+              mixcloudId={mixcloudId}
+            />
+          </li>
+        );
+      })}
+    </ul>
+  ) : hasError ? (
+    <p class="no-mixtapes">Error loading mixtapes</p>
+  ) : (
+    <p class="no-mixtapes">No mixtapes available</p>
+  )}
+</div>
+
+
+<script>
+  // Handle mixtape play/embed toggle - player appears below item content
+  document.addEventListener('DOMContentLoaded', () => {
+    const mixtapeItems = document.querySelectorAll('.mixtape-item');
+    let currentlyPlaying: HTMLElement | null = null;
+    
+    // Close all players and reset buttons
+    const closeAllPlayers = () => {
+      mixtapeItems.forEach((item) => {
+        const playerEmbed = item.querySelector('.music-player-embed') as HTMLElement;
+        const playButtonOverlay = item.querySelector('.music-play-btn') as HTMLElement;
+        const playButtonInline = item.querySelector('.music-play-btn-inline') as HTMLElement;
+        const iframe = item.querySelector('.music-iframe') as HTMLIFrameElement;
+        
+        if (playerEmbed) playerEmbed.style.display = 'none';
+        if (iframe) iframe.src = '';
+        
+        // Reset overlay button
+        if (playButtonOverlay) {
+          playButtonOverlay.setAttribute('data-active', 'false');
+          playButtonOverlay.setAttribute('data-action', 'play');
+          const overlayPlayIcon = playButtonOverlay.querySelector('.play-icon') as HTMLElement;
+          const overlayPauseIcon = playButtonOverlay.querySelector('.pause-icon') as HTMLElement;
+          if (overlayPlayIcon) overlayPlayIcon.style.display = 'block';
+          if (overlayPauseIcon) overlayPauseIcon.style.display = 'none';
+        }
+        
+        // Reset inline button
+        if (playButtonInline) {
+          playButtonInline.setAttribute('data-active', 'false');
+          playButtonInline.setAttribute('data-action', 'play');
+          const inlinePlayIcon = playButtonInline.querySelector('.play-icon') as HTMLElement;
+          const inlinePauseIcon = playButtonInline.querySelector('.pause-icon') as HTMLElement;
+          if (inlinePlayIcon) inlinePlayIcon.style.display = 'block';
+          if (inlinePauseIcon) inlinePauseIcon.style.display = 'none';
+        }
+      });
+      currentlyPlaying = null;
+    };
+    
+    // Handle play button clicks (both overlay and inline)
+    mixtapeItems.forEach((item) => {
+      const playButtonOverlay = item.querySelector('.music-play-btn') as HTMLElement;
+      const playButtonInline = item.querySelector('.music-play-btn-inline') as HTMLElement;
+      const playerEmbed = item.querySelector('.music-player-embed') as HTMLElement;
+      const iframe = item.querySelector('.music-iframe') as HTMLIFrameElement;
+      const mixcloudId = item.getAttribute('data-mixcloud-id');
+      
+      if (!playerEmbed || !iframe || !mixcloudId) return;
+      
+      const handlePlayClick = (playButton: HTMLElement | null) => {
+        if (!playButton) return;
+        
+        const playIcon = playButton.querySelector('.play-icon') as HTMLElement;
+        const pauseIcon = playButton.querySelector('.pause-icon') as HTMLElement;
+        const isActive = playButton.getAttribute('data-active') === 'true';
+        const action = playButton.getAttribute('data-action');
+        
+        if (isActive && action === 'pause') {
+          // Pause - stop embed
+          iframe.src = '';
+          playerEmbed.style.display = 'none';
+          // Update both buttons
+          if (playButtonOverlay) {
+            playButtonOverlay.setAttribute('data-active', 'false');
+            playButtonOverlay.setAttribute('data-action', 'play');
+            const overlayPlayIcon = playButtonOverlay.querySelector('.play-icon') as HTMLElement;
+            const overlayPauseIcon = playButtonOverlay.querySelector('.pause-icon') as HTMLElement;
+            if (overlayPlayIcon) overlayPlayIcon.style.display = 'block';
+            if (overlayPauseIcon) overlayPauseIcon.style.display = 'none';
+          }
+          if (playButtonInline) {
+            playButtonInline.setAttribute('data-active', 'false');
+            playButtonInline.setAttribute('data-action', 'play');
+            if (playIcon) playIcon.style.display = 'block';
+            if (pauseIcon) pauseIcon.style.display = 'none';
+          }
+          currentlyPlaying = null;
+        } else if (isActive && action === 'play') {
+          // Resume - show embed again
+          iframe.src = `https://player-widget.mixcloud.com/widget/iframe/?hide_cover=1&mini=1&autoplay=1&feed=%2F${mixcloudId}%2F`;
+          playerEmbed.style.display = 'block';
+          // Update both buttons
+          if (playButtonOverlay) {
+            playButtonOverlay.setAttribute('data-action', 'pause');
+            const overlayPlayIcon = playButtonOverlay.querySelector('.play-icon') as HTMLElement;
+            const overlayPauseIcon = playButtonOverlay.querySelector('.pause-icon') as HTMLElement;
+            if (overlayPlayIcon) overlayPlayIcon.style.display = 'none';
+            if (overlayPauseIcon) overlayPauseIcon.style.display = 'block';
+          }
+          if (playButtonInline) {
+            playButtonInline.setAttribute('data-action', 'pause');
+            if (playIcon) playIcon.style.display = 'none';
+            if (pauseIcon) pauseIcon.style.display = 'block';
+          }
+        } else {
+          // Play new - close any other players first
+          if (currentlyPlaying && currentlyPlaying !== item) {
+            closeAllPlayers();
+          }
+          
+          // Open this player
+          iframe.src = `https://player-widget.mixcloud.com/widget/iframe/?hide_cover=1&mini=1&autoplay=1&feed=%2F${mixcloudId}%2F`;
+          playerEmbed.style.display = 'block';
+          // Update both buttons
+          if (playButtonOverlay) {
+            playButtonOverlay.setAttribute('data-active', 'true');
+            playButtonOverlay.setAttribute('data-action', 'pause');
+            const overlayPlayIcon = playButtonOverlay.querySelector('.play-icon') as HTMLElement;
+            const overlayPauseIcon = playButtonOverlay.querySelector('.pause-icon') as HTMLElement;
+            if (overlayPlayIcon) overlayPlayIcon.style.display = 'none';
+            if (overlayPauseIcon) overlayPauseIcon.style.display = 'block';
+          }
+          if (playButtonInline) {
+            playButtonInline.setAttribute('data-active', 'true');
+            playButtonInline.setAttribute('data-action', 'pause');
+            if (playIcon) playIcon.style.display = 'none';
+            if (pauseIcon) pauseIcon.style.display = 'block';
+          }
+          currentlyPlaying = item as HTMLElement;
+        }
+      };
+      
+      if (playButtonOverlay) {
+        playButtonOverlay.addEventListener('click', () => handlePlayClick(playButtonOverlay));
+      }
+      if (playButtonInline) {
+        playButtonInline.addEventListener('click', () => handlePlayClick(playButtonInline));
+      }
+    });
+  });
+</script>
+
+<style>
+  .mixtapes {
+    margin-bottom: var(--space-xl);
+  }
+
+  .mixtapes-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-l);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    align-items: stretch;
+  }
+
+  .mixtapes-list::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .mixtapes-list::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .mixtapes-list::-webkit-scrollbar-thumb {
+    background: var(--clr-border);
+    border-radius: 2px;
+  }
+
+  .mixtape-item {
+    min-width: 20rem;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    height: 100%;
+  }
+
+  .no-mixtapes {
+    font-size: var(--fs--1);
+    opacity: 0.7;
+    font-style: italic;
+  }
+
+</style>
+
