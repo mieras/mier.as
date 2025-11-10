@@ -86,6 +86,7 @@
   /* Color aliases for components - dark mode */
   --clr-black: var(--black);
   --clr-white: var(--white);
+  --clr-text: var(--clr-white);
   --clr-bg: var(--dark-100);
 
   /* Semantic color variables - dark mode */

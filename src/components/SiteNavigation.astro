@@ -4,9 +4,6 @@ import DarkMode from './DarkMode.astro';
 
 const siteSettings = await getSiteSettings();
 
-// Verwerk navigation data
-const menuItems = siteSettings?.navigation?.menuItems || [];
-
 // Extract data voor navigatie
 const companyName = siteSettings?.title || 'Mier.as';
 const city = siteSettings?.footer?.address?.city || 'Rotterdam';

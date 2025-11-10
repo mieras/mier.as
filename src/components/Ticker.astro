@@ -13,13 +13,13 @@ const { items, speed = 20 } = Astro.props;
 <div class="ticker-container">
   <div class="ticker-wrapper">
     <div class="ticker-track" style={`--speed: ${speed}s`}>
-      {items.map((item, index) => (
+      {items.map(() => (
         <div class="ticker-item">
           <slot name="item" />
         </div>
       ))}
       {/* Duplicate for seamless loop */}
-      {items.map((item, index) => (
+      {items.map(() => (
         <div class="ticker-item">
           <slot name="item" />
         </div>

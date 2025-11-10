@@ -61,10 +61,11 @@ import LatestRecords from './music/LatestRecords.astro';
             // Restart ticker animations when tab becomes visible
             const tickerTracks = content.querySelectorAll('.ticker-track');
             tickerTracks.forEach((track) => {
+              const trackElement = track as HTMLElement;
               // Force reflow to restart animation
-              track.style.animation = 'none';
-              void track.offsetWidth; // Trigger reflow
-              track.style.animation = '';
+              trackElement.style.animation = 'none';
+              void trackElement.offsetWidth; // Trigger reflow
+              trackElement.style.animation = '';
             });
           }
         });
