@@ -14,14 +14,14 @@ const { items, speed = 20 } = Astro.props;
   <div class="ticker-wrapper">
     <div class="ticker-track" style={`--speed: ${speed}s`}>
       {items.map((item, index) => (
-        <div class="ticker-item" key={index}>
-          <slot name="item" item={item} index={index} />
+        <div class="ticker-item">
+          <slot name="item" />
         </div>
       ))}
       {/* Duplicate for seamless loop */}
       {items.map((item, index) => (
-        <div class="ticker-item" key={`duplicate-${index}`}>
-          <slot name="item" item={item} index={index} />
+        <div class="ticker-item">
+          <slot name="item" />
         </div>
       ))}
     </div>

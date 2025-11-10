@@ -54,7 +54,6 @@ const { projects, photography } = Astro.props;
         ? urlForImage(project.thumbnail.image)?.width(1200).height(800).url() 
         : null;
       const year = project.year || null;
-      const description = project.intro || project.subtitle || '';
       const role = project.role || '';
       
       return (

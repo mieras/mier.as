@@ -6,7 +6,6 @@ const siteSettings = await getSiteSettings();
 
 // Verwerk navigation data
 const menuItems = siteSettings?.navigation?.menuItems || [];
-const sortedMenuItems = menuItems.sort((a, b) => (a.order || 0) - (b.order || 0));
 
 // Extract data voor navigatie
 const companyName = siteSettings?.title || 'Mier.as';

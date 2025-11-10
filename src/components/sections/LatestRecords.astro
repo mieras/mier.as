@@ -5,14 +5,12 @@ const discogsUsername = import.meta.env.PUBLIC_DISCOGS_USERNAME || '';
 const discogsToken = import.meta.env.PUBLIC_DISCOGS_TOKEN || '';
 
 let latestRecords: any[] = [];
-let hasError = false;
 
 if (discogsUsername && discogsToken) {
   try {
     latestRecords = await getLatestRecords(discogsUsername, discogsToken, 5);
   } catch (error) {
     console.error('Error fetching Discogs data:', error);
-    hasError = true;
   }
 } else {
   console.warn(
@@ -85,7 +83,7 @@ function getRelativeTime(dateString?: string): string {
             </div>
           ))}
           {/* Duplicate for seamless loop */}
-          {latestRecords.map((record, index) => (
+          {latestRecords.map((record) => (
             <div class="ticker-item">
               {record.thumb && (
                 <img 

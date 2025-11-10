@@ -65,7 +65,7 @@ function getRelativeTime(dateText: string, uts?: string): string {
     <div class="ticker-container">
       <div class="ticker-wrapper">
         <div class="ticker-track" style="--speed: 20s">
-          {recentTracks.map((track, index) => {
+          {recentTracks.map((track) => {
             const artist = track.artist?.['#text'] || 'Unknown Artist';
             const album = track.album?.['#text'] || '';
             const song = track.name || '';
@@ -86,7 +86,7 @@ function getRelativeTime(dateText: string, uts?: string): string {
             );
           })}
           {/* Duplicate for seamless loop */}
-          {recentTracks.map((track, index) => {
+          {recentTracks.map((track) => {
             const artist = track.artist?.['#text'] || 'Unknown Artist';
             const album = track.album?.['#text'] || '';
             const song = track.name || '';
