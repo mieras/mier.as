@@ -1,0 +1,180 @@
+---
+import { getAllPhotography } from '../../lib/sanity';
+import { urlForImage } from '../../sanity/lib/image';
+
+type PhotographyItem = {
+  _id: string;
+  title: string;
+  year?: number;
+  city?: string;
+  country?: string;
+  camera?: string;
+  thumbnail?: any;
+};
+
+const photography = (await getAllPhotography()) as PhotographyItem[];
+---
+
+<section class="photography-section">
+  <h2 class="section-title">Photography</h2>
+  <ul class="photography-list">
+    {photography.map((photo) => {
+      const imageUrl = photo.thumbnail?.asset 
+        ? urlForImage(photo.thumbnail)?.width(1200).height(800).url() 
+        : null;
+      const year = photo.year || null;
+      const city = photo.city || '';
+      const country = photo.country || '';
+      const location = [city, country].filter(Boolean).join(', ');
+      const camera = photo.camera || '';
+      
+      return (
+        <li class="photography-item" data-photo-id={photo._id}>
+          {imageUrl && (
+            <>
+              <div class="photography-thumb photography-thumb-mobile">
+                <img 
+                  src={imageUrl} 
+                  alt={photo.title || 'Photo thumbnail'}
+                  loading="lazy"
+                />
+              </div>
+              <div class="photography-thumb-hover">
+                <img 
+                  src={imageUrl} 
+                  alt={photo.title || 'Photo thumbnail'}
+                  loading="lazy"
+                />
+              </div>
+            </>
+          )}
+          <div class="photography-info">
+            {year && <span class="photography-year">{year}</span>}
+            <h3 class="photography-title">{photo.title}</h3>
+            {location && <span class="photography-location">{location}</span>}
+            {camera && <span class="photography-camera">{camera}</span>}
+          </div>
+        </li>
+      );
+    })}
+  </ul>
+</section>
+
+<style>
+  .photography-section {
+    color: var(--clr-text);
+  }
+
+  .section-title {
+    font-size: var(--fs-2);
+    font-weight: 600;
+    margin-bottom: var(--space-l);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .photography-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-l);
+  }
+
+  .photography-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  .photography-thumb-mobile {
+    width: 100%;
+    aspect-ratio: 3 / 2;
+    overflow: hidden;
+    background-color: var(--clr-thumb-bg);
+  }
+
+  .photography-thumb-mobile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.9;
+    transition: opacity 0.3s ease;
+  }
+
+  .photography-thumb-mobile:hover img {
+    opacity: 1;
+  }
+
+  /* Desktop: verberg mobile thumbnail */
+  @media (min-width: 48em) {
+    .photography-thumb-mobile {
+      display: none;
+    }
+  }
+
+  /* Hover thumbnail - fixed in center on desktop */
+  .photography-thumb-hover {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 50vw;
+    max-height: 50vh;
+    margin: var(--space-xl);
+    z-index: 100;
+    pointer-events: none;
+    aspect-ratio: 3 / 2;
+    overflow: hidden;
+    background-color: var(--clr-thumb-bg);
+  }
+
+  .photography-thumb-hover img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  /* Show hover thumbnail on desktop hover */
+  @media (min-width: 48em) {
+    .photography-item:hover .photography-thumb-hover {
+      display: block;
+    }
+  }
+
+  .photography-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  .photography-year {
+    font-size: var(--fs--1);
+    opacity: 0.7;
+    font-weight: 300;
+    order: -1;
+  }
+
+  .photography-title {
+    font-size: var(--fs-0);
+    font-weight: 400;
+    margin: 0;
+    line-height: 1.3;
+  }
+
+  .photography-location {
+    font-size: var(--fs--1);
+    opacity: 0.7;
+    font-weight: 300;
+  }
+
+  .photography-camera {
+    font-size: var(--fs--1);
+    opacity: 0.6;
+    font-weight: 300;
+    margin-top: var(--space-2xs);
+  }
+</style>
+

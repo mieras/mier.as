@@ -1,0 +1,31 @@
+---
+description: Astro projectstructuur en organisatie
+globs: [
+  "**/*.astro",
+  "**/*.ts",
+  "**/*.tsx",
+  "**/*.mjs",
+  "**/*.cjs",
+  "**/*.js",
+  "astro.config.*",
+  "tailwind.config.*",
+  "tsconfig.json",
+  "package.json"
+]
+alwaysApply: true
+---
+
+Gebruik deze mapstructuur als basis voor alle projecten:
+
+- **public/** → fonts, images, favicon  
+- **src/**
+  - **assets/** → images & icons  
+  - **components/** → UI, blog, navigation, SEO  
+  - **content/** → Markdown content en configuratie  
+  - **layouts/** → Base, Blog, Page layouts  
+  - **pages/** → index, about, blog, 404  
+  - **styles/** → global.scss, reset.scss, _variables.scss, _utopia.scss, _typography.scss, _tokens.scss  
+  - **lib/** → utils, cms integraties  
+
+Houd componenten klein, herbruikbaar en duidelijk per domein (ui, blog, navigation).  
+Volg Astro’s file-based routing en gebruik consistente naamgeving.

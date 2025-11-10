@@ -224,6 +224,38 @@ export const HOME_FALLBACK_QUERY = `*[_type == "page" && title == "Homepage"][0]
   }
 }`;
 
+// All photography query
+export const ALL_PHOTOGRAPHY_QUERY = `*[_type == "photography"] | order(_createdAt desc) {
+  _id,
+  _type,
+  title,
+  year,
+  city,
+  country,
+  camera,
+  thumbnail {
+    ...,
+    asset->,
+    crop,
+    hotspot
+  }
+}`;
+
+// All mixtapes query
+export const ALL_MIXTAPES_QUERY = `*[_type == "mixtape"] | order(_createdAt desc) {
+  _id,
+  _type,
+  title,
+  year,
+  mixcloudLink,
+  thumbnail {
+    ...,
+    asset->,
+    crop,
+    hotspot
+  }
+}`;
+
 // All projects query
 export const ALL_PROJECTS_QUERY = `*[_type == "work"] | order(_createdAt desc) {
   _id,
@@ -231,6 +263,9 @@ export const ALL_PROJECTS_QUERY = `*[_type == "work"] | order(_createdAt desc) {
   title,
   "slug": slug.current,
   subtitle,
+  intro,
+  year,
+  role,
   thumbnail {
     image {
       ...,
@@ -653,6 +688,11 @@ export const SITE_SETTINGS_QUERY = `*[_type == "siteSettings"][0] {
       instagram,
       behance,
       linkedin
+    },
+    legal {
+      btw,
+      bank,
+      kvk
     }
   },
   openGraphSiteName,
@@ -719,7 +759,7 @@ export const DEBUG_PAGES_QUERY = `*[_type == "page"] {
 
 // All slugs query for static paths
 export const ALL_SLUGS_QUERY = `{
-  "pages": *[_type == "page" && defined(slug.current)].slug.current,
+  "pages": *[_type == "page" && defined(slug.current) && pageType != "homepage"].slug.current,
   "projects": *[_type == "work" && defined(slug.current)].slug.current,
-  "homepage": *[_type == "page" && pageType == "homepage"][0].slug.current
+  "homepage": count(*[_type == "page" && pageType == "homepage"]) > 0
 }`;

@@ -14,7 +14,8 @@ import { getSeoData } from '../lib/seo-helpers';
 
 // Dynamische parameter ophalen
 const { uri } = Astro.params;
-const slug = uri ? `/${uri}/` : "/";
+// Als uri undefined of lege string is, is het de homepage
+const slug = (uri === undefined || uri === '') ? "/" : `/${uri}/`;
 
 let node = await getNodeData(slug);
 const Template = getTemplateByRoute(node);

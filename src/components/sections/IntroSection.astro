@@ -1,0 +1,49 @@
+---
+// Intro sectie met grote tekst en beschrijving
+// Data kan uit siteSettings of homepage query komen
+
+const title = "Maarten Mieras"; // TODO: Haal uit Sanity
+const description = "Digital Designer based in Rotterdam. Designs clear and intuitive digital products. Shoots film. Collects weird music."; // TODO: Haal uit Sanity
+---
+
+<section class="intro-section">
+  <h1 class="title">{title}</h1>
+  <p class="intro-description">{description}</p>
+</section>
+
+<style>
+  .intro-section {
+    text-align: left;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .title {
+    font-size: var(--fs-5);
+    font-weight: 400;
+    letter-spacing: -0.05em;
+    margin: 0;
+    line-height: 1;
+    color: var(--clr-text);
+  }
+
+  .intro-large-text {
+    font-size: calc(1* var(--fs-6));
+    text-wrap: nowrap;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--clr-text);
+    margin: 0 0 var(--space-m) 0;
+  }
+
+  .intro-description {
+    font-size: var(--fs-0);
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--clr-text);
+    margin: 0;
+    max-width: 60ch;
+  }
+
+</style>
+

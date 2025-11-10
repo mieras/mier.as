@@ -24,6 +24,8 @@ import service from './documents/service';
 import teamMember from './documents/teamMember';
 import career from './documents/career';
 import siteSettings from './documents/siteSettings';
+import photography from './documents/photography';
+import mixtape from './documents/mixtape';
 
 export const schemaTypes = [
   // Objects
@@ -52,4 +54,6 @@ export const schemaTypes = [
   teamMember,
   career,
   siteSettings,
+  photography,
+  mixtape,
 ];

@@ -1,0 +1,178 @@
+---
+import { urlForImage } from '../../sanity/lib/image';
+
+type Project = {
+  _id: string;
+  title: string;
+  thumbnail?: {
+    image?: any;
+  };
+};
+
+type PhotographyItem = {
+  _id: string;
+  thumbnail?: any;
+};
+
+type Props = {
+  projects: Project[];
+  photography: PhotographyItem[];
+};
+
+const { projects, photography } = Astro.props;
+
+// Default foto - TODO: Haal uit Sanity of gebruik placeholder
+const defaultImage = '/astronaut-hero-img.webp';
+---
+
+<div class="thumb-container">
+  <!-- Default image when no hover -->
+  <div class="thumb-default">
+    <img 
+      src={defaultImage} 
+      alt="Default image"
+      loading="eager"
+    />
+  </div>
+
+  <!-- Hover thumbnails from projects -->
+  {projects.map((project) => {
+    const imageUrl = project.thumbnail?.image?.asset 
+      ? urlForImage(project.thumbnail.image)?.width(1200).height(800).url() 
+      : null;
+    
+    if (!imageUrl) return null;
+    
+    return (
+      <div 
+        class="thumb-hover thumb-project" 
+        data-project-id={project._id}
+        style="display: none;"
+      >
+        <img 
+          src={imageUrl} 
+          alt={project.title || 'Project thumbnail'}
+          loading="lazy"
+        />
+      </div>
+    );
+  })}
+
+  <!-- Hover thumbnails from photography -->
+  {photography.map((photo) => {
+    const imageUrl = photo.thumbnail?.asset 
+      ? urlForImage(photo.thumbnail)?.width(1200).height(800).url() 
+      : null;
+    
+    if (!imageUrl) return null;
+    
+    return (
+      <div 
+        class="thumb-hover thumb-photography" 
+        data-photo-id={photo._id}
+        style="display: none;"
+      >
+        <img 
+          src={imageUrl} 
+          alt="Photo thumbnail"
+          loading="lazy"
+        />
+      </div>
+    );
+  })}
+</div>
+
+<style>
+  .thumb-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--clr-thumb-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .thumb-default,
+  .thumb-hover {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+  }
+
+  .thumb-default img,
+  .thumb-hover img {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+
+  .thumb-hover {
+    z-index: 10;
+    display: none;
+  }
+
+  /* Mobile: verberg hover thumbnails */
+  @media (max-width: 799px) {
+    .thumb-hover {
+      display: none !important;
+    }
+  }
+</style>
+
+<script>
+  // Show hover thumbnails when projects/photography items are hovered
+  document.addEventListener('DOMContentLoaded', () => {
+    const projectItems = document.querySelectorAll('[data-project-id]');
+    const photoItems = document.querySelectorAll('[data-photo-id]');
+    const thumbProject = document.querySelectorAll('.thumb-project');
+    const thumbPhotography = document.querySelectorAll('.thumb-photography');
+    const thumbDefault = document.querySelector('.thumb-default');
+
+    // Project hover handlers
+    projectItems.forEach((item) => {
+      const projectId = item.getAttribute('data-project-id');
+      const thumb = document.querySelector(`.thumb-project[data-project-id="${projectId}"]`) as HTMLElement;
+      
+      if (!thumb) return;
+
+      item.addEventListener('mouseenter', () => {
+        if (thumbDefault) (thumbDefault as HTMLElement).style.display = 'none';
+        thumb.style.display = 'block';
+      });
+
+      item.addEventListener('mouseleave', () => {
+        thumb.style.display = 'none';
+        if (thumbDefault) (thumbDefault as HTMLElement).style.display = 'block';
+      });
+    });
+
+    // Photography hover handlers
+    photoItems.forEach((item) => {
+      const photoId = item.getAttribute('data-photo-id');
+      const thumb = document.querySelector(`.thumb-photography[data-photo-id="${photoId}"]`) as HTMLElement;
+      
+      if (!thumb) return;
+
+      item.addEventListener('mouseenter', () => {
+        if (thumbDefault) (thumbDefault as HTMLElement).style.display = 'none';
+        thumb.style.display = 'block';
+      });
+
+      item.addEventListener('mouseleave', () => {
+        thumb.style.display = 'none';
+        if (thumbDefault) (thumbDefault as HTMLElement).style.display = 'block';
+      });
+    });
+  });
+</script>
+

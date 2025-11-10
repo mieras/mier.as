@@ -6,6 +6,8 @@ import {
   PROJECT_BY_SLUG_QUERY, 
   PAGE_BY_SLUG_QUERY,
   ALL_PROJECTS_QUERY,
+  ALL_PHOTOGRAPHY_QUERY,
+  ALL_MIXTAPES_QUERY,
   SITE_SETTINGS_QUERY 
 } from '../sanity/queries';
 import type { SanityHome, SanityProject, SanityPage, SanitySiteSettings, SanityAllSlugs } from '../sanity/types';
@@ -23,9 +25,9 @@ export async function getAllUris() {
 
     const uris = [];
 
-    // Add homepage
+    // Add homepage - altijd toevoegen als er een homepage is
     if (data.homepage) {
-      uris.push({ params: { uri: undefined } }); // Homepage heeft undefined URI
+      uris.push({ params: { uri: '' } }); // Homepage heeft lege string voor root path
     }
 
     // Add pages
@@ -194,6 +196,32 @@ export async function getAllProjects() {
     return data || [];
   } catch (error) {
     console.error('❌ Failed to load projects:', error);
+    throw error;
+  }
+}
+
+/**
+ * Haal alle photography op
+ */
+export async function getAllPhotography() {
+  try {
+    const { data } = await loadQuery({ query: ALL_PHOTOGRAPHY_QUERY });
+    return data || [];
+  } catch (error) {
+    console.error('❌ Failed to load photography:', error);
+    throw error;
+  }
+}
+
+/**
+ * Haal alle mixtapes op
+ */
+export async function getAllMixtapes() {
+  try {
+    const { data } = await loadQuery({ query: ALL_MIXTAPES_QUERY });
+    return data || [];
+  } catch (error) {
+    console.error('❌ Failed to load mixtapes:', error);
     throw error;
   }
 }

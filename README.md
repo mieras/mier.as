@@ -76,11 +76,20 @@ npm install
    ```bash
    cp .env.example .env
    ```
-3. **Vul je Sanity credentials in** in `.env`:
-   - `PUBLIC_SANITY_PROJECT_ID`: Je Sanity Project ID (vind je in [Sanity Manage](https://www.sanity.io/manage))
-   - `PUBLIC_SANITY_DATASET`: Meestal `"production"` of `"development"`
-   - `PUBLIC_SANITY_API_VERSION`: API versie (standaard: `"2025-01-28"`)
-   - `SANITY_API_READ_TOKEN`: Alleen nodig voor Visual Editing (optioneel)
+3. **Vul je credentials in** in `.env`:
+   - **Sanity:**
+     - `PUBLIC_SANITY_PROJECT_ID`: Je Sanity Project ID (vind je in [Sanity Manage](https://www.sanity.io/manage))
+     - `PUBLIC_SANITY_DATASET`: Meestal `"production"` of `"development"`
+     - `PUBLIC_SANITY_API_VERSION`: API versie (standaard: `"2025-01-28"`)
+     - `SANITY_API_READ_TOKEN`: Alleen nodig voor Visual Editing (optioneel)
+   - **Last.fm** (optioneel, voor Recently Played):
+     - `PUBLIC_LASTFM_USERNAME`: Je Last.fm username
+     - `PUBLIC_LASTFM_API_KEY`: Je Last.fm API key (krijg je op [last.fm/api](https://www.last.fm/api))
+   - **Discogs** (optioneel, voor Latest Records):
+     - `PUBLIC_DISCOGS_USERNAME`: Je Discogs username
+     - `PUBLIC_DISCOGS_TOKEN`: Je Discogs API token (krijg je op [discogs.com/settings/developers](https://www.discogs.com/settings/developers))
+   - **OpenWeatherMap** (optioneel, voor temperatuur in navigatie):
+     - `PUBLIC_WEATHER_API_KEY`: Je OpenWeatherMap API key
 
 4. **Voor Sanity Studio**, kopieer `studio/.env.example` naar `studio/.env.local`:
    ```bash

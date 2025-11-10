@@ -1,0 +1,103 @@
+---
+import RecentlyPlayed from './RecentlyPlayed.astro';
+import Mixtapes from './Mixtapes.astro';
+import LatestRecords from './LatestRecords.astro';
+---
+
+<section class="music-section">
+  <div class="music-tabs">
+    <button class="tab-button tab-active" data-tab="now-listening" aria-label="Show now listening">
+      Now listening
+    </button>
+    <button class="tab-button" data-tab="mixtapes" aria-label="Show mixtapes">
+      Mixtapes
+    </button>
+    <button class="tab-button" data-tab="collections" aria-label="Show collections">
+      Collections
+    </button>
+  </div>
+
+  <!-- Now Listening Tab -->
+  <div class="tab-content tab-content-active" data-tab-content="now-listening">
+    <RecentlyPlayed />
+  </div>
+
+  <!-- Mixtapes Tab -->
+  <div class="tab-content" data-tab-content="mixtapes">
+    <Mixtapes />
+  </div>
+
+  <!-- Collections Tab -->
+  <div class="tab-content" data-tab-content="collections">
+    <LatestRecords />
+  </div>
+</section>
+
+<script>
+  // Tab switching functionality
+  document.addEventListener('DOMContentLoaded', () => {
+    const tabButtons = document.querySelectorAll('.music-tabs .tab-button');
+    const tabContents = document.querySelectorAll('.music-section .tab-content');
+
+    tabButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const targetTab = button.getAttribute('data-tab');
+
+        // Update active button
+        tabButtons.forEach((btn) => {
+          btn.classList.remove('tab-active');
+        });
+        button.classList.add('tab-active');
+
+        // Update active content
+        tabContents.forEach((content) => {
+          content.classList.remove('tab-content-active');
+          if (content.getAttribute('data-tab-content') === targetTab) {
+            content.classList.add('tab-content-active');
+          }
+        });
+      });
+    });
+  });
+</script>
+
+<style>
+  .music-section {
+    color: var(--clr-text);
+  }
+
+  .music-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: var(--space-m);
+    border-bottom: 1px solid var(--clr-border);
+  }
+
+  .tab-button {
+    background: transparent;
+    border: none;
+    padding: var(--space-xs) var(--space-m);
+    font-size: var(--fs-0);
+    font-weight: 400;
+    color: var(--clr-text);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s ease;
+  }
+
+  .tab-button.tab-active {
+    background-color: var(--clr-button-bg);
+    color: var(--clr-button-text);
+    border-bottom-color: var(--clr-button-border);
+  }
+
+  .tab-content {
+    display: none;
+  }
+
+  .tab-content.tab-content-active {
+    display: block;
+  }
+</style>
+

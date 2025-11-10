@@ -1,0 +1,272 @@
+---
+import { urlForImage } from '../../sanity/lib/image';
+
+type Project = {
+  _id: string;
+  title: string;
+  slug: string;
+  year?: number;
+  subtitle?: string;
+  intro?: string;
+  role?: string;
+  thumbnail?: {
+    image?: any;
+    aspectRatio?: string;
+  };
+  client?: {
+    title: string;
+  };
+};
+
+type PhotographyItem = {
+  _id: string;
+  title: string;
+  year?: number;
+  city?: string;
+  country?: string;
+  camera?: string;
+  thumbnail?: any;
+};
+
+type Props = {
+  projects: Project[];
+  photography: PhotographyItem[];
+};
+
+const { projects, photography } = Astro.props;
+---
+
+<section class="relative projects-section">
+  <div class="flex sticky top-0 projects-tabs">
+    <button class="tab-button tab-active" data-tab="design" aria-label="Show design projects">
+      Design
+    </button>
+    <button class="tab-button" data-tab="photography" aria-label="Show photography">
+      Photography
+    </button>
+  </div>
+
+  <!-- Design Projects Tab -->
+  <div class="tab-content tab-content-active" data-tab-content="design">
+    <ul class="projects-list">
+    {projects.map((project) => {
+      const imageUrl = project.thumbnail?.image?.asset 
+        ? urlForImage(project.thumbnail.image)?.width(1200).height(800).url() 
+        : null;
+      const year = project.year || null;
+      const description = project.intro || project.subtitle || '';
+      const role = project.role || '';
+      
+      return (
+        <li class="project-item" data-project-id={project._id}>
+          {imageUrl && (
+            <div class="project-thumb project-thumb-mobile">
+              <img 
+                src={imageUrl} 
+                alt={project.title || 'Project thumbnail'}
+                loading="lazy"
+              />
+            </div>
+          )}
+          {year && <p class="project-year">{year}</p>}
+          <div class="project-client">
+            {project.client?.title && <h3 class="project-client-title">{project.client.title}</h3>}
+            {role && <h4 class="project-role">{role}</h4>}
+          </div>
+          <p class="project-name">{project.title}</p>
+        </li>
+      );
+    })}
+    </ul>
+  </div>
+
+  <!-- Photography Tab -->
+  <div class="tab-content" data-tab-content="photography">
+    <ul class="projects-list">
+      {photography.map((photo) => {
+        const year = photo.year || null;
+        const city = photo.city || '';
+        const country = photo.country || '';
+        const location = [city, country].filter(Boolean).join(', ');
+        const camera = photo.camera || '';
+        
+        return (
+          <li class="project-item" data-photo-id={photo._id}>
+            {year && <p class="project-year">{year}</p>}
+            <div class="project-client">
+              {location && <h3 class="project-client-title">{location}</h3>}
+              {camera && <h4 class="project-role">{camera}</h4>}
+            </div>
+            <p class="project-name">{photo.title}</p>
+          </li>
+        );
+      })}
+    </ul>
+  </div>
+</section>
+
+<script>
+  // Tab switching functionality
+  document.addEventListener('DOMContentLoaded', () => {
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const targetTab = button.getAttribute('data-tab');
+
+        // Update active button
+        tabButtons.forEach((btn) => {
+          btn.classList.remove('tab-active');
+        });
+        button.classList.add('tab-active');
+
+        // Update active content
+        tabContents.forEach((content) => {
+          content.classList.remove('tab-content-active');
+          if (content.getAttribute('data-tab-content') === targetTab) {
+            content.classList.add('tab-content-active');
+          }
+        });
+      });
+    });
+  });
+</script>
+
+<style>
+  .projects-section {
+    color: var(--clr-text);
+  }
+
+  .projects-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: -1px;
+    border-bottom: 1px solid var(--clr-border);
+    background-color: var(--clr-bg);
+    z-index: 5;
+  }
+
+  .tab-button {
+    background: transparent;
+    border: none;
+    padding: var(--space-xs) var(--default-padding);
+    font-size: var(--fs--1);
+    line-height: 1;
+    font-weight: 400;
+    color: var(--clr-text);
+    cursor: pointer;
+    border-top: 1px solid var(--clr-border);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s ease;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tab-button.tab-active {
+    background-color: var(--clr-button-bg);
+    color: var(--clr-button-text);
+    border-bottom-color: var(--clr-button-border);
+  }
+
+  .tab-content {
+    display: none;
+  }
+
+  .tab-content.tab-content-active {
+    display: block;
+  }
+
+  .projects-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow-y: auto;
+    scroll-snap-type: y proximity;
+    scroll-behavior: smooth;
+    height: 100%;
+  }
+
+  .project-item {
+    display: grid;
+    grid-template-columns: auto 1fr 1fr;
+    align-items: baseline;
+    gap: 1rem;
+    padding: var(--space-s) var(--default-padding);
+    border-top: 1px solid var(--clr-border);
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+
+  .project-thumb-mobile {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background-color: var(--clr-thumb-bg);
+  }
+
+  .project-thumb-mobile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.9;
+    transition: opacity 0.3s ease;
+  }
+
+  .project-thumb-mobile:hover img {
+    opacity: 1;
+  }
+
+  /* Desktop: verberg mobile thumbnail */
+  @media (min-width: 48em) {
+    .project-thumb-mobile {
+      display: none;
+    }
+  }
+
+  /* Hover thumbnail - fixed in center on desktop */
+
+  .project-year {
+    font-size: var(--fs--3);
+    font-weight: 400;
+    color: var(--clr-text);
+    margin: 0;
+  }
+
+  .project-client {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .project-client-title {
+    font-size: var(--fs-0);
+    font-weight: 400;
+    margin: 0;
+    color: var(--clr-text);
+  }
+
+  .project-role {
+    font-size: var(--fs--3);
+    font-weight: 500;
+    margin-top: 0.2rem;
+    opacity: 0.5;
+    color: var(--clr-text);
+  }
+
+  .project-name {
+    font-size: var(--fs--1);
+    font-weight: 400;
+    margin: 0;
+    opacity: 0.5;
+    color: var(--clr-text);
+  }
+</style>
+

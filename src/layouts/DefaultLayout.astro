@@ -2,12 +2,13 @@
 import '../assets/global.css'
 import '../assets/scss/globals.scss'
 import '../assets/default.css'
+import '@fontsource-variable/geist/index.css'
+import '@fontsource-variable/geist-mono/index.css'
+import '@fontsource/tiktok-sans/index.css'
 import SiteMeta from '../components/SiteMeta.astro'
 import SiteNavigation from '../components/SiteNavigation.astro'
 import SiteFooter from '../components/SiteFooter.astro'
 import CookieConsent from '../components/CookieConsent.astro'
-import DarkMode from '../components/DarkMode.astro'
-
 
 import { getNavigation } from '../lib/sanity'
 
@@ -59,13 +60,7 @@ const primaryMenu = menus.nodes[0]
     <link rel="icon" href="/favicon.svg" type="image/svg+xml"  />
     <link rel="icon" href="/favicon.ico" sizes="any">
     
-    <!-- Font imports -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700;1,800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-    
-    <!-- CookieConsent CSS -->
-       
+
     <!-- CookieConsent CSS -->
     <link rel="stylesheet" href="/css/iframemanager.css" />
     <link rel="stylesheet" href="/css/cookieconsent.css" />
@@ -86,13 +81,14 @@ const primaryMenu = menus.nodes[0]
   </head>
 
   <body>
+    <div class="wrapper">
     <SiteNavigation menu={primaryMenu} generalSettings={generalSettings} />
-    <main class="page-layout md:mb-[100vh]">
+    <main class="">
       <slot />
     </main>
-    <SiteFooter />
+    </div>
+    <!-- <SiteFooter /> -->
     <CookieConsent />
-    <DarkMode />
     <!-- JavaScript bestanden -->
     <script src="/js/cookieconsent.umd.js" is:inline></script>
     <script src="/js/iframemanager.js" is:inline></script>
@@ -108,9 +104,16 @@ const primaryMenu = menus.nodes[0]
 </html>
 
 <style>
+
+.wrapper {
+  height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+  
   main {
     
-    padding-bottom: 20vh;
+    /* padding-bottom: 20vh; */
     background-color: var(--white);
     position: relative;
     z-index: 1;

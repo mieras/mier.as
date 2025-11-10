@@ -184,6 +184,28 @@ export default defineType({
             }),
           ],
         }),
+        defineField({
+          name: 'legal',
+          type: 'object',
+          title: 'Legal Information',
+          fields: [
+            defineField({
+              name: 'btw',
+              type: 'string',
+              title: 'BTW Number',
+            }),
+            defineField({
+              name: 'bank',
+              type: 'string',
+              title: 'Bank Account',
+            }),
+            defineField({
+              name: 'kvk',
+              type: 'string',
+              title: 'KVK Number',
+            }),
+          ],
+        }),
       ],
     }),
     // Site-wide SEO settings (siteName, twitterSite)

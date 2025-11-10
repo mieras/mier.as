@@ -6,7 +6,7 @@
 
 
 
-/* Fonts are now loaded via Google Fonts in DefaultLayout.astro */
+/* Fonts are now loaded via @fontsource-variable in DefaultLayout.astro */
 
 body {
   font-family: var(--font-family-default);

@@ -1,0 +1,188 @@
+---
+import { getRecentlyPlayed } from '../../lib/lastfm';
+
+const lastfmUsername = import.meta.env.PUBLIC_LASTFM_USERNAME || '';
+const lastfmApiKey = import.meta.env.PUBLIC_LASTFM_API_KEY || '';
+
+let recentTracks: any[] = [];
+let hasError = false;
+
+if (lastfmUsername && lastfmApiKey) {
+  try {
+    recentTracks = await getRecentlyPlayed(lastfmUsername, lastfmApiKey, 5);
+  } catch (error) {
+    console.error('Error fetching Last.fm data:', error);
+    hasError = true;
+  }
+} else {
+  console.warn('⚠️ Last.fm credentials not configured. Add PUBLIC_LASTFM_USERNAME and PUBLIC_LASTFM_API_KEY to .env');
+}
+
+// Helper function to format relative time
+function getRelativeTime(dateText: string, uts?: string): string {
+  if (!dateText) return '';
+  
+  try {
+    const now = new Date();
+    let trackDate: Date;
+    
+    if (uts) {
+      // Use unix timestamp if available (more accurate)
+      trackDate = new Date(parseInt(uts) * 1000);
+    } else {
+      // Parse the date text (format: "08 Nov 2025, 11:12")
+      trackDate = new Date(dateText);
+    }
+    
+    const diffMs = now.getTime() - trackDate.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'zojuist';
+    if (diffMins < 60) return `${diffMins} min geleden`;
+    if (diffHours < 24) return `${diffHours} uur geleden`;
+    if (diffDays === 1) return 'gisteren';
+    if (diffDays < 7) return `${diffDays} dagen geleden`;
+    if (diffDays < 30) {
+      const weeks = Math.floor(diffDays / 7);
+      return `${weeks} ${weeks === 1 ? 'week' : 'weken'} geleden`;
+    }
+    if (diffDays < 365) {
+      const months = Math.floor(diffDays / 30);
+      return `${months} ${months === 1 ? 'maand' : 'maanden'} geleden`;
+    }
+    const years = Math.floor(diffDays / 365);
+    return `${years} ${years === 1 ? 'jaar' : 'jaren'} geleden`;
+  } catch (error) {
+    return dateText; // Fallback to original text
+  }
+}
+---
+
+<div class="recently-played">
+  {recentTracks.length > 0 ? (
+    <div class="ticker-container">
+      <div class="ticker-wrapper">
+        <div class="ticker-track" style="--speed: 20s">
+          {recentTracks.map((track, index) => {
+            const artist = track.artist?.['#text'] || 'Unknown Artist';
+            const album = track.album?.['#text'] || '';
+            const song = track.name || '';
+            
+            return (
+              <div class="ticker-item">
+                <span class="track-text">
+                  {artist}
+                  {album && <><span class="track-separator"> • </span>{album}</>}
+                  {song && <><span class="track-separator"> • </span>{song}</>}
+                </span>
+                {track.date && (
+                  <span class="track-time">
+                    {getRelativeTime(track.date['#text'], track.date.uts)}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+          {/* Duplicate for seamless loop */}
+          {recentTracks.map((track, index) => {
+            const artist = track.artist?.['#text'] || 'Unknown Artist';
+            const album = track.album?.['#text'] || '';
+            const song = track.name || '';
+            
+            return (
+              <div class="ticker-item">
+                <span class="track-text">
+                  {artist}
+                  {album && <><span class="track-separator"> • </span>{album}</>}
+                  {song && <><span class="track-separator"> • </span>{song}</>}
+                </span>
+                {track.date && (
+                  <span class="track-time">
+                    {getRelativeTime(track.date['#text'], track.date.uts)}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  ) : hasError ? (
+    <p class="no-tracks">Error loading tracks</p>
+  ) : (
+    <p class="no-tracks">No recent tracks available</p>
+  )}
+</div>
+
+<style>
+  .recently-played {
+    margin-bottom: var(--space-l);
+  }
+
+  .ticker-container {
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .ticker-wrapper {
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .ticker-track {
+    display: flex;
+    width: fit-content;
+    animation: ticker-scroll var(--speed, 20s) linear infinite;
+  }
+
+  .ticker-track:hover {
+    animation-play-state: paused;
+  }
+
+  @keyframes ticker-scroll {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .ticker-item {
+    flex-shrink: 0;
+    padding-right: var(--space-l);
+    display: flex;
+    align-items: center;
+    gap: var(--space-m);
+    white-space: nowrap;
+  }
+
+  .track-text {
+    font-size: var(--fs--1);
+    font-weight: 400;
+    color: var(--clr-text);
+    line-height: 1.4;
+  }
+
+  .track-separator {
+    opacity: 0.5;
+  }
+
+  .track-time {
+    font-size: var(--fs--3);
+    font-weight: 400;
+    color: var(--clr-text);
+    opacity: 0.6;
+  }
+
+  .no-tracks {
+    font-size: var(--fs--1);
+    opacity: 0.7;
+    font-style: italic;
+    color: var(--clr-text);
+  }
+</style>
+

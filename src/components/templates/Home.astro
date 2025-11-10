@@ -1,71 +1,169 @@
 ---
-import Carousel from '../Carousel.astro'
-import PageIntro from '../PageIntro.astro'
-import ProjectList from '../ProjectList.astro'
+import { getAllProjects } from '../../lib/sanity';
+import { getAllPhotography } from '../../lib/sanity';
+import IntroSection from '../sections/IntroSection.astro';
+import ProjectsSection from '../sections/ProjectsSection.astro';
+import ThumbContainer from '../sections/ThumbContainer.astro';
+import MusicSection from '../sections/MusicSection.astro';
+import SiteFooter from '../SiteFooter.astro';
 
-const { data } = Astro.props
+type Project = {
+  _id: string;
+  title: string;
+  slug: string;
+  year?: number;
+  subtitle?: string;
+  intro?: string;
+  role?: string;
+  thumbnail?: {
+    image?: any;
+    aspectRatio?: string;
+  };
+  client?: {
+    title: string;
+  };
+};
 
-// DEBUG: Log de volledige data structuur
-if (import.meta.env.DEV) {
-  console.log('🏠 Home data received:', JSON.stringify(data, null, 2));
-  console.log('🏠 Data source:', data?.dataSource);
-  console.log('🏠 Data type:', data?._type);
-  console.log('🏠 Page type:', data?.pageType);
-}
+// Haal alle projecten en photography op
+const projects = (await getAllProjects()) as Project[];
+const photography = (await getAllPhotography()) as any[];
+---
 
-// Sanity data structure
-const slides = data?.slides || [];
-const projects = data?.featuredProjects || [];
-const introCols = data?.introCols || [];
+<div class="grid full">
+  <main class="main">
+    <div class="left">
+      <section class="hero">
+        <IntroSection />
+      </section>
+      <section class="projects">
+        <ProjectsSection {projects} {photography} />
+      </section>
+    </div>
+    <div class="right">
+      <div class="project-image">
+        <ThumbContainer {projects} {photography} />
+      </div>
+      <section class="music">
+        <MusicSection />
+      </section>
+    </div>
+  </main>
+  <SiteFooter />
+</div>
 
-    // Extract intro en statement uit introCols
-    const intro = introCols[0]?.content || [];
-    const statement = introCols[1]?.content || [];
+<style>
+  .grid {
+    display: grid;
+    grid-template-rows: 1fr auto; /* header, main, footer */
+    height: 100%;
+    grid-template-areas:
+      
+      "main"
+      "footer";
+    background-color: var(--clr-bg);
+    overflow: hidden;
+  }
 
-    // Geen fallback - laat errors zien als data mist
-    if (import.meta.env.DEV) {
-      if (introCols.length === 0) {
-        console.error('❌ introCols is leeg in Sanity data');
-      }
-      if (projects.length === 0) {
-        console.error('❌ featuredProjects is leeg in Sanity data');
-      }
+
+  .main {
+    grid-area: main;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid var(--clr-border);
+    min-height: 0; /* Important for overflow to work */
+    overflow: hidden;
+  }
+
+
+
+  /* Left column (nested grid) */
+  .left {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    border-right: 1px solid var(--clr-border);
+    min-height: 0; /* Important for overflow to work */
+    overflow: hidden;
+  }
+
+  .hero {
+    padding: var(--default-padding);
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    border-bottom: 1px solid var(--clr-border);
+  }
+
+  .projects {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    overflow: hidden;
+    min-height: 0; /* Important for overflow to work */
+  }
+
+  /* Right column (nested grid) */
+  .right {
+    display: grid;
+    grid-template-rows: 1fr auto;
+    min-height: 0; /* Important for overflow to work */
+  }
+
+  .project-image {
+    padding: var(--space-xs) var(--default-padding);
+    display: grid;
+    align-items: center;
+    min-height: 0; /* Important for overflow to work */
+    overflow: hidden;
+  }
+
+  .music {
+    padding: var(--space-xs) var(--default-padding);
+    border-top: 1px solid var(--clr-border);
+    overflow-y: auto;
+  }
+
+  /* Mobile: stack everything */
+  @media (max-width: 799px) {
+    .grid {
+      display: block;
+      height: auto;
+      overflow: visible;
     }
 
-if (import.meta.env.DEV) {
-  console.log('📊 Home data breakdown:', {
-    slidesCount: slides.length,
-    projectsCount: projects.length,
-    introColsCount: introCols.length,
-    introContent: intro,
-    statementContent: statement,
-    slides: (slides as Array<any>).map((slide: any) => ({
-      title: slide.title,
-      subtitle: slide.subtitle,
-      hasImage: !!slide.image,
-      // imageAsset: slide.image?.asset?._ref
-    })),
-  });
-}
----
-<Carousel {slides} />
+    .main {
+      display: block;
+      border-top: none;
+      overflow: visible;
+    }
 
-    <PageIntro class="home">
-      <Fragment slot="column-one">
-        {intro.map((block: any) => (
-          <div class={`text-${block.style || 'normal'}`}>
-            {block.children?.map((child: any) => child.text).join('')}
-          </div>
-        ))}
-      </Fragment>
-      <Fragment slot="column-two">
-        {statement.map((block: any) => (
-          <div class={`text-${block.style || 'normal'}`}>
-            {block.children?.map((child: any) => child.text).join('')}
-          </div>
-        ))}
-      </Fragment>
-    </PageIntro>
+    .left,
+    .right {
+      display: block;
+      border-right: none;
+      overflow: visible;
+      height: auto;
+    }
 
-<ProjectList {projects} layout="grid" />
+    .left {
+      border-bottom: 1px solid var(--clr-border);
+    }
+
+    .hero {
+      padding: var(--default-padding);
+      border-bottom: 1px solid var(--clr-border);
+    }
+
+    .projects {
+      overflow: visible;
+    }
+
+    .project-image {
+      border-bottom: 1px solid var(--clr-border);
+    }
+
+    .music {
+      padding: var(--space-xs) var(--default-padding);
+      border-bottom: 1px solid var(--clr-border);
+    }
+  }
+</style>
 

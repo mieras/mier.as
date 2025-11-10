@@ -317,6 +317,11 @@ export interface SanitySiteSettings {
       behance?: string;
       linkedin?: string;
     };
+    legal?: {
+      btw?: string;
+      bank?: string;
+      kvk?: string;
+    };
   };
   openGraphSiteName?: string;
   twitterSite?: string;

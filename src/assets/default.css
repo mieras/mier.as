@@ -21,6 +21,30 @@
   --primary-background: var(--primary-100);
   --neutral-background: var(--neutral-200);
 
+  /* Color aliases for components */
+  --clr-black: var(--black);
+  --clr-white: var(--white);
+  --clr-bg: #f8f7f2; /* Beige background */
+
+  /* Semantic color variables - automatically switch in dark mode */
+  --clr-text: var(--clr-black);
+  --clr-text-secondary: var(--clr-black);
+  --clr-border: var(--clr-black);
+  --clr-bg-alt: var(--clr-white);
+  --clr-button-bg: var(--clr-black);
+  --clr-button-text: var(--clr-white);
+  --clr-button-border: var(--clr-black);
+  --clr-button-hover-bg: var(--clr-black);
+  --clr-button-hover-text: var(--clr-white);
+  --clr-button-active-bg: var(--clr-black);
+  --clr-button-active-text: var(--clr-white);
+  --clr-thumb-bg: var(--clr-black);
+  --clr-thumb-bg-alt: var(--clr-white);
+  --clr-genre-bg: var(--clr-black);
+  --clr-genre-text: var(--clr-white);
+
+  --default-padding: var(--space-s-l);
+
   --gap-default: var(--space-m-l);
   --grid-gutter: var(--space-xl);
   /* Spacing - now handled by Utopia in SCSS */
@@ -28,10 +52,16 @@
 
   --font-measure: 70ch;
   --font-family-default:
-    'Instrument Sans', Roboto, 'Helvetica Neue', 'Arial Nova', 'Nimbus Sans',
-    Arial, sans-serif;
-  --font-family-special: 'Instrument Serif', serif;
-  --font-mono: 'Geist Mono Variable', monospace;
+    'Geist Variable', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-family-special:
+    'Geist Variable', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    Roboto, sans-serif;
+  --font-family-tiktok:
+    'TikTok Sans', 'Geist Variable', 'Geist', -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, sans-serif;
+  --font-mono:
+    'Geist Mono Variable', 'Geist Mono', 'Courier New', Courier, monospace;
 
   --radius-small: 3px;
   --radius-large: 6px;
@@ -52,6 +82,28 @@
   --background: var(--dark-100);
   --primary-background: var(--primary-500);
   --neutral-background: var(--neutral-900);
+
+  /* Color aliases for components - dark mode */
+  --clr-black: var(--black);
+  --clr-white: var(--white);
+  --clr-bg: var(--dark-100);
+
+  /* Semantic color variables - dark mode */
+  --clr-text: var(--clr-white);
+  --clr-text-secondary: var(--clr-white);
+  --clr-border: var(--clr-white);
+  --clr-bg-alt: var(--dark-100);
+  --clr-button-bg: var(--clr-white);
+  --clr-button-text: var(--clr-black);
+  --clr-button-border: var(--clr-white);
+  --clr-button-hover-bg: var(--clr-white);
+  --clr-button-hover-text: var(--clr-black);
+  --clr-button-active-bg: var(--clr-white);
+  --clr-button-active-text: var(--clr-black);
+  --clr-thumb-bg: var(--clr-white);
+  --clr-thumb-bg-alt: var(--clr-black);
+  --clr-genre-bg: var(--clr-white);
+  --clr-genre-text: var(--clr-black);
 
   --cc-bg: #000;
   --cc-primary-color: rgb(239, 244, 246);

@@ -1,0 +1,67 @@
+---
+// Herbruikbare ticker component gebaseerd op CodePen voorbeeld
+// https://codepen.io/vladlen11/pen/yLYPbVd
+
+type Props = {
+  items: any[];
+  speed?: number; // Animation speed in seconds
+};
+
+const { items, speed = 20 } = Astro.props;
+---
+
+<div class="ticker-container">
+  <div class="ticker-wrapper">
+    <div class="ticker-track" style={`--speed: ${speed}s`}>
+      {items.map((item, index) => (
+        <div class="ticker-item" key={index}>
+          <slot name="item" item={item} index={index} />
+        </div>
+      ))}
+      {/* Duplicate for seamless loop */}
+      {items.map((item, index) => (
+        <div class="ticker-item" key={`duplicate-${index}`}>
+          <slot name="item" item={item} index={index} />
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
+
+<style>
+  .ticker-container {
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .ticker-wrapper {
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .ticker-track {
+    display: flex;
+    width: fit-content;
+    animation: ticker-scroll var(--speed, 20s) linear infinite;
+  }
+
+  .ticker-track:hover {
+    animation-play-state: paused;
+  }
+
+  @keyframes ticker-scroll {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .ticker-item {
+    flex-shrink: 0;
+    padding-right: var(--space-l);
+  }
+</style>
+

@@ -1,0 +1,36 @@
+---
+description: Optionele Sanity CMS integratie voor Astro projecten
+globs: ["src/sanity/**/*", "sanity.config.ts"]
+alwaysApply: false
+priority: medium
+---
+
+# Astro + Sanity Rules
+
+
+https://www.sanity.io/plugins/sanity-astro 
+
+Optionele koppeling tussen Sanity CMS en Astro.
+
+- Houd alle CMS-code binnen `/src/sanity/`.
+- Gebruik `@sanity/client` of de Astro integratie `@sanity/astro`.
+- Schemas in `/studio/schemas/`, één per bestand.
+- Gebruik `defineType`, `defineField`, `defineArrayMember`.
+- Voeg altijd `description` en `validation` toe.
+- Queries in `/src/sanity/queries.ts`.
+- Gebruik `sanityClient.fetch(GROQ_QUERY)` binnen `/lib/` of `getStaticPaths()`.
+- Studio apart draaien van frontend.
+- Gebruik `.env` voor `SANITY_PROJECT_ID`, `SANITY_DATASET`, `SANITY_API_VERSION`.
+
+**Integratiepatroon:**
+```astro
+---
+import { getPageData } from "../sanity/queries";
+const data = await getPageData("home");
+---
+<Layout>
+  <Content content={data} />
+</Layout>
+```
+
+https://www.sanity.io/docs/studio/structure-builder-cheat-sheet

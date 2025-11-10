@@ -214,6 +214,21 @@ export default defineType({
       group: 'meta',
     }),
     defineField({
+      name: 'year',
+      type: 'number',
+      title: 'Year',
+      description: 'Project year',
+      validation: (Rule) => Rule.min(1900).max(2100),
+      group: 'meta',
+    }),
+    defineField({
+      name: 'role',
+      type: 'string',
+      title: 'Role',
+      description: 'Your role in this project',
+      group: 'meta',
+    }),
+    defineField({
       name: 'relatedProjects',
       type: 'array',
       title: 'Related Projects',
