@@ -12,44 +12,27 @@
 @layer base {
   html,
   body {
-    color: var(--clr-text);
+    color: var(--text);
+    background: var(--bg);
   }
 }
 
 :root {
-  --bg: #f8f7f2;
-  --white: #fdfdfa;
-  --black: #222;
-  --primary: #00b7c6;
-  --grey--dark: #7b7974;
-  --font-color: var(--black);
-  --background: var(--white);
-  --action-color: var(--primary-300);
-  --action-color-state: var(--primary-500);
-  --primary-background: var(--primary-100);
-  --neutral-background: var(--neutral-200);
+  /* Light mode - sRGB hex fallback */
+  --bg: #f5f2eb;
+  --text: #060205;
+  --link: #060205;
+  --border: #060205;
+  --tile-hover: #ffffff;
 
-  /* Color aliases for components */
-  --clr-black: var(--black);
-  --clr-white: var(--white);
-  --clr-bg: #f8f7f2; /* Beige background */
-
-  /* Semantic color variables - automatically switch in dark mode */
-  --clr-text: var(--clr-black);
-  --clr-text-secondary: var(--clr-black);
-  --clr-border: var(--clr-black);
-  --clr-bg-alt: var(--clr-white);
-  --clr-button-bg: var(--clr-black);
-  --clr-button-text: var(--clr-white);
-  --clr-button-border: var(--clr-black);
-  --clr-button-hover-bg: var(--clr-black);
-  --clr-button-hover-text: var(--clr-white);
-  --clr-button-active-bg: var(--clr-black);
-  --clr-button-active-text: var(--clr-white);
-  --clr-thumb-bg: var(--clr-black);
-  --clr-thumb-bg-alt: var(--clr-white);
-  --clr-genre-bg: var(--clr-black);
-  --clr-genre-text: var(--clr-white);
+  @supports (color: oklch(0 0 0)) {
+    /* Light mode - OKLCH */
+    --bg: oklch(0.97 0.01 95);
+    --text: oklch(0.15 0.01 300);
+    --link: oklch(0.15 0.01 300);
+    --border: oklch(0.15 0.01 300);
+    --tile-hover: oklch(1 0 0);
+  }
 
   --default-padding: var(--space-s-l);
 
@@ -81,45 +64,21 @@
 }
 
 :root[data-theme='dark'] {
-  --white: #111;
-  --black: #e6e6e4;
-  --primary: #ff851b;
-  --font-color: var(--neutral-100);
-  --action-color: var(--secondary-100);
-  --action-color-state: var(--secondary-500);
-  --background: var(--dark-100);
-  --primary-background: var(--primary-500);
-  --neutral-background: var(--neutral-900);
+  /* Dark mode - sRGB hex fallback */
+  --bg: #060205;
+  --text: #f5f2eb;
+  --link: #f5f2eb;
+  --border: #f5f2eb;
+  --tile-hover: #000;
 
-  /* Color aliases for components - dark mode */
-  --clr-black: var(--black);
-  --clr-white: var(--white);
-  --clr-bg: hsl(
-    240,
-    4%,
-    9%
-  ); /* Dark background - equivalent to --dark-100 from SCSS */
-
-  /* Semantic color variables - dark mode */
-  --clr-text: var(--clr-white);
-  --clr-text-secondary: var(--clr-white);
-  --clr-border: var(--clr-white);
-  --clr-bg-alt: hsl(
-    240,
-    4%,
-    9%
-  ); /* Dark background - equivalent to --dark-100 from SCSS */
-  --clr-button-bg: var(--clr-white);
-  --clr-button-text: var(--clr-black);
-  --clr-button-border: var(--clr-white);
-  --clr-button-hover-bg: var(--clr-white);
-  --clr-button-hover-text: var(--clr-black);
-  --clr-button-active-bg: var(--clr-white);
-  --clr-button-active-text: var(--clr-black);
-  --clr-thumb-bg: var(--clr-white);
-  --clr-thumb-bg-alt: var(--clr-black);
-  --clr-genre-bg: var(--clr-white);
-  --clr-genre-text: var(--clr-black);
+  @supports (color: oklch(0 0 0)) {
+    /* Dark mode - OKLCH */
+    --bg: oklch(0.15 0.01 300);
+    --text: oklch(0.97 0.01 95);
+    --link: oklch(0.97 0.01 95);
+    --border: oklch(0.97 0.01 95);
+    --tile-hover: oklch(0 0 0);
+  }
 
   /* Cookie Consent */
 
@@ -167,12 +126,12 @@
 
 .logo {
   width: 6rem;
-  color: var(--clr-text);
+  color: var(--text);
 }
 
 body {
-  color: var(--black);
-  background: var(--white);
+  color: var(--text);
+  background: var(--bg);
 }
 
 .page-layout > *,

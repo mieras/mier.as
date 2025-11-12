@@ -61,8 +61,7 @@ const city = siteSettings?.footer?.address?.city || 'Rotterdam';
 <style>
   nav.nav-monochrome {
     z-index: 999;
-    background-color: var(--clr-bg-alt);
-    border-bottom: 1px solid var(--clr-border);
+    border-bottom: 1px solid var(--border);
   }
 
   nav .inner {
@@ -81,7 +80,6 @@ const city = siteSettings?.footer?.address?.city || 'Rotterdam';
   .nav-company {
     font-weight: 600;
     text-decoration: none;
-    color: var(--clr-text);
     transition: opacity 0.3s ease;
   }
 
@@ -92,7 +90,6 @@ const city = siteSettings?.footer?.address?.city || 'Rotterdam';
   .nav-city,
   .nav-time,
   .nav-temperature {
-    color: var(--clr-text);
     opacity: 0.8;
   }
 
@@ -106,6 +103,6 @@ const city = siteSettings?.footer?.address?.city || 'Rotterdam';
     transform: scale(0.8);
     width: 2rem;
     height: 2rem;
-    border-color: var(--clr-border);
+    border-color: var(--border);
   }
 </style>

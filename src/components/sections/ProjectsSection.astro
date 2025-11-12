@@ -105,7 +105,6 @@ const { projects, photography } = Astro.props;
 
 <style>
   .projects-section {
-    color: var(--clr-text);
     display: grid;
     grid-template-rows: auto 1fr;
     height: 100%;
@@ -116,8 +115,7 @@ const { projects, photography } = Astro.props;
     display: flex;
     gap: 0;
     margin-bottom: -1px;
-    border-bottom: 1px solid var(--clr-border);
-    background-color: var(--clr-bg);
+    border-bottom: 1px solid var(--border);
     z-index: 5;
   }
 
@@ -128,9 +126,8 @@ const { projects, photography } = Astro.props;
     font-size: var(--fs--1);
     line-height: 1;
     font-weight: 400;
-    color: var(--clr-text);
     cursor: pointer;
-    border-top: 1px solid var(--clr-border);
+    border-top: 1px solid var(--border);
     border-bottom: 2px solid transparent;
     margin-bottom: -1px;
     transition: all 0.2s ease;
@@ -141,9 +138,9 @@ const { projects, photography } = Astro.props;
   }
 
   .tab-button.tab-active {
-    background-color: var(--clr-button-bg);
-    color: var(--clr-button-text);
-    border-bottom-color: var(--clr-button-border);
+    background-color: var(--text);
+    color: var(--bg);
+    border-bottom-color: var(--border);
   }
 
   .tab-content {

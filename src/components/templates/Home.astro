@@ -53,24 +53,20 @@ const photography = (await getAllPhotography()) as any[];
 
 
   .main {
-    
     display: grid;
     grid-template-columns: 1fr 1fr;
-    /* border-top: 1px solid var(--clr-border); */
-    min-height: 0; /* Important for overflow to work */
+    min-height: 0;
     height: 100%;
     overflow: hidden;
     position: relative;
   }
 
-
-
   /* Left column (nested grid) */
   .left {
     display: grid;
     grid-template-rows: auto 1fr;
-    border-right: 1px solid var(--clr-border);
-    min-height: 0; /* Important for overflow to work */
+    border-right: 1px solid var(--border);
+    min-height: 0;
     overflow: hidden;
   }
 
@@ -105,8 +101,7 @@ const photography = (await getAllPhotography()) as any[];
   }
 
   .music {
-    /* padding: var(--space-xs) var(--default-padding); */
-    border-top: 1px solid var(--clr-border);
+    border-top: 1px solid var(--border);
     overflow-y: auto;
   }
 
@@ -133,12 +128,12 @@ const photography = (await getAllPhotography()) as any[];
     }
 
     .left {
-      border-bottom: 1px solid var(--clr-border);
+      border-bottom: 1px solid var(--border);
     }
 
     .hero {
       padding: var(--default-padding);
-      border-bottom: 1px solid var(--clr-border);
+      border-bottom: 1px solid var(--border);
     }
 
     .projects {
@@ -146,12 +141,12 @@ const photography = (await getAllPhotography()) as any[];
     }
 
     .project-image {
-      border-bottom: 1px solid var(--clr-border);
+      border-bottom: 1px solid var(--border);
     }
 
     .music {
       padding: var(--space-xs) var(--default-padding);
-      border-bottom: 1px solid var(--clr-border);
+      border-bottom: 1px solid var(--border);
     }
   }
 </style>

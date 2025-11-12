@@ -12,7 +12,7 @@
     appearance: none;
     -moz-appearance: none;
     -webkit-appearance: none;
-    background: var(--white);
+    background: var(--bg);
     display: inline-block;
     border: none;
     border-radius: 0;
@@ -24,7 +24,7 @@
     cursor: pointer;
     overflow: hidden;
     border-radius: 100vw;
-    border: 0.2rem solid var(--grey--dark);
+    border: 0.2rem solid var(--border);
     position: fixed;
     bottom: 0.5rem;
     right: 0.5rem;
@@ -33,7 +33,7 @@
 
   .dark-mode-toggle:focus {
     outline: none;
-    border-color: var(--primary);
+    border-color: var(--link);
   }
 
   :root[data-theme="dark"] .dark-mode-toggle__text:before {
@@ -46,7 +46,7 @@
 
   .dark-mode-toggle__icon {
     display: block;
-    background: var(--grey--dark);
+    background: var(--border);
     border-radius: 50%;
     width: 2rem;
     height: 2rem;
@@ -78,29 +78,29 @@
     background-image: linear-gradient(
         0deg,
         transparent 46%,
-        var(--grey--dark) 46%,
-        var(--grey--dark) 54%,
+        var(--border) 46%,
+        var(--border) 54%,
         transparent 54%
       ),
       linear-gradient(
         90deg,
         transparent 46%,
-        var(--grey--dark) 46%,
-        var(--grey--dark) 54%,
+        var(--border) 46%,
+        var(--border) 54%,
         transparent 54%
       ),
       linear-gradient(
         45deg,
         transparent 47%,
-        var(--grey--dark) 47%,
-        var(--grey--dark) 53%,
+        var(--border) 47%,
+        var(--border) 53%,
         transparent 53%
       ),
       linear-gradient(
         135deg,
         transparent 47%,
-        var(--grey--dark) 47%,
-        var(--grey--dark) 53%,
+        var(--border) 47%,
+        var(--border) 53%,
         transparent 53%
       );
   }
@@ -109,7 +109,7 @@
     content: "";
     position: absolute;
     display: block;
-    background: var(--white);
+    background: var(--bg);
     border-radius: 0.7rem;
     width: 1.4rem;
     height: 1.4rem;
@@ -120,35 +120,35 @@
   }
 
   .dark-mode-toggle:hover .dark-mode-toggle__icon {
-    background: var(--primary);
+    background: var(--link);
   }
   .dark-mode-toggle:hover .dark-mode-toggle__icon:before {
     background-image: linear-gradient(
         0deg,
         transparent 47%,
-        var(--primary) 47%,
-        var(--primary) 53%,
+        var(--link) 47%,
+        var(--link) 53%,
         transparent 53%
       ),
       linear-gradient(
         90deg,
         transparent 47%,
-        var(--primary) 47%,
-        var(--primary) 53%,
+        var(--link) 47%,
+        var(--link) 53%,
         transparent 53%
       ),
       linear-gradient(
         45deg,
         transparent 48%,
-        var(--primary) 48%,
-        var(--primary) 52%,
+        var(--link) 48%,
+        var(--link) 52%,
         transparent 52%
       ),
       linear-gradient(
         135deg,
         transparent 48%,
-        var(--primary) 48%,
-        var(--primary) 52%,
+        var(--link) 48%,
+        var(--link) 52%,
         transparent 52%
       );
   }

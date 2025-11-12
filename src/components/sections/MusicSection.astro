@@ -75,15 +75,10 @@ import LatestRecords from './music/LatestRecords.astro';
 </script>
 
 <style>
-  .music-section {
-    color: var(--clr-text);
-  }
-
   .music-tabs {
     display: flex;
     gap: 0;
-    
-    border-bottom: 1px solid var(--clr-border);
+    border-bottom: 1px solid var(--border);
   }
 
   .tab-button {
@@ -92,7 +87,6 @@ import LatestRecords from './music/LatestRecords.astro';
     padding: var(--space-xs) var(--space-m);
     font-size: var(--fs-0);
     font-weight: 400;
-    color: var(--clr-text);
     cursor: pointer;
     border-bottom: 2px solid transparent;
     margin-bottom: -1px;
@@ -100,9 +94,9 @@ import LatestRecords from './music/LatestRecords.astro';
   }
 
   .tab-button.tab-active {
-    background-color: var(--clr-button-bg);
-    color: var(--clr-button-text);
-    border-bottom-color: var(--clr-button-border);
+    background-color: var(--text);
+    color: var(--bg);
+    border-bottom-color: var(--border);
   }
 
   .tab-content {
