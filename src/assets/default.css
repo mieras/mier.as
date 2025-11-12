@@ -8,8 +8,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Override Tailwind base styles to use CSS variables for text color */
+@layer base {
+  html,
+  body {
+    color: var(--clr-text);
+  }
+}
+
 :root {
-  --bg: #111;
+  --bg: #f8f7f2;
   --white: #fdfdfa;
   --black: #222;
   --primary: #00b7c6;
@@ -43,7 +51,7 @@
   --clr-genre-bg: var(--clr-black);
   --clr-genre-text: var(--clr-white);
 
-  --default-padding: var(--space-s-m);
+  --default-padding: var(--space-s-l);
 
   --gap-default: var(--space-m-l);
   --grid-gutter: var(--space-xl);
@@ -86,14 +94,21 @@
   /* Color aliases for components - dark mode */
   --clr-black: var(--black);
   --clr-white: var(--white);
-  --clr-text: var(--clr-white);
-  --clr-bg: var(--dark-100);
+  --clr-bg: hsl(
+    240,
+    4%,
+    9%
+  ); /* Dark background - equivalent to --dark-100 from SCSS */
 
   /* Semantic color variables - dark mode */
   --clr-text: var(--clr-white);
   --clr-text-secondary: var(--clr-white);
   --clr-border: var(--clr-white);
-  --clr-bg-alt: var(--dark-100);
+  --clr-bg-alt: hsl(
+    240,
+    4%,
+    9%
+  ); /* Dark background - equivalent to --dark-100 from SCSS */
   --clr-button-bg: var(--clr-white);
   --clr-button-text: var(--clr-black);
   --clr-button-border: var(--clr-white);
@@ -106,9 +121,7 @@
   --clr-genre-bg: var(--clr-white);
   --clr-genre-text: var(--clr-black);
 
-  --cc-bg: #000;
-  --cc-primary-color: rgb(239, 244, 246);
-  --cc-secondary-color: #b1bdc3 !important;
+  /* Cookie Consent */
 
   --cc-btn-primary-bg: #ffffff;
   --cc-btn-primary-color: #000;
@@ -154,7 +167,7 @@
 
 .logo {
   width: 6rem;
-  color: var(--neutral-100);
+  color: var(--clr-text);
 }
 
 body {

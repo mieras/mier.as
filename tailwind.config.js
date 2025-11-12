@@ -13,7 +13,15 @@ module.exports = {
       gridTemplateColumns: {
         16: 'repeat(16, minmax(0, 1fr))',
       },
+      colors: {
+        // Override Tailwind's default text color to use CSS variables
+        inherit: 'inherit',
+      },
     },
+  },
+  corePlugins: {
+    // Disable Tailwind's default preflight styles that set body color
+    preflight: false,
   },
   plugins: [
     require('tailwindcss-fluid-type')({

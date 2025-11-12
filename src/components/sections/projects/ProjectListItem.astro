@@ -93,7 +93,7 @@ const dataId = type === 'photography'
     display: grid;
     grid-template-columns: auto 1fr 1fr;
     align-items: baseline;
-    gap: 1rem;
+    gap: var(--space-s);;
     padding: var(--space-s) var(--default-padding);
     border-top: 1px solid var(--clr-border);
     scroll-snap-align: start;
@@ -102,9 +102,9 @@ const dataId = type === 'photography'
 
   .project-thumb-mobile {
     width: 100%;
-    aspect-ratio: 16 / 9;
+    /* aspect-ratio: 16 / 9; */
     overflow: hidden;
-    background-color: var(--clr-thumb-bg);
+    /* background-color: var(--clr-thumb-bg); */
   }
 
   .project-thumb-mobile img {
@@ -142,6 +142,7 @@ const dataId = type === 'photography'
   .project-client-title {
     font-size: var(--fs-0);
     font-weight: 400;
+    line-height: 112.5%;
     margin: 0;
     color: var(--clr-text);
   }
@@ -149,13 +150,14 @@ const dataId = type === 'photography'
   .project-role {
     font-size: var(--fs--3);
     font-weight: 500;
-    margin-top: 0.2rem;
+    line-height: 112.5%;
     opacity: 0.5;
     color: var(--clr-text);
   }
 
   .project-name {
     font-size: var(--fs--1);
+    line-height: 112.5%;
     font-weight: 400;
     margin: 0;
     opacity: 0.5;

@@ -11,13 +11,13 @@ const city = siteSettings?.footer?.address?.city || 'Rotterdam';
 
 <nav class="z-10 w-full page-layout nav-monochrome">
   <div class="flex justify-between items-center page inner">
-    <div class="flex gap-4 items-center text-white nav-left">
+    <div class="flex gap-4 items-center nav-left">
       <a href="/" aria-label="Homepage" class="nav-company">
         {companyName}
       </a>
       <span class="nav-city">{city}</span>
     </div>
-    <div class="flex gap-4 items-center text-white nav-right">
+    <div class="flex gap-4 items-center nav-right">
       <span class="nav-time" id="local-time"></span>
       <span class="nav-temperature" id="temperature">--°C</span>
       <div class="nav-darkmode">

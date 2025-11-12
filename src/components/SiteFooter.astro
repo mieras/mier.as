@@ -28,7 +28,7 @@ const legalString = legalParts.length > 0 ? `${legalParts.join(' / ')} /T+C` : '
 ---
 
 <footer class="footer-simple">
-  <div class="footer-content page">
+  <div class="footer-content">
     {addressString && (
       <p class="footer-address">
         Studio: {addressString}
@@ -54,7 +54,8 @@ const legalString = legalParts.length > 0 ? `${legalParts.join(' / ')} /T+C` : '
 
   .footer-content {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    justify-content: space-between;
     gap: var(--space-xs);
   }
 
