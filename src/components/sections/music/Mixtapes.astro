@@ -9,13 +9,13 @@ try {
   // Use Astro.url to construct absolute URL for SSR
   const apiUrl = new URL('/api/music.json', Astro.url.origin);
   const apiRes = await fetch(apiUrl);
-  
+
   if (!apiRes.ok) {
     throw new Error(`API returned ${apiRes.status}`);
   }
-  
+
   const { items } = await apiRes.json();
-  
+
   // Filter for mixcloud items only
   mixtapes = items.filter((item: any) => item.source === 'mixcloud');
 } catch (error) {
@@ -95,7 +95,7 @@ try {
           <iframe
             class="mixtapes-embed-iframe"
             width="100%"
-            height="400"
+            height="100%"
             src=""
             frameborder="0"
             allow="encrypted-media; fullscreen; autoplay; idle-detection; speaker-selection; web-share;"
@@ -154,7 +154,7 @@ try {
 
     // Toon embed over carousel (carousel blijft zichtbaar maar embed komt erover)
     embedContainer.style.display = 'flex';
-    embedIframe.src = `https://player-widget.mixcloud.com/widget/iframe/?hide_cover=1&mini=1&autoplay=1&feed=%2F${mixcloudId}%2F`;
+    embedIframe.src = `https://player-widget.mixcloud.com/widget/iframe/?hide_cover=1&autoplay=1&feed=%2F${mixcloudId}%2F`;
   };
 
   const handleEmbedClose = () => {
@@ -316,9 +316,9 @@ try {
     width: 100%;
     height: 100%;
     background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-small);
-    padding: var(--space-m);
+    /* border: 1px solid var(--border); */
+    /* border-radius: var(--radius-small); */
+    /* padding: var(--space-m); */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -327,10 +327,12 @@ try {
   }
 
   .mixtapes-embed-iframe {
-    width: 100%;
-    height: 400px;
+    width: calc(100% - 2rem);
+    padding-right: 1.5rem;
+    height: 60px;
+    background: var(--bg);
     border: none;
-    border-radius: var(--radius-small);
+    /* border-radius: var(--radius-small); */
   }
 
   .mixtapes-embed-close {

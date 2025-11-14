@@ -263,7 +263,7 @@ export async function getNavigation() {
 
     const generalSettings = {
       title: siteSettings.title,
-      url: siteSettings.url,
+      url: siteSettings.url || '',
       description: siteSettings.description
     };
 

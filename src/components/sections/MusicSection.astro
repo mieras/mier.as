@@ -37,9 +37,42 @@ import TabGroup from '../ui/TabGroup.astro';
     mixtapesPreset,
   } from '../../lib/swiper-utils';
 
+  // Close Mixcloud embed when switching away from mixtapes tab
+  const closeMixcloudEmbed = () => {
+    const embedContainer = document.querySelector(
+      '.mixtapes-embed-container',
+    ) as HTMLElement;
+    const embedIframe = document.querySelector(
+      '.mixtapes-embed-iframe',
+    ) as HTMLIFrameElement;
+
+    if (embedContainer && embedIframe) {
+      // Stop embed by clearing src
+      embedIframe.src = '';
+      embedContainer.style.display = 'none';
+      
+      // Reset all mixtape button states
+      const mixtapeItems = document.querySelectorAll('.mixtape-item');
+      mixtapeItems.forEach((item) => {
+        const mixcloudIconBtn = item.querySelector(
+          '.music-mixcloud-icon-btn',
+        ) as HTMLElement;
+        if (mixcloudIconBtn) {
+          mixcloudIconBtn.setAttribute('data-active', 'false');
+          mixcloudIconBtn.setAttribute('data-action', 'play');
+        }
+      });
+    }
+  };
+
   // Re-initialize Swiper instances when tab changes
   const handleTabChange = (event: CustomEvent) => {
-    const { content } = event.detail;
+    const { content, tabId } = event.detail;
+
+    // Close Mixcloud embed if switching away from mixtapes tab
+    if (tabId !== 'mixtapes') {
+      closeMixcloudEmbed();
+    }
 
     // Wait for content to be visible before initializing Swiper
     // Use requestAnimationFrame and timeout to ensure DOM is fully updated and layout calculated
