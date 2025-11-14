@@ -1,7 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 
 import fluid from 'fluid-tailwind';
-const { extract } = fluid
+const { extract } = fluid;
 
 module.exports = {
   content: {
@@ -13,19 +13,10 @@ module.exports = {
       gridTemplateColumns: {
         16: 'repeat(16, minmax(0, 1fr))',
       },
-      colors: {
-        // Override Tailwind's default text color to use CSS variables
-        inherit: 'inherit',
-      },
     },
-  },
-  corePlugins: {
-    // Disable Tailwind's default preflight styles that set body color
-    preflight: false,
   },
   plugins: [
     require('tailwindcss-fluid-type')({
-      
       settings: {
         fontSizeMin: 1.125, // 1.125rem === 18px
         fontSizeMax: 1.5, // 1.25rem === 20px
@@ -62,4 +53,4 @@ module.exports = {
     fluid,
   ],
   darkMode: ['class', '.darkmode'],
-}
+};

@@ -28,58 +28,54 @@ const defaultImage = '/astronaut-hero-img.webp';
 <div class="thumb-container">
   <!-- Default image when no hover -->
   <div class="thumb-default">
-    <img 
-      src={defaultImage} 
-      alt="Default image"
-      loading="eager"
-    />
+    <img src={defaultImage} alt="Default image" loading="eager" />
   </div>
 
   <!-- Hover thumbnails from projects -->
-  {projects.map((project) => {
-    const imageUrl = project.thumbnail?.image?.asset 
-      ? urlForImage(project.thumbnail.image)?.width(1200).height(800).url() 
-      : null;
-    
-    if (!imageUrl) return null;
-    
-    return (
-      <div 
-        class="thumb-hover thumb-project" 
-        data-project-id={project._id}
-        style="display: none;"
-      >
-        <img 
-          src={imageUrl} 
-          alt={project.title || 'Project thumbnail'}
-          loading="lazy"
-        />
-      </div>
-    );
-  })}
+  {
+    projects.map((project) => {
+      const imageUrl = project.thumbnail?.image?.asset
+        ? urlForImage(project.thumbnail.image)?.width(1200).height(800).url()
+        : null;
+
+      if (!imageUrl) return null;
+
+      return (
+        <div
+          class="thumb-hover thumb-project"
+          data-project-id={project._id}
+          style="display: none;"
+        >
+          <img
+            src={imageUrl}
+            alt={project.title || 'Project thumbnail'}
+            loading="lazy"
+          />
+        </div>
+      );
+    })
+  }
 
   <!-- Hover thumbnails from photography -->
-  {photography.map((photo) => {
-    const imageUrl = photo.thumbnail?.asset 
-      ? urlForImage(photo.thumbnail)?.width(1200).height(800).url() 
-      : null;
-    
-    if (!imageUrl) return null;
-    
-    return (
-      <div 
-        class="thumb-hover thumb-photography" 
-        data-photo-id={photo._id}
-        style="display: none;"
-      >
-        <img 
-          src={imageUrl} 
-          alt="Photo thumbnail"
-          loading="lazy"
-        />
-      </div>
-    );
-  })}
+  {
+    photography.map((photo) => {
+      const imageUrl = photo.thumbnail?.asset
+        ? urlForImage(photo.thumbnail)?.width(1200).height(800).url()
+        : null;
+
+      if (!imageUrl) return null;
+
+      return (
+        <div
+          class="thumb-hover thumb-photography"
+          data-photo-id={photo._id}
+          style="display: none;"
+        >
+          <img src={imageUrl} alt="Photo thumbnail" loading="lazy" />
+        </div>
+      );
+    })
+  }
 </div>
 
 <style>
@@ -91,6 +87,13 @@ const defaultImage = '/astronaut-hero-img.webp';
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  /* Mobile: verberg hele component */
+  @media (max-width: 799px) {
+    .thumb-container {
+      display: none;
+    }
   }
 
   .thumb-default,
@@ -119,13 +122,6 @@ const defaultImage = '/astronaut-hero-img.webp';
     z-index: 10;
     display: none;
   }
-
-  /* Mobile: verberg hover thumbnails */
-  @media (max-width: 799px) {
-    .thumb-hover {
-      display: none !important;
-    }
-  }
 </style>
 
 <script>
@@ -138,8 +134,10 @@ const defaultImage = '/astronaut-hero-img.webp';
     // Project hover handlers
     projectItems.forEach((item) => {
       const projectId = item.getAttribute('data-project-id');
-      const thumb = document.querySelector(`.thumb-project[data-project-id="${projectId}"]`) as HTMLElement;
-      
+      const thumb = document.querySelector(
+        `.thumb-project[data-project-id="${projectId}"]`,
+      ) as HTMLElement;
+
       if (!thumb) return;
 
       item.addEventListener('mouseenter', () => {
@@ -156,8 +154,10 @@ const defaultImage = '/astronaut-hero-img.webp';
     // Photography hover handlers
     photoItems.forEach((item) => {
       const photoId = item.getAttribute('data-photo-id');
-      const thumb = document.querySelector(`.thumb-photography[data-photo-id="${photoId}"]`) as HTMLElement;
-      
+      const thumb = document.querySelector(
+        `.thumb-photography[data-photo-id="${photoId}"]`,
+      ) as HTMLElement;
+
       if (!thumb) return;
 
       item.addEventListener('mouseenter', () => {
@@ -172,4 +172,3 @@ const defaultImage = '/astronaut-hero-img.webp';
     });
   });
 </script>
-

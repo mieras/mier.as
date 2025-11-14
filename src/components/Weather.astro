@@ -1,0 +1,148 @@
+---
+import 'weather-icons/css/weather-icons.css';
+
+interface Props {
+  city?: string;
+}
+
+const { city = 'Rotterdam' } = Astro.props;
+---
+
+<span class="weather-container">
+  <i class="weather-icon wi" id="weather-icon" aria-hidden="true"></i>
+  <span class="nav-temperature" id="temperature">--°C</span>
+</span>
+
+<script define:vars={{ city }}>
+  const API_KEY = '14ca45f46d204e66bd3165215251411';
+  const API_URL = 'https://api.weatherapi.com/v1/current.json';
+
+  // Map WeatherAPI condition codes to weather-icons classes
+  function getWeatherIconClass(conditionCode) {
+    const iconMap = {
+      // Sunny/Clear
+      1000: 'wi-day-sunny', // Sunny
+      // Partly cloudy
+      1003: 'wi-day-cloudy', // Partly cloudy
+      // Cloudy
+      1006: 'wi-cloudy', // Cloudy
+      1009: 'wi-cloudy', // Overcast
+      // Rain
+      1063: 'wi-day-rain', // Patchy rain
+      1087: 'wi-day-thunderstorm', // Thundery outbreaks
+      1150: 'wi-sprinkle', // Patchy light drizzle
+      1153: 'wi-sprinkle', // Light drizzle
+      1168: 'wi-rain-mix', // Freezing drizzle
+      1171: 'wi-rain-mix', // Heavy freezing drizzle
+      1180: 'wi-day-rain', // Patchy light rain
+      1183: 'wi-rain', // Light rain
+      1186: 'wi-rain', // Moderate rain at times
+      1189: 'wi-rain', // Moderate rain
+      1192: 'wi-rain', // Heavy rain at times
+      1195: 'wi-rain', // Heavy rain
+      1198: 'wi-rain-mix', // Light freezing rain
+      1201: 'wi-rain-mix', // Moderate or heavy freezing rain
+      1204: 'wi-sleet', // Light sleet
+      1207: 'wi-sleet', // Moderate or heavy sleet
+      1240: 'wi-day-showers', // Light rain shower
+      1243: 'wi-showers', // Moderate or heavy rain shower
+      1246: 'wi-showers', // Torrential rain shower
+      1249: 'wi-sleet', // Light sleet showers
+      1252: 'wi-sleet', // Moderate or heavy sleet showers
+      1255: 'wi-day-snow', // Light snow showers
+      1258: 'wi-snow', // Moderate or heavy snow showers
+      // Snow
+      1066: 'wi-day-snow', // Patchy snow
+      1069: 'wi-sleet', // Patchy sleet
+      1072: 'wi-rain-mix', // Patchy freezing drizzle
+      1114: 'wi-snow-wind', // Blowing snow
+      1117: 'wi-snow-wind', // Blizzard
+      1210: 'wi-day-snow', // Patchy light snow
+      1213: 'wi-snow', // Light snow
+      1216: 'wi-snow', // Patchy moderate snow
+      1219: 'wi-snow', // Moderate snow
+      1222: 'wi-snow', // Patchy heavy snow
+      1225: 'wi-snow', // Heavy snow
+      1237: 'wi-hail', // Ice pellets
+      1261: 'wi-hail', // Light ice pellet showers
+      1264: 'wi-hail', // Moderate or heavy ice pellet showers
+      // Fog/Mist
+      1030: 'wi-fog', // Mist
+      1135: 'wi-fog', // Fog
+      1147: 'wi-fog', // Freezing fog
+    };
+
+    return iconMap[conditionCode] || 'wi-cloudy';
+  }
+
+  async function fetchTemperature() {
+    try {
+      const response = await fetch(
+        `${API_URL}?key=${API_KEY}&q=${city}&aqi=no`,
+      );
+
+      if (!response.ok) {
+        throw new Error('Weather API request failed');
+      }
+
+      const data = await response.json();
+      const temperature = Math.round(data.current.temp_c);
+      const conditionCode = data.current.condition.code;
+
+      const tempElement = document.getElementById('temperature');
+      const iconElement = document.getElementById('weather-icon');
+
+      if (tempElement) {
+        tempElement.textContent = `${temperature}°C`;
+      }
+
+      if (iconElement) {
+        // Remove all existing weather-icon classes
+        iconElement.className = 'weather-icon wi';
+        // Add the appropriate icon class
+        const iconClass = getWeatherIconClass(conditionCode);
+        iconElement.classList.add(iconClass);
+      }
+    } catch (error) {
+      console.error('Error fetching temperature:', error);
+      const tempElement = document.getElementById('temperature');
+      const iconElement = document.getElementById('weather-icon');
+
+      if (tempElement) {
+        tempElement.textContent = '--°C';
+      }
+
+      if (iconElement) {
+        iconElement.className = 'weather-icon wi wi-cloudy';
+      }
+    }
+  }
+
+  // Fetch temperature on load
+  fetchTemperature();
+
+  // Update every 10 minutes
+  setInterval(fetchTemperature, 600000);
+</script>
+
+<style>
+  .weather-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    opacity: 0.8;
+  }
+
+  .weather-icon {
+    font-size: 0.875em;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    width: 0.875em;
+    height: 0.875em;
+  }
+
+  .nav-temperature {
+    opacity: 0.8;
+  }
+</style>

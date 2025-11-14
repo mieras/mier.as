@@ -2,21 +2,18 @@
 import RecentlyPlayed from './music/RecentlyPlayed.astro';
 import Mixtapes from './music/Mixtapes.astro';
 import LatestRecords from './music/LatestRecords.astro';
+import TabGroup from '../ui/TabGroup.astro';
 ---
 
-<section class="music-section">
-  <div class="music-tabs">
-    <button class="tab-button tab-active" data-tab="now-listening" aria-label="Show now listening">
-      Now listening
-    </button>
-    <button class="tab-button" data-tab="mixtapes" aria-label="Show mixtapes">
-      Mixtapes
-    </button>
-    <button class="tab-button" data-tab="collections" aria-label="Show collections">
-      Collections
-    </button>
-  </div>
-
+<TabGroup
+  tabs={[
+    { id: 'now-listening', label: 'Now listening' },
+    { id: 'mixtapes', label: 'Mixtapes' },
+    { id: 'collections', label: 'Collections' },
+  ]}
+  defaultTab="now-listening"
+  sectionClass="music-section"
+>
   <!-- Now Listening Tab -->
   <div class="tab-content tab-content-active" data-tab-content="now-listening">
     <RecentlyPlayed />
@@ -31,74 +28,188 @@ import LatestRecords from './music/LatestRecords.astro';
   <div class="tab-content" data-tab-content="collections">
     <LatestRecords />
   </div>
-</section>
+</TabGroup>
 
 <script>
-  // Tab switching functionality - scoped to music section only
-  document.addEventListener('DOMContentLoaded', () => {
+  import {
+    initSwiper,
+    musicTickerPreset,
+    mixtapesPreset,
+  } from '../../lib/swiper-utils';
+
+  // Re-initialize Swiper instances when tab changes
+  const handleTabChange = (event: CustomEvent) => {
+    const { content } = event.detail;
+
+    // Wait for content to be visible before initializing Swiper
+    // Use requestAnimationFrame and timeout to ensure DOM is fully updated and layout calculated
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          const latestRecordsSwiper = content.querySelector(
+            '.latest-records-swiper',
+          ) as HTMLElement;
+          const recentlyPlayedSwiper = content.querySelector(
+            '.recently-played-swiper',
+          ) as HTMLElement;
+          const mixtapesSwiper = content.querySelector(
+            '.mixtapes-swiper',
+          ) as HTMLElement;
+
+          if (
+            latestRecordsSwiper &&
+            content.classList.contains('tab-content-active')
+          ) {
+            // Destroy existing instance if any, then reinitialize
+            const swiper = initSwiper(
+              latestRecordsSwiper,
+              musicTickerPreset,
+              true,
+            );
+            // Force update after initialization
+            if (swiper) {
+              requestAnimationFrame(() => {
+                swiper.update();
+                swiper.updateSize();
+              });
+            }
+          }
+
+          if (
+            recentlyPlayedSwiper &&
+            content.classList.contains('tab-content-active')
+          ) {
+            // Destroy existing instance if any, then reinitialize
+            const swiper = initSwiper(
+              recentlyPlayedSwiper,
+              musicTickerPreset,
+              true,
+            );
+            // Force update after initialization
+            if (swiper) {
+              requestAnimationFrame(() => {
+                swiper.update();
+                swiper.updateSize();
+              });
+            }
+          }
+
+          if (
+            mixtapesSwiper &&
+            content.classList.contains('tab-content-active')
+          ) {
+            // Destroy existing instance if any, then reinitialize
+            const swiperInstance = initSwiper(
+              mixtapesSwiper,
+              mixtapesPreset,
+              true,
+            );
+            // Store reference for Mixtapes component embed handlers
+            if (swiperInstance && mixtapesSwiper) {
+              (mixtapesSwiper as any).swiper = swiperInstance;
+              // Force update after initialization
+              requestAnimationFrame(() => {
+                swiperInstance.update();
+                swiperInstance.updateSize();
+              });
+            }
+          }
+        }, 50);
+      });
+    });
+  };
+
+  // Initialize Swiper for the default active tab on load
+  const initDefaultTabSwiper = () => {
+    const activeTab = document.querySelector(
+      '.music-section .tab-content.tab-content-active',
+    );
+    if (!activeTab) return;
+
+    const latestRecordsSwiper = activeTab.querySelector(
+      '.latest-records-swiper',
+    ) as HTMLElement;
+    const recentlyPlayedSwiper = activeTab.querySelector(
+      '.recently-played-swiper',
+    ) as HTMLElement;
+    const mixtapesSwiper = activeTab.querySelector(
+      '.mixtapes-swiper',
+    ) as HTMLElement;
+
+    // Wait for layout to be calculated, especially on desktop with grid layout
+    // Use multiple requestAnimationFrame calls and a small timeout
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          if (latestRecordsSwiper) {
+            const swiper = initSwiper(
+              latestRecordsSwiper,
+              musicTickerPreset,
+              true,
+            );
+            // Force update after initialization to ensure correct dimensions
+            if (swiper) {
+              requestAnimationFrame(() => {
+                swiper.update();
+                swiper.updateSize();
+              });
+            }
+          }
+
+          if (recentlyPlayedSwiper) {
+            const swiper = initSwiper(
+              recentlyPlayedSwiper,
+              musicTickerPreset,
+              true,
+            );
+            // Force update after initialization
+            if (swiper) {
+              requestAnimationFrame(() => {
+                swiper.update();
+                swiper.updateSize();
+              });
+            }
+          }
+
+          if (mixtapesSwiper) {
+            const swiperInstance = initSwiper(
+              mixtapesSwiper,
+              mixtapesPreset,
+              true,
+            );
+            // Store reference for Mixtapes component embed handlers
+            if (swiperInstance && mixtapesSwiper) {
+              (mixtapesSwiper as any).swiper = swiperInstance;
+              // Force update after initialization
+              requestAnimationFrame(() => {
+                swiperInstance.update();
+                swiperInstance.updateSize();
+              });
+            }
+          }
+        }, 50);
+      });
+    });
+  };
+
+  const initMusicSection = () => {
     const musicSection = document.querySelector('.music-section');
     if (!musicSection) return;
 
-    const tabButtons = musicSection.querySelectorAll('.music-tabs .tab-button');
-    const tabContents = musicSection.querySelectorAll('.tab-content');
+    musicSection.addEventListener(
+      'tab-change',
+      handleTabChange as EventListener,
+    );
 
-    tabButtons.forEach((button) => {
-      button.addEventListener('click', () => {
-        const targetTab = button.getAttribute('data-tab');
+    // Initialize Swiper for default active tab
+    initDefaultTabSwiper();
+  };
 
-        // Update active button (only within music section)
-        tabButtons.forEach((btn) => {
-          btn.classList.remove('tab-active');
-        });
-        button.classList.add('tab-active');
-
-        // Update active content (only within music section)
-        tabContents.forEach((content) => {
-          content.classList.remove('tab-content-active');
-          if (content.getAttribute('data-tab-content') === targetTab) {
-            content.classList.add('tab-content-active');
-            
-            // Restart ticker animations when tab becomes visible
-            const tickerTracks = content.querySelectorAll('.ticker-track');
-            tickerTracks.forEach((track) => {
-              const trackElement = track as HTMLElement;
-              // Force reflow to restart animation
-              trackElement.style.animation = 'none';
-              void trackElement.offsetWidth; // Trigger reflow
-              trackElement.style.animation = '';
-            });
-          }
-        });
-      });
-    });
-  });
+  document.addEventListener('DOMContentLoaded', initMusicSection);
+  document.addEventListener('astro:page-load', initMusicSection);
 </script>
 
 <style>
-  .music-tabs {
-    display: flex;
-    gap: 0;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .tab-button {
-    background: transparent;
-    border: none;
-    padding: var(--space-xs) var(--space-m);
-    font-size: var(--fs-0);
-    font-weight: 400;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-    transition: all 0.2s ease;
-  }
-
-  .tab-button.tab-active {
-    background-color: var(--text);
-    color: var(--bg);
-    border-bottom-color: var(--border);
-  }
-
   .tab-content {
     display: none;
   }
@@ -107,4 +218,3 @@ import LatestRecords from './music/LatestRecords.astro';
     display: block;
   }
 </style>
-

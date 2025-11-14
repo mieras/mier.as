@@ -22,7 +22,7 @@ if (discogsUsername && discogsToken) {
 // Helper function to format relative time (similar to Last.fm)
 function getRelativeTime(dateString?: string): string {
   if (!dateString) return '';
-  
+
   try {
     const now = new Date();
     const addedDate = new Date(dateString);
@@ -30,7 +30,7 @@ function getRelativeTime(dateString?: string): string {
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
-    
+
     if (diffMins < 1) return 'zojuist toegevoegd';
     if (diffMins < 60) return `${diffMins} min geleden toegevoegd`;
     if (diffHours < 24) return `${diffHours} uur geleden toegevoegd`;
@@ -53,88 +53,107 @@ function getRelativeTime(dateString?: string): string {
 ---
 
 <div class="latest-records">
-  {latestRecords.length > 0 ? (
-    <div class="ticker-container">
-      <div class="ticker-wrapper">
-        <div class="ticker-track" style="--speed: 25s">
+  {
+    latestRecords.length > 0 ? (
+      <div class="swiper music-swiper latest-records-swiper">
+        <div class="swiper-wrapper">
           {latestRecords.map((record) => {
             const artist = record.artist || '';
-            const albumYear = [record.title, record.year].filter(Boolean).join(' • ');
-            const timestamp = record.dateAdded 
+            const albumYear = [record.title, record.year]
+              .filter(Boolean)
+              .join(' • ');
+            const timestamp = record.dateAdded
               ? getRelativeTime(record.dateAdded)
               : undefined;
-            
+
             return (
-              <MusicItem
-                thumbnail={record.thumb}
-                line1={artist}
-                line2={albumYear}
-                timestamp={timestamp}
-                variant="ticker-thumbnail"
-              />
+              <div class="swiper-slide">
+                <MusicItem
+                  thumbnail={record.thumb}
+                  line1={artist}
+                  line2={albumYear}
+                  timestamp={timestamp}
+                  variant="ticker-thumbnail"
+                />
+              </div>
             );
           })}
           {/* Duplicate for seamless loop */}
           {latestRecords.map((record) => {
             const artist = record.artist || '';
-            const albumYear = [record.title, record.year].filter(Boolean).join(' • ');
-            const timestamp = record.dateAdded 
+            const albumYear = [record.title, record.year]
+              .filter(Boolean)
+              .join(' • ');
+            const timestamp = record.dateAdded
               ? getRelativeTime(record.dateAdded)
               : undefined;
-            
+
             return (
-              <MusicItem
-                thumbnail={record.thumb}
-                line1={artist}
-                line2={albumYear}
-                timestamp={timestamp}
-                variant="ticker-thumbnail"
-              />
+              <div class="swiper-slide">
+                <MusicItem
+                  thumbnail={record.thumb}
+                  line1={artist}
+                  line2={albumYear}
+                  timestamp={timestamp}
+                  variant="ticker-thumbnail"
+                />
+              </div>
             );
           })}
         </div>
+        <div class="swiper-pagination" />
       </div>
-    </div>
-  ) : (
-    <p class="no-records">No recent records available</p>
-  )}
+    ) : (
+      <p class="no-records">No recent records available</p>
+    )
+  }
 </div>
 
+<script>
+  // Swiper initialization is now handled by MusicSection component
+  // to ensure it only initializes when the tab is visible
+</script>
+
 <style>
-  .latest-records {
-    margin-bottom: var(--space-xl);
+  .latest-records-swiper {
+    width: 100%;
   }
 
-  .ticker-container {
-    width: 100%;
-    overflow: hidden;
+  .latest-records-swiper .swiper-slide {
+    width: auto;
+    height: auto;
+  }
+
+  .latest-records-swiper .swiper-slide .ticker-item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--space-s);
+    align-items: center;
+    padding: var(--space-s) var(--space-m);
+    background: var(--bg);
+    border-right: 1px solid var(--border);
+    white-space: nowrap;
+    height: 100%;
+  }
+
+  .latest-records-swiper .swiper-slide .ticker-item {
+    border-right-color: color-mix(in srgb, var(--border) 10%, transparent);
+  }
+
+  .latest-records-swiper .swiper-pagination {
     position: relative;
+    /* margin-top: var(--space-s); */
+    text-align: center;
   }
 
-  .ticker-wrapper {
-    width: 100%;
-    overflow: hidden;
+  .latest-records-swiper .swiper-pagination-bullet {
+    background: var(--text);
+    opacity: 0.3;
   }
 
-  .ticker-track {
-    display: flex;
-    width: fit-content;
-    animation: ticker-scroll var(--speed, 25s) linear infinite;
+  .latest-records-swiper .swiper-pagination-bullet-active {
+    opacity: 1;
   }
-
-  .ticker-track:hover {
-    animation-play-state: paused;
-  }
-
-  @keyframes ticker-scroll {
-    0% {
-      transform: translateX(0);
-    }
-    100% {
-      transform: translateX(-50%);
-    }
-  }
-
 
   .no-records {
     font-size: var(--fs--1);
@@ -142,4 +161,3 @@ function getRelativeTime(dateString?: string): string {
     font-style: italic;
   }
 </style>
-

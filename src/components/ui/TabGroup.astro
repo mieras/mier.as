@@ -1,0 +1,147 @@
+---
+interface Props {
+  tabs: Array<{
+    id: string;
+    label: string;
+    ariaLabel?: string;
+  }>;
+  defaultTab?: string;
+  sectionClass?: string;
+  sticky?: boolean;
+}
+
+const { tabs, defaultTab, sectionClass = '', sticky = false } = Astro.props;
+const activeTab = defaultTab || tabs[0]?.id || '';
+---
+
+<div class={`tab-group ${sectionClass}`}>
+  <div class={`tab-group-tabs ${sticky ? 'tab-group-tabs-sticky' : ''}`}>
+    {
+      tabs.map((tab) => (
+        <button
+          class={`tab-button ${tab.id === activeTab ? 'tab-active' : ''}`}
+          data-tab={tab.id}
+          aria-label={tab.ariaLabel || `Show ${tab.label}`}
+        >
+          {tab.label}
+        </button>
+      ))
+    }
+  </div>
+  <slot />
+</div>
+
+<script>
+  // Tab switching functionality - scoped to tab group
+  const initTabSwitching = (container: HTMLElement) => {
+    const tabButtons = container.querySelectorAll(
+      '.tab-group-tabs .tab-button',
+    );
+    const tabContents = container.querySelectorAll('.tab-content');
+
+    tabButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const targetTab = button.getAttribute('data-tab');
+
+        // Update active button
+        tabButtons.forEach((btn) => {
+          btn.classList.remove('tab-active');
+        });
+        button.classList.add('tab-active');
+
+        // Update active content
+        tabContents.forEach((content) => {
+          content.classList.remove('tab-content-active');
+          if (content.getAttribute('data-tab-content') === targetTab) {
+            content.classList.add('tab-content-active');
+
+            // Dispatch custom event for tab change
+            const event = new CustomEvent('tab-change', {
+              detail: { tabId: targetTab, content },
+              bubbles: true,
+            });
+            container.dispatchEvent(event);
+          }
+        });
+      });
+    });
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const tabGroups = document.querySelectorAll('.tab-group');
+    tabGroups.forEach((group) => {
+      initTabSwitching(group as HTMLElement);
+    });
+  });
+
+  document.addEventListener('astro:page-load', () => {
+    const tabGroups = document.querySelectorAll('.tab-group');
+    tabGroups.forEach((group) => {
+      initTabSwitching(group as HTMLElement);
+    });
+  });
+</script>
+
+<style>
+  .tab-group {
+    /* display: grid; */
+    /* grid-template-rows: auto 1fr; */
+    height: 100%;
+    /* min-height: 0; */
+    background-color: var(--bg);
+  }
+
+  .tab-group-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: -1px;
+    border-bottom: 1px solid var(--border);
+    z-index: 5;
+    background-color: var(--bg);
+    width: 100%;
+  }
+
+  .tab-group-tabs-sticky {
+    position: sticky;
+    top: 0;
+  }
+
+  .tab-button {
+    background: transparent;
+    border: none;
+    padding: var(--space-xs) var(--default-padding);
+    font-size: var(--fs--1);
+    line-height: 1;
+    font-weight: 400;
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text);
+  }
+
+  .tab-button.tab-active {
+    background-color: var(--text);
+    color: var(--bg);
+    border-bottom-color: var(--border);
+  }
+
+  .tab-button:hover:not(.tab-active) {
+    opacity: 0.7;
+  }
+
+  /* Mobile: stack everything */
+  @media (max-width: 799px) {
+    .tab-group {
+      display: block;
+      height: auto;
+    }
+
+    .tab-group-tabs {
+      grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    }
+  }
+</style>

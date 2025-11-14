@@ -1,7 +1,7 @@
 ---
 type Props = {
   thumbnail?: string;
-  line1: string;  // Regel 1 (artist, title, etc.)
+  line1: string; // Regel 1 (artist, title, etc.)
   line2?: string; // Regel 2 (track, album, genres, etc.)
   timestamp?: string;
   variant?: 'ticker-text' | 'ticker-thumbnail' | 'list';
@@ -10,118 +10,200 @@ type Props = {
   genres?: string[]; // Voor genres als pills (regel 2)
 };
 
-const { 
-  thumbnail, 
+const {
+  thumbnail,
   line1,
   line2,
   genres,
-  timestamp, 
+  timestamp,
   variant = 'list',
   showPlayButton = false,
-  mixcloudId 
+  mixcloudId,
 } = Astro.props;
 
 const isTicker = variant === 'ticker-text' || variant === 'ticker-thumbnail';
 const hasThumbnail = variant === 'ticker-thumbnail' || variant === 'list';
 ---
 
-{isTicker ? (
-  <div class="ticker-item">
-    {hasThumbnail && thumbnail && (
-      <img 
-        src={thumbnail} 
-        alt={line1}
-        class="music-thumb"
-        loading="lazy"
-      />
-    )}
-    <div class="music-info">
-      <span class="music-line1">{line1}</span>
-      {line2 && (
-        <span class="music-line2">{line2}</span>
-      )}
-      {timestamp && (
-        <span class="music-timestamp">{timestamp}</span>
-      )}
-    </div>
-  </div>
-) : (
-  <div class="music-item-wrapper">
-    <div class="music-item">
-      {thumbnail && (
-        <div class="music-thumb-container">
-          <img 
-            src={thumbnail} 
-            alt={line1}
-            class="music-thumb"
-            loading="lazy"
-          />
+{
+  isTicker ? (
+    <div class="ticker-item">
+      {hasThumbnail && thumbnail && (
+        <div class="ticker-thumb-container">
+          <img src={thumbnail} alt={line1} class="music-thumb" loading="lazy" />
           {showPlayButton && (
-            <button 
-              class="music-play-btn" 
-              aria-label={`Play ${line1}`} 
-              data-mixcloud-id={mixcloudId} 
+            <button
+              class="music-play-btn ticker-play-btn"
+              aria-label={`Play ${line1}`}
+              data-mixcloud-id={mixcloudId}
               data-action="play"
               data-active="false"
             >
-              <svg class="play-icon" width="20" height="20" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 2.5v11l9-5.5-9-5.5z"/>
+              <svg
+                class="play-icon"
+                width="20"
+                height="20"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M3 2.5v11l9-5.5-9-5.5z" />
               </svg>
-              <svg class="pause-icon" width="20" height="20" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style="display: none;">
-                <path d="M3 2.5h3v11H3V2.5zm7 0h3v11h-3V2.5z"/>
+              <svg
+                class="pause-icon"
+                width="20"
+                height="20"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+                xmlns="http://www.w3.org/2000/svg"
+                style="display: none;"
+              >
+                <path d="M3 2.5h3v11H3V2.5zm7 0h3v11h-3V2.5z" />
               </svg>
             </button>
           )}
         </div>
       )}
       <div class="music-info">
-        <div class="music-line1-container">
-          {showPlayButton && (
-            <button 
-              class="music-play-btn-inline" 
-              aria-label={`Play ${line1}`} 
-              data-mixcloud-id={mixcloudId} 
+        <span class="music-line1">
+          {mixcloudId && (
+            <button
+              class="music-mixcloud-icon-btn"
+              aria-label={`Play ${line1}`}
+              data-mixcloud-id={mixcloudId}
               data-action="play"
               data-active="false"
             >
-              <svg class="play-icon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 2.5v11l9-5.5-9-5.5z"/>
-              </svg>
-              <svg class="pause-icon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style="display: none;">
-                <path d="M3 2.5h3v11H3V2.5zm7 0h3v11h-3V2.5z"/>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M14.6663 7.33329V8.66663H13.9997V9.33329H13.333V9.99996H11.9997V10.6666H10.6663V11.3333H9.99967V12H8.66634V12.6666H7.33301V13.3333H6.66634V14H5.33301V14.6666H3.99967V15.3333H1.99967V14.6666H1.33301V1.33329H1.99967V0.666626H3.99967V1.33329H5.33301V1.99996H6.66634V2.66663H7.33301V3.33329H8.66634V3.99996H9.99967V4.66663H10.6663V5.33329H11.9997V5.99996H13.333V6.66663H13.9997V7.33329H14.6663Z"
+                  fill="currentColor"
+                />
               </svg>
             </button>
           )}
-          <h4 class="music-line1">{line1}</h4>
-        </div>
-        {genres && genres.length > 0 ? (
-          <div class="music-genres">
-            {genres.map((genre) => (
-              <span class="music-genre">{genre}</span>
-            ))}
-          </div>
-        ) : line2 ? (
-          <div class="music-line2">{line2}</div>
-        ) : null}
-        {timestamp && (
-          <span class="music-timestamp">{timestamp}</span>
-        )}
+          {line1}
+        </span>
+        {line2 && <span class="music-line2">{line2}</span>}
+        {timestamp && <span class="music-timestamp">{timestamp}</span>}
       </div>
     </div>
-    {mixcloudId && (
-      <div class="music-player-embed" data-mixcloud-id={mixcloudId} style="display: none;">
-        <iframe
-          class="music-iframe"
-          width="100%"
-          height="60"
-          src=""
-          frameborder="0"
-          allow="encrypted-media; fullscreen; autoplay; idle-detection; speaker-selection; web-share;"
-        ></iframe>
+  ) : (
+    <div class="music-item-wrapper">
+      <div class="music-item">
+        {thumbnail && (
+          <div class="music-thumb-container">
+            <img
+              src={thumbnail}
+              alt={line1}
+              class="music-thumb"
+              loading="lazy"
+            />
+            {showPlayButton && (
+              <button
+                class="music-play-btn"
+                aria-label={`Play ${line1}`}
+                data-mixcloud-id={mixcloudId}
+                data-action="play"
+                data-active="false"
+              >
+                <svg
+                  class="play-icon"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M3 2.5v11l9-5.5-9-5.5z" />
+                </svg>
+                <svg
+                  class="pause-icon"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                  xmlns="http://www.w3.org/2000/svg"
+                  style="display: none;"
+                >
+                  <path d="M3 2.5h3v11H3V2.5zm7 0h3v11h-3V2.5z" />
+                </svg>
+              </button>
+            )}
+          </div>
+        )}
+        <div class="music-info">
+          <div class="music-line1-container">
+            {showPlayButton && (
+              <button
+                class="music-play-btn-inline"
+                aria-label={`Play ${line1}`}
+                data-mixcloud-id={mixcloudId}
+                data-action="play"
+                data-active="false"
+              >
+                <svg
+                  class="play-icon"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M3 2.5v11l9-5.5-9-5.5z" />
+                </svg>
+                <svg
+                  class="pause-icon"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                  xmlns="http://www.w3.org/2000/svg"
+                  style="display: none;"
+                >
+                  <path d="M3 2.5h3v11H3V2.5zm7 0h3v11h-3V2.5z" />
+                </svg>
+              </button>
+            )}
+            <h4 class="music-line1">{line1}</h4>
+          </div>
+          {genres && genres.length > 0 ? (
+            <div class="music-genres">
+              {genres.map((genre) => (
+                <span class="music-genre">{genre}</span>
+              ))}
+            </div>
+          ) : line2 ? (
+            <div class="music-line2">{line2}</div>
+          ) : null}
+          {timestamp && <span class="music-timestamp">{timestamp}</span>}
+        </div>
       </div>
-    )}
-  </div>
-)}
+      {mixcloudId && (
+        <div
+          class="music-player-embed"
+          data-mixcloud-id={mixcloudId}
+          style="display: none;"
+        >
+          <iframe
+            class="music-iframe"
+            width="100%"
+            height="60"
+            src=""
+            frameborder="0"
+            allow="encrypted-media; fullscreen; autoplay; idle-detection; speaker-selection; web-share;"
+          />
+        </div>
+      )}
+    </div>
+  )
+}
 
 <style>
   /* Ticker variants */
@@ -130,43 +212,117 @@ const hasThumbnail = variant === 'ticker-thumbnail' || variant === 'list';
     padding-right: var(--space-l);
     display: flex;
     align-items: center;
-    gap: var(--space-s);
+    gap: var(--space-2xs);
     white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .ticker-thumb-container {
+    position: relative;
+    width: 4rem;
+    height: 4rem;
+    flex-shrink: 0;
   }
 
   .ticker-item .music-thumb {
-    width: 3rem;
-    height: 3rem;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    flex-shrink: 0;
     opacity: 0.9;
+  }
+
+  .ticker-play-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 10;
+    opacity: 0;
+  }
+
+  .ticker-thumb-container:hover .ticker-play-btn {
+    opacity: 1;
+  }
+
+  .ticker-play-btn:hover {
+    background-color: var(--tile-hover);
+  }
+
+  .ticker-play-btn .play-icon,
+  .ticker-play-btn .pause-icon {
+    width: 1rem;
+    height: 1rem;
+    fill: currentColor;
   }
 
   .ticker-item .music-info {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2xs);
+    gap: var(--space-3xs);
     flex: 1;
     min-width: 0;
+    padding-block: 1em;
   }
 
   .ticker-item .music-line1 {
-    font-size: var(--fs-0);
-    font-weight: 400;
+    font-size: var(--fs--2);
+    font-weight: 500;
     line-height: 1.3;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2xs);
+  }
+
+  .music-mixcloud-icon-btn {
+    background: transparent;
+    border: none;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1rem;
+    color: var(--text);
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+  }
+
+  .music-mixcloud-icon-btn:hover {
+    opacity: 1;
+  }
+
+  .music-mixcloud-icon-btn svg {
+    width: 100%;
+    height: 100%;
   }
 
   .ticker-item .music-line2 {
-    font-size: var(--fs--1);
+    font-size: var(--fs--2);
     opacity: 0.7;
     font-weight: 300;
+    line-height: 1;
   }
 
   .ticker-item .music-timestamp {
-    font-size: var(--fs--1);
+    font-size: var(--fs--3);
     opacity: 0.6;
     font-weight: 300;
-    margin-top: var(--space-2xs);
+    line-height: 1;
   }
 
   /* List variant */
@@ -207,8 +363,8 @@ const hasThumbnail = variant === 'ticker-thumbnail' || variant === 'list';
 
   .music-thumb-container {
     position: relative;
-    width: 3rem;
-    height: 3rem;
+    width: 5rem;
+    height: 5rem;
     aspect-ratio: 1 / 1;
     overflow: hidden;
     flex-shrink: 0;
@@ -232,10 +388,11 @@ const hasThumbnail = variant === 'ticker-thumbnail' || variant === 'list';
     left: 50%;
     transform: translate(-50%, -50%);
     background: transparent;
-    border: 1px solid var(--border);
+    aspect-ratio: 1 / 1;
+    /* border: 1px solid var(--border); */
     border-radius: 50%;
-    width: 3rem;
-    height: 3rem;
+    width: 100%;
+    height: 100%;
     min-width: 3rem;
     min-height: 3rem;
     display: flex;
@@ -328,4 +485,3 @@ const hasThumbnail = variant === 'ticker-thumbnail' || variant === 'list';
     border-radius: 0.125rem;
   }
 </style>
-

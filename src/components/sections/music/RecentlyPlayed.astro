@@ -16,17 +16,19 @@ if (lastfmUsername && lastfmApiKey) {
     hasError = true;
   }
 } else {
-  console.warn('⚠️ Last.fm credentials not configured. Add PUBLIC_LASTFM_USERNAME and PUBLIC_LASTFM_API_KEY to .env');
+  console.warn(
+    '⚠️ Last.fm credentials not configured. Add PUBLIC_LASTFM_USERNAME and PUBLIC_LASTFM_API_KEY to .env',
+  );
 }
 
 // Helper function to format relative time
 function getRelativeTime(dateText: string, uts?: string): string {
   if (!dateText) return '';
-  
+
   try {
     const now = new Date();
     let trackDate: Date;
-    
+
     if (uts) {
       // Use unix timestamp if available (more accurate)
       trackDate = new Date(parseInt(uts) * 1000);
@@ -34,12 +36,12 @@ function getRelativeTime(dateText: string, uts?: string): string {
       // Parse the date text (format: "08 Nov 2025, 11:12")
       trackDate = new Date(dateText);
     }
-    
+
     const diffMs = now.getTime() - trackDate.getTime();
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
-    
+
     if (diffMins < 1) return 'zojuist';
     if (diffMins < 60) return `${diffMins} min geleden`;
     if (diffHours < 24) return `${diffHours} uur geleden`;
@@ -62,90 +64,100 @@ function getRelativeTime(dateText: string, uts?: string): string {
 ---
 
 <div class="recently-played">
-  {recentTracks.length > 0 ? (
-    <div class="ticker-container">
-      <div class="ticker-wrapper">
-        <div class="ticker-track" style="--speed: 20s">
+  {
+    recentTracks.length > 0 ? (
+      <div class="swiper music-swiper recently-played-swiper">
+        <div class="swiper-wrapper">
           {recentTracks.map((track) => {
             const artist = track.artist?.['#text'] || 'Unknown Artist';
             const song = track.name || '';
-            const timestamp = track.date 
+            const timestamp = track.date
               ? getRelativeTime(track.date['#text'], track.date.uts)
               : undefined;
-            
+
             return (
-              <MusicItem
-                thumbnail={track.imageUrl}
-                line1={artist}
-                line2={song}
-                timestamp={timestamp}
-                variant="ticker-thumbnail"
-              />
+              <div class="swiper-slide">
+                <MusicItem
+                  thumbnail={track.imageUrl}
+                  line1={artist}
+                  line2={song}
+                  timestamp={timestamp}
+                  variant="ticker-thumbnail"
+                />
+              </div>
             );
           })}
           {/* Duplicate for seamless loop */}
           {recentTracks.map((track) => {
             const artist = track.artist?.['#text'] || 'Unknown Artist';
             const song = track.name || '';
-            const timestamp = track.date 
+            const timestamp = track.date
               ? getRelativeTime(track.date['#text'], track.date.uts)
               : undefined;
-            
+
             return (
-              <MusicItem
-                thumbnail={track.imageUrl}
-                line1={artist}
-                line2={song}
-                timestamp={timestamp}
-                variant="ticker-thumbnail"
-              />
+              <div class="swiper-slide">
+                <MusicItem
+                  thumbnail={track.imageUrl}
+                  line1={artist}
+                  line2={song}
+                  timestamp={timestamp}
+                  variant="ticker-thumbnail"
+                />
+              </div>
             );
           })}
         </div>
+        <div class="swiper-pagination" />
       </div>
-    </div>
-  ) : hasError ? (
-    <p class="no-tracks">Error loading tracks</p>
-  ) : (
-    <p class="no-tracks">No recent tracks available</p>
-  )}
+    ) : hasError ? (
+      <p class="no-tracks">Error loading tracks</p>
+    ) : (
+      <p class="no-tracks">No recent tracks available</p>
+    )
+  }
 </div>
 
 <style>
-  .recently-played {
-    margin-bottom: var(--space-l);
+  .recently-played-swiper {
+    width: 100%;
   }
 
-  .ticker-container {
-    width: 100%;
-    overflow: hidden;
+  .recently-played-swiper .swiper-slide {
+    width: auto;
+    height: auto;
+  }
+
+  .recently-played-swiper .swiper-slide .ticker-item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--space-s);
+    align-items: center;
+    padding: var(--space-s) var(--space-m);
+    background: var(--bg);
+    border-right: 1px solid var(--border);
+    white-space: nowrap;
+    height: 100%;
+  }
+
+  .recently-played-swiper .swiper-slide .ticker-item {
+    border-right-color: color-mix(in srgb, var(--border) 10%, transparent);
+  }
+
+  .recently-played-swiper .swiper-pagination {
     position: relative;
+
+    text-align: center;
   }
 
-  .ticker-wrapper {
-    width: 100%;
-    overflow: hidden;
+  .recently-played-swiper .swiper-pagination-bullet {
+    background: var(--text);
+    opacity: 0.3;
   }
 
-  .ticker-track {
-    display: flex;
-    width: fit-content;
-    animation: ticker-scroll var(--speed, 20s) linear infinite;
+  .recently-played-swiper .swiper-pagination-bullet-active {
+    opacity: 1;
   }
-
-  .ticker-track:hover {
-    animation-play-state: paused;
-  }
-
-  @keyframes ticker-scroll {
-    0% {
-      transform: translateX(0);
-    }
-    100% {
-      transform: translateX(-50%);
-    }
-  }
-
 
   .no-tracks {
     font-size: var(--fs--1);
@@ -153,4 +165,3 @@ function getRelativeTime(dateText: string, uts?: string): string {
     font-style: italic;
   }
 </style>
-

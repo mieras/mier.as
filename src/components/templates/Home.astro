@@ -6,7 +6,6 @@ import ProjectsSection from '../sections/ProjectsSection.astro';
 import ProjectsMedia from '../sections/ProjectsMedia.astro';
 import MusicSection from '../sections/MusicSection.astro';
 
-
 type Project = {
   _id: string;
   title: string;
@@ -29,29 +28,23 @@ const projects = (await getAllProjects()) as Project[];
 const photography = (await getAllPhotography()) as any[];
 ---
 
-  <main class="main">
-    <div class="left">
-      <section class="hero">
-        <IntroSection />
-      </section>
-      <section class="projects">
-        <ProjectsSection {projects} {photography} />
-      </section>
-    </div>
-    <div class="right">
-      <div class="project-image">
-        <ProjectsMedia {projects} {photography} />
-      </div>
-      <section class="music">
-        <MusicSection />
-      </section>
-    </div>
-  </main>
+<main class="main">
+  <div class="left">
+    <IntroSection />
 
+    <ProjectsSection {projects} {photography} />
+  </div>
+  <div class="right">
+    <div class="project-image">
+      <ProjectsMedia {projects} {photography} />
+    </div>
+    <section class="music">
+      <MusicSection />
+    </section>
+  </div>
+</main>
 
 <style>
-
-
   .main {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -63,6 +56,7 @@ const photography = (await getAllPhotography()) as any[];
 
   /* Left column (nested grid) */
   .left {
+    position: relative;
     display: grid;
     grid-template-rows: auto 1fr;
     border-right: 1px solid var(--border);
@@ -71,11 +65,9 @@ const photography = (await getAllPhotography()) as any[];
   }
 
   .hero {
-    padding: var(--default-padding);
-    display: flex;
+    /* display: flex; */
     align-items: center;
     justify-content: flex-start;
-    
   }
 
   .projects {
@@ -103,6 +95,10 @@ const photography = (await getAllPhotography()) as any[];
   .music {
     border-top: 1px solid var(--border);
     overflow-y: auto;
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
   }
 
   /* Mobile: stack everything */
@@ -141,13 +137,7 @@ const photography = (await getAllPhotography()) as any[];
     }
 
     .project-image {
-      border-bottom: 1px solid var(--border);
-    }
-
-    .music {
-      padding: var(--space-xs) var(--default-padding);
-      border-bottom: 1px solid var(--border);
+      display: none;
     }
   }
 </style>
-
