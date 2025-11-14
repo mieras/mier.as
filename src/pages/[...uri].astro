@@ -3,7 +3,8 @@ import DefaultLayout from '../layouts/DefaultLayout.astro';
 import { getAllUris } from '../lib/sanity';
 import { getNodeData, getTemplateByRoute } from '../lib/routes';
 
-export const prerender = true;
+// Verwijder deze regel voor SSR:
+// export const prerender = true;
 
 export async function getStaticPaths() {
   return await getAllUris();
