@@ -1,5 +1,5 @@
 import { type QueryParams } from 'sanity';
-import { createClient } from '@sanity/client';
+import { sanityClient } from 'sanity:client';
 
 const visualEditingEnabled =
   import.meta.env.PUBLIC_SANITY_VISUAL_EDITING_ENABLED === 'true';
@@ -13,7 +13,7 @@ export async function loadQuery<QueryResponse>({
   params?: QueryParams;
 }) {
   try {
-    // Log tijdens build om te zien wat er gebeurt
+    // Log tijdens request om te zien wat er gebeurt
     console.log('🔍 Sanity query:', {
       hasProjectId: !!import.meta.env.PUBLIC_SANITY_PROJECT_ID,
       hasDataset: !!import.meta.env.PUBLIC_SANITY_DATASET,
@@ -22,30 +22,23 @@ export async function loadQuery<QueryResponse>({
     });
 
     if (visualEditingEnabled && !token) {
-      console.warn(
+      throw new Error(
         'The `SANITY_API_READ_TOKEN` environment variable is required during Visual Editing.',
       );
     }
 
     const perspective = visualEditingEnabled ? 'previewDrafts' : 'published';
 
-    // Create client instance
-    const client = createClient({
-      projectId: import.meta.env.PUBLIC_SANITY_PROJECT_ID,
-      dataset: import.meta.env.PUBLIC_SANITY_DATASET,
-      apiVersion: import.meta.env.PUBLIC_SANITY_API_VERSION || '2025-01-28',
-      useCdn: !visualEditingEnabled,
-      token: visualEditingEnabled ? token : undefined,
-      perspective,
-    });
-
-    const { result, resultSourceMap } = await client.fetch<QueryResponse>(
+    // Use the official sanity:client from @sanity/astro integration
+    const { result, resultSourceMap } = await sanityClient.fetch<QueryResponse>(
       query,
       params ?? {},
       {
         filterResponse: false,
+        perspective,
         resultSourceMap: visualEditingEnabled ? 'withKeyArraySelector' : false,
         stega: visualEditingEnabled,
+        ...(visualEditingEnabled ? { token } : {}),
       },
     );
 
