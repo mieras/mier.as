@@ -13,6 +13,14 @@ export async function loadQuery<QueryResponse>({
   params?: QueryParams;
 }) {
   try {
+    // Log tijdens build om te zien wat er gebeurt
+    console.log('🔍 Sanity query:', {
+      hasProjectId: !!import.meta.env.PUBLIC_SANITY_PROJECT_ID,
+      hasDataset: !!import.meta.env.PUBLIC_SANITY_DATASET,
+      projectId: import.meta.env.PUBLIC_SANITY_PROJECT_ID,
+      dataset: import.meta.env.PUBLIC_SANITY_DATASET,
+    });
+
     if (visualEditingEnabled && !token) {
       console.warn(
         'The `SANITY_API_READ_TOKEN` environment variable is required during Visual Editing.',
@@ -41,18 +49,29 @@ export async function loadQuery<QueryResponse>({
       },
     );
 
+    console.log('✅ Sanity query succeeded, result:', {
+      hasData: !!result,
+      dataType: typeof result,
+      isArray: Array.isArray(result),
+      length: Array.isArray(result) ? result.length : 'N/A',
+    });
+
     return {
       data: result,
       sourceMap: resultSourceMap,
       perspective,
     };
   } catch (error) {
-    // Log error in development mode
-    if (import.meta.env.DEV) {
-      console.error(`❌ Sanity query failed:`, error);
-      console.warn(`Query:`, query);
-      console.warn(`Params:`, params);
-    }
+    // Log error ALTIJD (ook tijdens build)
+    console.error(`❌ Sanity query failed:`, error);
+    console.error(`Query:`, query);
+    console.error(`Params:`, params);
+    console.error(`Environment:`, {
+      hasProjectId: !!import.meta.env.PUBLIC_SANITY_PROJECT_ID,
+      hasDataset: !!import.meta.env.PUBLIC_SANITY_DATASET,
+      projectId: import.meta.env.PUBLIC_SANITY_PROJECT_ID,
+      dataset: import.meta.env.PUBLIC_SANITY_DATASET,
+    });
 
     // Throw error instead of returning null - laat de frontend crashen
     throw new Error(

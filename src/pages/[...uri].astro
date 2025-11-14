@@ -37,6 +37,7 @@ try {
 } catch (e) {
   error = e instanceof Error ? e.message : 'Unknown error';
   console.error(`❌ Failed to load data for ${slug}:`, error);
+  console.error(`Error stack:`, e instanceof Error ? e.stack : 'No stack');
   // Tijdens build: laat de build falen zodat je het ziet
   throw new Error(`Failed to load page data for ${slug}: ${error}`);
 }
