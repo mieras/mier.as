@@ -152,6 +152,60 @@ try {
     });
   }
 
+  // Try to initialize Swiper - with multiple strategies
+  const tryInitSwiper = () => {
+    const container = document.querySelector(
+      '[data-tab="mixtapes"]',
+    ) as HTMLElement;
+    if (!container) {
+      return false;
+    }
+
+    const swiperEl = container.querySelector('.mixtapes-swiper') as HTMLElement;
+    if (!swiperEl) {
+      return false;
+    }
+
+    const wrapper = swiperEl.querySelector('.swiper-wrapper');
+    if (!wrapper || wrapper.children.length === 0) {
+      return false;
+    }
+
+    // Check if already initialized
+    if ((swiperEl as any).swiper) {
+      swiperInitialized = true;
+      mixtapesSwiper = (swiperEl as any).swiper;
+      return true;
+    }
+
+    // Initialize Swiper
+    if (!swiperInitialized) {
+      swiperInitialized = true;
+      console.log(
+        'Initializing Mixtapes Swiper with',
+        wrapper.children.length,
+        'slides',
+      );
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const swiper = initSwiper(swiperEl, mixtapesPreset, true);
+          if (swiper && swiperEl) {
+            (swiperEl as any).swiper = swiper;
+            mixtapesSwiper = swiper;
+            console.log('Mixtapes Swiper initialized successfully');
+            requestAnimationFrame(() => {
+              swiper.update();
+              swiper.updateSize();
+            });
+          }
+        });
+      });
+      return true;
+    }
+
+    return false;
+  };
+
   // Use MutationObserver to detect when server island content is added
   const observeForContent = () => {
     const container = document.querySelector(
@@ -162,31 +216,43 @@ try {
       return;
     }
 
+    // Try immediately
+    if (tryInitSwiper()) {
+      initEmbedHandlers();
+      return;
+    }
+
     const observer = new MutationObserver(() => {
-      const swiperEl = container.querySelector(
-        '.mixtapes-swiper',
-      ) as HTMLElement;
-      if (swiperEl) {
-        const wrapper = swiperEl.querySelector('.swiper-wrapper');
-        if (wrapper && wrapper.children.length > 0 && !swiperInitialized) {
-          observer.disconnect();
-          initMixtapesSwiper();
-          initEmbedHandlers();
-        }
+      if (tryInitSwiper()) {
+        observer.disconnect();
+        initEmbedHandlers();
       }
     });
 
     observer.observe(container, {
       childList: true,
       subtree: true,
+      attributes: true,
     });
 
-    // Also try immediately
-    initMixtapesSwiper();
-    initEmbedHandlers();
+    // Also use interval as fallback
+    let attempts = 0;
+    const intervalId = setInterval(() => {
+      attempts++;
+      if (tryInitSwiper() || attempts > 50) {
+        clearInterval(intervalId);
+        observer.disconnect();
+        if (attempts <= 50) {
+          initEmbedHandlers();
+        }
+      }
+    }, 100);
 
-    // Cleanup observer after 10 seconds
-    setTimeout(() => observer.disconnect(), 10000);
+    // Cleanup after 10 seconds
+    setTimeout(() => {
+      clearInterval(intervalId);
+      observer.disconnect();
+    }, 10000);
   };
 
   const handleEmbedOpen = (mixcloudId: string) => {
