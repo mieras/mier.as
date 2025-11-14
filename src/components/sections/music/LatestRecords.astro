@@ -1,185 +1,256 @@
 ---
-import { getLatestRecords } from '../../../lib/discogs';
+// Client-side data fetching - geen server-side data meer
 import { getRelativeTimeDiscogs } from '../../../lib/music-helpers';
 import MusicItem from './ui/MusicItem.astro';
-
-// Try server-side env vars first, fallback to PUBLIC_ for local dev
-const discogsUsername =
-  import.meta.env.DISCOGS_USERNAME ||
-  import.meta.env.PUBLIC_DISCOGS_USERNAME ||
-  '';
-const discogsToken =
-  import.meta.env.DISCOGS_TOKEN || import.meta.env.PUBLIC_DISCOGS_TOKEN || '';
-
-let records: any[] = [];
-let error: string | null = null;
-
-if (discogsUsername && discogsToken) {
-  try {
-    records = await getLatestRecords(discogsUsername, discogsToken, 5);
-  } catch (e) {
-    error = e instanceof Error ? e.message : 'Failed to fetch records';
-    console.error('Error fetching latest records:', e);
-  }
-} else {
-  error = 'Discogs credentials not configured';
-}
 ---
 
 <div class="latest-records" data-tab="collections">
-  {
-    error ? (
-      <div class="error-state">
-        <p class="no-records">Error loading records: {error}</p>
+  <div class="loading-state" data-loading="true">
+    <p>Loading records...</p>
+  </div>
+  <div class="error-state" data-error="false" style="display: none;">
+    <p class="no-records">Error loading records</p>
+  </div>
+  <div class="content-state" data-content="false" style="display: none;">
+    <div class="swiper music-swiper latest-records-swiper">
+      <div class="swiper-wrapper">
+        <!-- Content wordt hier geïnjecteerd via JavaScript -->
       </div>
-    ) : records.length === 0 ? (
-      <div class="content-state">
-        <p class="no-records">No recent records available</p>
-      </div>
-    ) : (
-      <div class="content-state">
-        <div class="swiper music-swiper latest-records-swiper">
-          <div class="swiper-wrapper">
-            {[...records, ...records].map((record) => {
-              const artist = record.artist || 'Unknown Artist';
-              const album = record.title || '';
-              const albumYear = record.year ? `(${record.year})` : undefined;
-              const timestamp = record.dateAdded
-                ? getRelativeTimeDiscogs(record.dateAdded)
-                : undefined;
-
-              return (
-                <div class="swiper-slide">
-                  <MusicItem
-                    variant="ticker-thumbnail"
-                    thumbnail={record.thumb}
-                    line1={artist}
-                    line2={albumYear ? `${album} ${albumYear}` : album}
-                    timestamp={timestamp}
-                  />
-                </div>
-              );
-            })}
-          </div>
-          <div class="swiper-pagination" />
-        </div>
-      </div>
-    )
-  }
+      <div class="swiper-pagination"></div>
+    </div>
+  </div>
 </div>
 
 <script>
   import { initSwiper, musicTickerPreset } from '../../../lib/swiper-utils';
+  import { getRelativeTimeDiscogs } from '../../../lib/music-helpers';
 
+  let isLoading = false;
   let initialized = false;
 
-  // Try to initialize Swiper - with multiple strategies
-  const tryInitSwiper = () => {
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minuten
+
+  async function loadLatestRecords() {
+    if (isLoading) {
+      console.log('Already loading, skipping...');
+      return;
+    }
+
     const container = document.querySelector(
       '[data-tab="collections"]',
     ) as HTMLElement;
-    if (!container) {
-      return false;
-    }
+    if (!container) return;
 
-    const swiperEl = container.querySelector(
-      '.latest-records-swiper',
+    const loadingState = container.querySelector(
+      '[data-loading="true"]',
     ) as HTMLElement;
-    if (!swiperEl) {
-      return false;
+    const errorState = container.querySelector('[data-error]') as HTMLElement;
+    const contentState = container.querySelector(
+      '[data-content]',
+    ) as HTMLElement;
+
+    // Check cache
+    const cachedData = sessionStorage.getItem('latest-records-data');
+    const cachedTimestamp = sessionStorage.getItem('latest-records-timestamp');
+
+    if (cachedData && cachedTimestamp) {
+      const age = Date.now() - parseInt(cachedTimestamp, 10);
+      if (age < CACHE_DURATION) {
+        console.log('Using cached records');
+        const records = JSON.parse(cachedData);
+        renderRecords(records);
+        return;
+      }
     }
 
-    const wrapper = swiperEl.querySelector('.swiper-wrapper');
-    if (!wrapper || wrapper.children.length === 0) {
-      return false;
+    isLoading = true;
+    if (loadingState) loadingState.style.display = 'block';
+    if (errorState) {
+      errorState.style.display = 'none';
+      errorState.setAttribute('data-error', 'false');
+    }
+    if (contentState) {
+      contentState.style.display = 'none';
+      contentState.setAttribute('data-content', 'false');
     }
 
-    // Check if already initialized
-    if ((swiperEl as any).swiper) {
-      initialized = true;
-      return true;
+    try {
+      const response = await fetch('/api/music/latest-records');
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}`);
+      }
+
+      const records = await response.json();
+
+      // Cache data
+      sessionStorage.setItem('latest-records-data', JSON.stringify(records));
+      sessionStorage.setItem('latest-records-timestamp', Date.now().toString());
+
+      renderRecords(records);
+    } catch (error) {
+      console.error('Failed to load records:', error);
+      if (loadingState) loadingState.style.display = 'none';
+      if (errorState) {
+        errorState.style.display = 'block';
+        errorState.setAttribute('data-error', 'true');
+      }
+    } finally {
+      isLoading = false;
     }
+  }
+
+  function renderRecords(records: any[]) {
+    const container = document.querySelector(
+      '[data-tab="collections"]',
+    ) as HTMLElement;
+    if (!container) return;
+
+    const loadingState = container.querySelector(
+      '[data-loading="true"]',
+    ) as HTMLElement;
+    const errorState = container.querySelector('[data-error]') as HTMLElement;
+    const contentState = container.querySelector(
+      '[data-content]',
+    ) as HTMLElement;
+    const wrapper = contentState?.querySelector(
+      '.swiper-wrapper',
+    ) as HTMLElement;
+
+    if (!wrapper || !contentState) {
+      console.error('Wrapper or contentState not found');
+      return;
+    }
+
+    // Show content, hide loading/error
+    if (loadingState) loadingState.style.display = 'none';
+    if (errorState) {
+      errorState.style.display = 'none';
+      errorState.setAttribute('data-error', 'false');
+    }
+    contentState.style.display = 'block';
+    contentState.setAttribute('data-content', 'true');
+
+    // Clear and render records
+    wrapper.innerHTML = '';
+
+    [...records, ...records].forEach((record) => {
+      const artist = record.artist || 'Unknown Artist';
+      const album = record.title || '';
+      const albumYear = record.year ? `(${record.year})` : undefined;
+      const timestamp = record.dateAdded
+        ? getRelativeTimeDiscogs(record.dateAdded)
+        : undefined;
+
+      const slide = document.createElement('div');
+      slide.className = 'swiper-slide';
+
+      // Create MusicItem structure
+      const musicItem = document.createElement('div');
+      musicItem.className = 'ticker-item';
+
+      const img = document.createElement('img');
+      img.src = record.thumb || '';
+      img.alt = artist;
+
+      const content = document.createElement('div');
+
+      const line1 = document.createElement('span');
+      line1.className = 'music-line1';
+      line1.textContent = artist;
+
+      const line2 = document.createElement('span');
+      line2.className = 'music-line2';
+      line2.textContent = albumYear ? `${album} ${albumYear}` : album;
+
+      content.appendChild(line1);
+      content.appendChild(line2);
+
+      if (timestamp) {
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'music-timestamp';
+        timeSpan.textContent = timestamp;
+        content.appendChild(timeSpan);
+      }
+
+      musicItem.appendChild(img);
+      musicItem.appendChild(content);
+      slide.appendChild(musicItem);
+      wrapper.appendChild(slide);
+    });
 
     // Initialize Swiper
     if (!initialized) {
-      initialized = true;
-      console.log(
-        'Initializing LatestRecords Swiper with',
-        wrapper.children.length,
-        'slides',
-      );
-      requestAnimationFrame(() => {
+      const swiperEl = container.querySelector(
+        '.latest-records-swiper',
+      ) as HTMLElement;
+      if (swiperEl && wrapper.children.length > 0) {
+        initialized = true;
+        console.log(
+          'Initializing LatestRecords Swiper with',
+          wrapper.children.length,
+          'slides',
+        );
         requestAnimationFrame(() => {
-          const swiper = initSwiper(swiperEl, musicTickerPreset, true);
-          if (swiper) {
-            console.log('LatestRecords Swiper initialized successfully');
-            requestAnimationFrame(() => {
-              swiper.update();
-              swiper.updateSize();
-            });
-          }
+          requestAnimationFrame(() => {
+            const swiper = initSwiper(swiperEl, musicTickerPreset, true);
+            if (swiper) {
+              console.log('LatestRecords Swiper initialized successfully');
+              requestAnimationFrame(() => {
+                swiper.update();
+                swiper.updateSize();
+              });
+            }
+          });
         });
-      });
-      return true;
+      }
+    } else {
+      // Update existing Swiper
+      const swiperEl = container.querySelector(
+        '.latest-records-swiper',
+      ) as HTMLElement;
+      if ((swiperEl as any).swiper) {
+        (swiperEl as any).swiper.update();
+        (swiperEl as any).swiper.updateSize();
+      }
     }
+  }
 
-    return false;
-  };
-
-  // Use MutationObserver to detect when server island content is added
-  const observeForContent = () => {
+  // Load data when tab becomes active
+  function initLatestRecords() {
     const container = document.querySelector(
       '[data-tab="collections"]',
     ) as HTMLElement;
     if (!container) {
-      setTimeout(observeForContent, 100);
+      setTimeout(initLatestRecords, 100);
       return;
     }
 
-    // Try immediately
-    if (tryInitSwiper()) {
-      return;
+    // Check if tab is active
+    const tabContent = container.closest('.tab-content');
+    if (tabContent?.classList.contains('tab-content-active')) {
+      loadLatestRecords();
     }
 
-    const observer = new MutationObserver(() => {
-      if (tryInitSwiper()) {
-        observer.disconnect();
-      }
-    });
+    // Listen for tab changes
+    const musicSection = document.querySelector('.music-section');
+    if (musicSection) {
+      musicSection.addEventListener('tab-change', (e: any) => {
+        if (e.detail.content === tabContent) {
+          loadLatestRecords();
+        }
+      });
+    }
+  }
 
-    observer.observe(container, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-    });
-
-    // Also use interval as fallback
-    let attempts = 0;
-    const intervalId = setInterval(() => {
-      attempts++;
-      if (tryInitSwiper() || attempts > 50) {
-        clearInterval(intervalId);
-        observer.disconnect();
-      }
-    }, 100);
-
-    // Cleanup after 10 seconds
-    setTimeout(() => {
-      clearInterval(intervalId);
-      observer.disconnect();
-    }, 10000);
-  };
-
-  // Try to initialize when DOM is ready
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', observeForContent);
+    document.addEventListener('DOMContentLoaded', initLatestRecords);
   } else {
-    observeForContent();
+    initLatestRecords();
   }
 
   document.addEventListener('astro:page-load', () => {
     initialized = false;
-    observeForContent();
+    initLatestRecords();
   });
 </script>
 
@@ -187,6 +258,13 @@ if (discogsUsername && discogsToken) {
   .latest-records {
     position: relative;
     /* min-height: 200px; */
+  }
+
+  .loading-state {
+    padding: var(--space-m);
+    text-align: center;
+    font-size: var(--fs--1);
+    opacity: 0.7;
   }
 
   .error-state {

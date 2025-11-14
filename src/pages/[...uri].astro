@@ -31,9 +31,9 @@ let error: string | null = null;
 try {
   node = await getNodeData(slug);
   // Log tijdens build om te zien of data wordt opgehaald
-  if (!import.meta.env.DEV) {
-    console.log(`📄 Building page: ${slug}, hasData: ${!!node}, title: ${node?.title || 'N/A'}`);
-  }
+  console.log(
+    `📄 Building page: ${slug}, hasData: ${!!node}, title: ${node?.title || 'N/A'}`,
+  );
 } catch (e) {
   error = e instanceof Error ? e.message : 'Unknown error';
   console.error(`❌ Failed to load data for ${slug}:`, error);
@@ -42,6 +42,7 @@ try {
 }
 
 if (!node) {
+  console.error(`❌ No data returned for ${slug}`);
   throw new Error(`No data returned for ${slug}`);
 }
 

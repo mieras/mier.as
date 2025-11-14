@@ -30,8 +30,15 @@ let photography: any[] = [];
 try {
   projects = (await getAllProjects()) as Project[];
   console.log(`🏗️ Build: Loaded ${projects.length} projects`);
+  if (projects.length === 0) {
+    console.warn('⚠️ No projects loaded - check Sanity configuration');
+  }
 } catch (error) {
   console.error('❌ Failed to load projects during build:', error);
+  console.error(
+    'Error details:',
+    error instanceof Error ? error.message : String(error),
+  );
   // Laat de build falen zodat je het ziet
   throw error;
 }
@@ -39,8 +46,15 @@ try {
 try {
   photography = (await getAllPhotography()) as any[];
   console.log(`🏗️ Build: Loaded ${photography.length} photography items`);
+  if (photography.length === 0) {
+    console.warn('⚠️ No photography loaded - check Sanity configuration');
+  }
 } catch (error) {
   console.error('❌ Failed to load photography during build:', error);
+  console.error(
+    'Error details:',
+    error instanceof Error ? error.message : String(error),
+  );
   // Laat de build falen zodat je het ziet
   throw error;
 }
