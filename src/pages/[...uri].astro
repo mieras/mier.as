@@ -3,11 +3,19 @@ import DefaultLayout from '../layouts/DefaultLayout.astro';
 import { getAllUris } from '../lib/sanity';
 import { getNodeData, getTemplateByRoute } from '../lib/routes';
 
-// Verwijder deze regel voor SSR:
+// Verwijder prerender = true voor dynamische rendering (SSR)
 // export const prerender = true;
 
+// getStaticPaths blijft voor route discovery (niet voor prerendering)
 export async function getStaticPaths() {
-  return await getAllUris();
+  try {
+    const paths = await getAllUris();
+    console.log('📦 Discovering routes:', paths.length);
+    return paths;
+  } catch (error) {
+    console.error('❌ Failed to discover routes:', error);
+    throw error;
+  }
 }
 
 import { getSiteSettings } from '../lib/sanity';
@@ -18,11 +26,39 @@ const { uri } = Astro.params;
 // Als uri undefined of lege string is, is het de homepage
 const slug = uri === undefined || uri === '' ? '/' : `/${uri}/`;
 
-let node = await getNodeData(slug);
+let node;
+let error: string | null = null;
+
+try {
+  node = await getNodeData(slug);
+  // Log tijdens request om te zien of data wordt opgehaald
+  console.log(
+    `📄 Rendering page: ${slug}, hasData: ${!!node}, title: ${node?.title || 'N/A'}`,
+  );
+} catch (e) {
+  error = e instanceof Error ? e.message : 'Unknown error';
+  console.error(`❌ Failed to load data for ${slug}:`, error);
+  console.error(`Error stack:`, e instanceof Error ? e.stack : 'No stack');
+  // Tijdens request: laat de request falen zodat je het ziet
+  throw new Error(`Failed to load page data for ${slug}: ${error}`);
+}
+
+if (!node) {
+  console.error(`❌ No data returned for ${slug}`);
+  throw new Error(`No data returned for ${slug}`);
+}
+
 const Template = getTemplateByRoute(node);
 
 // Haal site settings op voor SEO fallbacks
-const siteSettings = await getSiteSettings();
+let siteSettings;
+try {
+  siteSettings = await getSiteSettings();
+} catch (e) {
+  console.error('❌ Failed to load site settings:', e);
+  // Site settings zijn niet kritiek, gebruik fallbacks
+  siteSettings = null;
+}
 
 // Build URL voor deze pagina
 const pageUrl = Astro.site
@@ -32,7 +68,7 @@ const pageUrl = Astro.site
 // Get SEO data met fallbacks
 const seoData = getSeoData(
   node.seo,
-  siteSettings,
+  siteSettings || undefined, // Convert null to undefined
   node.title,
   'Our amazing studio from Rotterdam',
   pageUrl,
