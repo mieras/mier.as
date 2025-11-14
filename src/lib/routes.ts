@@ -82,13 +82,13 @@ export function getTemplateByRoute(node: any) {
           (node.title === 'Homepage' && node._type === 'page')
         ) {
           if (import.meta.env.DEV)
-            console.log('🏠 Selected Home template (homepage detected)', {
-              pageType: node.pageType,
-              hasSlides: !!(node.slides && node.slides.length > 0),
-              title: node.title,
-              _type: node._type,
-            });
-          return Home;
+            // console.log('🏠 Selected Home template (homepage detected)', {
+            //   pageType: node.pageType,
+            //   hasSlides: !!(node.slides && node.slides.length > 0),
+            //   title: node.title,
+            //   _type: node._type,
+            // });
+            return Home;
         }
         if (node.pageType === 'work') {
           if (import.meta.env.DEV)

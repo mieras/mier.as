@@ -1,112 +1,59 @@
 ---
 import { getRecentCloudcasts } from '../../../lib/mixcloud';
+import { getRelativeTimeMixcloud } from '../../../lib/music-helpers';
 import MusicItem from './ui/MusicItem.astro';
 
-const mixcloudUsername = import.meta.env.PUBLIC_MIXCLOUD_USERNAME || 'mieras';
+// Try server-side env vars first, fallback to PUBLIC_ for local dev
+const mixcloudUsername =
+  import.meta.env.MIXCLOUD_USERNAME ||
+  import.meta.env.PUBLIC_MIXCLOUD_USERNAME ||
+  'mieras';
 
 let mixtapes: any[] = [];
-let hasError = false;
+let error: string | null = null;
 
 try {
   mixtapes = await getRecentCloudcasts(mixcloudUsername, 5);
-} catch (error) {
-  console.error('Error fetching Mixcloud data:', error);
-  hasError = true;
-}
-
-// Helper function to format relative time
-function getRelativeTime(dateString: string): string {
-  if (!dateString) return '';
-
-  try {
-    const now = new Date();
-    const uploadDate = new Date(dateString);
-    const diffMs = now.getTime() - uploadDate.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'zojuist geüpload';
-    if (diffMins < 60) return `${diffMins} min geleden geüpload`;
-    if (diffHours < 24) return `${diffHours} uur geleden geüpload`;
-    if (diffDays === 1) return 'gisteren geüpload';
-    if (diffDays < 7) return `${diffDays} dagen geleden geüpload`;
-    if (diffDays < 30) {
-      const weeks = Math.floor(diffDays / 7);
-      return `${weeks} ${weeks === 1 ? 'week' : 'weken'} geleden geüpload`;
-    }
-    if (diffDays < 365) {
-      const months = Math.floor(diffDays / 30);
-      return `${months} ${months === 1 ? 'maand' : 'maanden'} geleden geüpload`;
-    }
-    const years = Math.floor(diffDays / 365);
-    return `${years} ${years === 1 ? 'jaar' : 'jaren'} geleden geüpload`;
-  } catch (error) {
-    return '';
-  }
+} catch (e) {
+  error = e instanceof Error ? e.message : 'Failed to fetch mixtapes';
+  console.error('Error fetching mixtapes:', e);
 }
 ---
 
-<div class="mixtapes">
+<div class="mixtapes" data-tab="mixtapes">
   {
-    mixtapes.length > 0 ? (
-      <>
+    error ? (
+      <div class="error-state">
+        <p class="no-mixtapes">Error loading mixtapes: {error}</p>
+      </div>
+    ) : mixtapes.length === 0 ? (
+      <div class="content-state">
+        <p class="no-mixtapes">No mixtapes available</p>
+      </div>
+    ) : (
+      <div class="content-state">
         <div class="swiper music-swiper mixtapes-swiper">
           <div class="swiper-wrapper">
-            {mixtapes.map((mixtape, index) => {
-              const thumbnail = mixtape.thumbnail;
-              const mixcloudId = mixtape.mixcloudId;
-              const genres = mixtape.genres || [];
+            {[...mixtapes, ...mixtapes].map((mixtape, index) => {
               const timestamp = mixtape.createdTime
-                ? getRelativeTime(mixtape.createdTime)
+                ? getRelativeTimeMixcloud(mixtape.createdTime)
                 : undefined;
-              const genresText =
-                genres.length > 0 ? genres.join(', ') : undefined;
 
               return (
-                <div
-                  class="swiper-slide mixtape-item"
-                  data-mixcloud-id={mixcloudId}
-                  data-index={index}
-                >
-                  <MusicItem
-                    thumbnail={thumbnail}
-                    line1={mixtape.name}
-                    line2={genresText}
-                    timestamp={timestamp}
-                    variant="ticker-thumbnail"
-                    showPlayButton={false}
-                    mixcloudId={mixcloudId}
-                  />
-                </div>
-              );
-            })}
-            {/* Duplicate for seamless loop */}
-            {mixtapes.map((mixtape, index) => {
-              const thumbnail = mixtape.thumbnail;
-              const mixcloudId = mixtape.mixcloudId;
-              const genres = mixtape.genres || [];
-              const timestamp = mixtape.createdTime
-                ? getRelativeTime(mixtape.createdTime)
-                : undefined;
-              const genresText =
-                genres.length > 0 ? genres.join(', ') : undefined;
-
-              return (
-                <div
-                  class="swiper-slide mixtape-item"
-                  data-mixcloud-id={mixcloudId}
-                  data-index={index}
-                >
-                  <MusicItem
-                    thumbnail={thumbnail}
-                    line1={mixtape.name}
-                    line2={genresText}
-                    timestamp={timestamp}
-                    variant="ticker-thumbnail"
-                    showPlayButton={false}
-                    mixcloudId={mixcloudId}
-                  />
+                <div class="swiper-slide">
+                  <div
+                    class="mixtape-item"
+                    data-mixcloud-id={mixtape.mixcloudId}
+                  >
+                    <MusicItem
+                      variant="ticker-thumbnail"
+                      thumbnail={mixtape.thumbnail}
+                      line1={mixtape.name}
+                      line2={mixtape.genres?.join(', ')}
+                      timestamp={timestamp}
+                      mixcloudId={mixtape.mixcloudId}
+                    />
+                  </div>
                 </div>
               );
             })}
@@ -127,33 +74,119 @@ function getRelativeTime(dateString: string): string {
             ×
           </button>
         </div>
-      </>
-    ) : hasError ? (
-      <p class="no-mixtapes">Error loading mixtapes</p>
-    ) : (
-      <p class="no-mixtapes">No mixtapes available</p>
+      </div>
     )
   }
 </div>
 
 <script>
-  // Swiper initialization is now handled by MusicSection component
-  // to ensure it only initializes when the tab is visible
-  // We keep a reference to the Swiper instance for embed handlers
+  import { initSwiper, mixtapesPreset } from '../../../lib/swiper-utils';
+
+  // Swiper instance reference
   let mixtapesSwiper: any = null;
 
-  // Function to get Swiper instance (called after initialization by MusicSection)
+  // Function to get Swiper instance
   const getMixtapesSwiper = () => {
     if (!mixtapesSwiper) {
       const swiperElement = document.querySelector(
         '.mixtapes-swiper',
       ) as HTMLElement;
       if (swiperElement) {
-        // Try to get instance from element data or global store
         mixtapesSwiper = (swiperElement as any).swiper;
       }
     }
     return mixtapesSwiper;
+  };
+
+  let swiperInitialized = false;
+
+  function initMixtapesSwiper() {
+    if (swiperInitialized) return;
+
+    const container = document.querySelector(
+      '[data-tab="mixtapes"]',
+    ) as HTMLElement;
+    if (!container) {
+      console.warn('Mixtapes container not found, retrying...');
+      setTimeout(initMixtapesSwiper, 100);
+      return;
+    }
+
+    const swiperEl = container.querySelector('.mixtapes-swiper') as HTMLElement;
+    if (!swiperEl) {
+      // Retry if swiper not found (server island might not be loaded yet)
+      setTimeout(initMixtapesSwiper, 100);
+      return;
+    }
+
+    // Wait for content to be loaded (server:defer might still be loading)
+    const wrapper = swiperEl.querySelector('.swiper-wrapper');
+    if (!wrapper || wrapper.children.length === 0) {
+      // Content not loaded yet, retry
+      setTimeout(initMixtapesSwiper, 100);
+      return;
+    }
+
+    // Check if Swiper is already initialized
+    if ((swiperEl as any).swiper) {
+      swiperInitialized = true;
+      mixtapesSwiper = (swiperEl as any).swiper;
+      return;
+    }
+
+    swiperInitialized = true;
+
+    // Initialize Swiper now that content is loaded
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const swiper = initSwiper(swiperEl, mixtapesPreset, true);
+        if (swiper && swiperEl) {
+          (swiperEl as any).swiper = swiper;
+          mixtapesSwiper = swiper;
+          requestAnimationFrame(() => {
+            swiper.update();
+            swiper.updateSize();
+          });
+        }
+      });
+    });
+  }
+
+  // Use MutationObserver to detect when server island content is added
+  const observeForContent = () => {
+    const container = document.querySelector(
+      '[data-tab="mixtapes"]',
+    ) as HTMLElement;
+    if (!container) {
+      setTimeout(observeForContent, 100);
+      return;
+    }
+
+    const observer = new MutationObserver(() => {
+      const swiperEl = container.querySelector(
+        '.mixtapes-swiper',
+      ) as HTMLElement;
+      if (swiperEl) {
+        const wrapper = swiperEl.querySelector('.swiper-wrapper');
+        if (wrapper && wrapper.children.length > 0 && !swiperInitialized) {
+          observer.disconnect();
+          initMixtapesSwiper();
+          initEmbedHandlers();
+        }
+      }
+    });
+
+    observer.observe(container, {
+      childList: true,
+      subtree: true,
+    });
+
+    // Also try immediately
+    initMixtapesSwiper();
+    initEmbedHandlers();
+
+    // Cleanup observer after 10 seconds
+    setTimeout(() => observer.disconnect(), 10000);
   };
 
   const handleEmbedOpen = (mixcloudId: string) => {
@@ -227,9 +260,13 @@ function getRelativeTime(dateString: string): string {
 
       if (!mixcloudId || !mixcloudIconBtn) return;
 
+      // Remove existing listeners to prevent duplicates
+      const newBtn = mixcloudIconBtn.cloneNode(true) as HTMLElement;
+      mixcloudIconBtn.parentNode?.replaceChild(newBtn, mixcloudIconBtn);
+
       const handlePlayClick = () => {
-        const isActive = mixcloudIconBtn.getAttribute('data-active') === 'true';
-        const action = mixcloudIconBtn.getAttribute('data-action');
+        const isActive = newBtn.getAttribute('data-active') === 'true';
+        const action = newBtn.getAttribute('data-action');
 
         if (isActive && action === 'pause') {
           // Pause - close embed
@@ -246,13 +283,13 @@ function getRelativeTime(dateString: string): string {
           handleEmbedOpen(mixcloudId);
 
           // Update button state
-          mixcloudIconBtn.setAttribute('data-active', 'true');
-          mixcloudIconBtn.setAttribute('data-action', 'pause');
+          newBtn.setAttribute('data-active', 'true');
+          newBtn.setAttribute('data-action', 'pause');
           currentlyPlaying = item as HTMLElement;
         }
       };
 
-      mixcloudIconBtn.addEventListener('click', handlePlayClick);
+      newBtn.addEventListener('click', handlePlayClick);
     });
 
     // Close button handler
@@ -267,31 +304,33 @@ function getRelativeTime(dateString: string): string {
     }
   };
 
-  // Initialize embed handlers on page load
-  // Swiper initialization is handled by MusicSection component
-  document.addEventListener('DOMContentLoaded', () => {
-    initEmbedHandlers();
-  });
-
-  // Re-initialize embed handlers on Astro page load (for view transitions)
-  document.addEventListener('astro:page-load', () => {
-    initEmbedHandlers();
-  });
-
-  // Also initialize immediately if DOM is already loaded
+  // Try to initialize when DOM is ready
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      initEmbedHandlers();
-    });
+    document.addEventListener('DOMContentLoaded', observeForContent);
   } else {
-    initEmbedHandlers();
+    observeForContent();
   }
+
+  document.addEventListener('astro:page-load', () => {
+    swiperInitialized = false;
+    mixtapesSwiper = null;
+    observeForContent();
+  });
 </script>
 
 <style>
   .mixtapes {
     position: relative;
     /* min-height: 200px; */
+  }
+
+  .error-state {
+    padding: var(--space-m);
+  }
+
+  .content-state {
+    width: 100%;
+    position: relative;
   }
 
   .mixtapes-swiper {
@@ -304,6 +343,15 @@ function getRelativeTime(dateString: string): string {
   }
 
   .mixtapes-swiper .swiper-slide .ticker-item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--space-s);
+    align-items: center;
+    padding: var(--space-s) var(--space-m);
+    background: var(--bg);
+    border-right: 1px solid var(--border);
+    white-space: nowrap;
+    height: 100%;
   }
 
   .mixtapes-swiper .swiper-slide .ticker-item {
@@ -312,7 +360,6 @@ function getRelativeTime(dateString: string): string {
 
   .mixtapes-swiper .swiper-pagination {
     position: relative;
-    /* margin-top: var(--space-s); */
     text-align: center;
   }
 
@@ -325,64 +372,52 @@ function getRelativeTime(dateString: string): string {
     opacity: 1;
   }
 
-  .mixtape-item {
-    height: 100%;
-  }
-
-  /* Embed container die over de carousel komt */
   .mixtapes-embed-container {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    width: 100%;
-    height: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-small);
-    padding: var(--space-m);
+    z-index: 20;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    z-index: 20;
+    background: rgba(0, 0, 0, 0.8);
   }
 
   .mixtapes-embed-iframe {
     width: 100%;
-    height: 400px;
+    height: 60px;
     border: none;
-    border-radius: var(--radius-small);
   }
 
   .mixtapes-embed-close {
     position: absolute;
     top: var(--space-s);
     right: var(--space-s);
-    background: var(--text);
-    color: var(--bg);
-    border: none;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
     width: 2rem;
     height: 2rem;
-    border-radius: 50%;
-    font-size: 1.5rem;
-    line-height: 1;
-    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: opacity 0.2s ease;
-    z-index: 10;
+    cursor: pointer;
+    font-size: 1.5rem;
+    line-height: 1;
+    z-index: 21;
   }
 
   .mixtapes-embed-close:hover {
-    opacity: 0.8;
+    background: var(--tile-hover);
   }
 
   .no-mixtapes {
     font-size: var(--fs--1);
     opacity: 0.7;
     font-style: italic;
+    text-align: center;
+    padding: var(--space-m);
   }
 </style>
