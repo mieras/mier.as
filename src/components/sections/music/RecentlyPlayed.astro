@@ -1,184 +1,258 @@
 ---
-import { getRecentlyPlayed } from '../../../lib/lastfm';
-import { getRelativeTimeLastFm } from '../../../lib/music-helpers';
-import MusicItem from './ui/MusicItem.astro';
-
-// Try server-side env vars first, fallback to PUBLIC_ for local dev
-const lastfmUsername =
-  import.meta.env.LASTFM_USERNAME ||
-  import.meta.env.PUBLIC_LASTFM_USERNAME ||
-  '';
-const lastfmApiKey =
-  import.meta.env.LASTFM_API_KEY || import.meta.env.PUBLIC_LASTFM_API_KEY || '';
-
-let tracks: any[] = [];
-let error: string | null = null;
-
-if (lastfmUsername && lastfmApiKey) {
-  try {
-    tracks = await getRecentlyPlayed(lastfmUsername, lastfmApiKey, 5);
-  } catch (e) {
-    error = e instanceof Error ? e.message : 'Failed to fetch tracks';
-    console.error('Error fetching recently played:', e);
-  }
-} else {
-  error = 'Last.fm credentials not configured';
-}
+// Client-side data fetching - geen server-side data meer
+// getRelativeTimeLastFm wordt gebruikt in de client-side script
+// MusicItem wordt niet gebruikt - HTML wordt dynamisch gegenereerd
 ---
 
 <div class="recently-played" data-tab="now-listening">
-  {
-    error ? (
-      <div class="error-state">
-        <p class="no-tracks">Error loading tracks: {error}</p>
+  <div class="loading-state" data-loading="true">
+    <p>Loading tracks...</p>
+  </div>
+  <div class="error-state" data-error="false" style="display: none;">
+    <p class="no-tracks">Error loading tracks</p>
+  </div>
+  <div class="content-state" data-content="false" style="display: none;">
+    <div class="swiper music-swiper recently-played-swiper">
+      <div class="swiper-wrapper">
+        <!-- Content wordt hier geïnjecteerd via JavaScript -->
       </div>
-    ) : tracks.length === 0 ? (
-      <div class="content-state">
-        <p class="no-tracks">No recent tracks available</p>
-      </div>
-    ) : (
-      <div class="content-state">
-        <div class="swiper music-swiper recently-played-swiper">
-          <div class="swiper-wrapper">
-            {[...tracks, ...tracks].map((track) => {
-              const artist = track.artist?.['#text'] || 'Unknown Artist';
-              const song = track.name || '';
-              const timestamp = track.date
-                ? getRelativeTimeLastFm(track.date['#text'], track.date.uts)
-                : undefined;
-
-              return (
-                <div class="swiper-slide">
-                  <MusicItem
-                    variant="ticker-thumbnail"
-                    thumbnail={track.imageUrl}
-                    line1={artist}
-                    line2={song}
-                    timestamp={timestamp}
-                  />
-                </div>
-              );
-            })}
-          </div>
-          <div class="swiper-pagination" />
-        </div>
-      </div>
-    )
-  }
+      <div class="swiper-pagination"></div>
+    </div>
+  </div>
 </div>
 
 <script>
   import { initSwiper, musicTickerPreset } from '../../../lib/swiper-utils';
+  import { getRelativeTimeLastFm } from '../../../lib/music-helpers';
 
+  let isLoading = false;
   let initialized = false;
 
-  // Try to initialize Swiper - with multiple strategies
-  const tryInitSwiper = () => {
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minuten
+
+  async function loadRecentlyPlayed() {
+    if (isLoading) {
+      console.log('Already loading, skipping...');
+      return;
+    }
+
     const container = document.querySelector(
       '[data-tab="now-listening"]',
     ) as HTMLElement;
-    if (!container) {
-      return false;
-    }
+    if (!container) return;
 
-    const swiperEl = container.querySelector(
-      '.recently-played-swiper',
+    const loadingState = container.querySelector(
+      '[data-loading="true"]',
     ) as HTMLElement;
-    if (!swiperEl) {
-      return false;
+    const errorState = container.querySelector('[data-error]') as HTMLElement;
+    const contentState = container.querySelector(
+      '[data-content]',
+    ) as HTMLElement;
+
+    // Check cache
+    const cachedData = sessionStorage.getItem('recently-played-data');
+    const cachedTimestamp = sessionStorage.getItem('recently-played-timestamp');
+
+    if (cachedData && cachedTimestamp) {
+      const age = Date.now() - parseInt(cachedTimestamp, 10);
+      if (age < CACHE_DURATION) {
+        console.log('Using cached tracks');
+        const tracks = JSON.parse(cachedData);
+        renderTracks(tracks);
+        return;
+      }
     }
 
-    const wrapper = swiperEl.querySelector('.swiper-wrapper');
-    if (!wrapper || wrapper.children.length === 0) {
-      return false;
+    isLoading = true;
+    if (loadingState) loadingState.style.display = 'block';
+    if (errorState) {
+      errorState.style.display = 'none';
+      errorState.setAttribute('data-error', 'false');
+    }
+    if (contentState) {
+      contentState.style.display = 'none';
+      contentState.setAttribute('data-content', 'false');
     }
 
-    // Check if already initialized
-    if ((swiperEl as any).swiper) {
-      initialized = true;
-      return true;
+    try {
+      const response = await fetch('/api/music/recently-played');
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}`);
+      }
+
+      const tracks = await response.json();
+
+      // Cache data
+      sessionStorage.setItem('recently-played-data', JSON.stringify(tracks));
+      sessionStorage.setItem(
+        'recently-played-timestamp',
+        Date.now().toString(),
+      );
+
+      renderTracks(tracks);
+    } catch (error) {
+      console.error('Failed to load tracks:', error);
+      if (loadingState) loadingState.style.display = 'none';
+      if (errorState) {
+        errorState.style.display = 'block';
+        errorState.setAttribute('data-error', 'true');
+      }
+    } finally {
+      isLoading = false;
     }
+  }
+
+  function renderTracks(tracks: any[]) {
+    const container = document.querySelector(
+      '[data-tab="now-listening"]',
+    ) as HTMLElement;
+    if (!container) return;
+
+    const loadingState = container.querySelector(
+      '[data-loading="true"]',
+    ) as HTMLElement;
+    const errorState = container.querySelector('[data-error]') as HTMLElement;
+    const contentState = container.querySelector(
+      '[data-content]',
+    ) as HTMLElement;
+    const wrapper = contentState?.querySelector(
+      '.swiper-wrapper',
+    ) as HTMLElement;
+
+    if (!wrapper || !contentState) {
+      console.error('Wrapper or contentState not found');
+      return;
+    }
+
+    // Show content, hide loading/error
+    if (loadingState) loadingState.style.display = 'none';
+    if (errorState) {
+      errorState.style.display = 'none';
+      errorState.setAttribute('data-error', 'false');
+    }
+    contentState.style.display = 'block';
+    contentState.setAttribute('data-content', 'true');
+
+    // Clear and render tracks
+    wrapper.innerHTML = '';
+
+    [...tracks, ...tracks].forEach((track) => {
+      const artist = track.artist?.['#text'] || 'Unknown Artist';
+      const song = track.name || '';
+      const timestamp = track.date
+        ? getRelativeTimeLastFm(track.date['#text'], track.date.uts)
+        : undefined;
+
+      const slide = document.createElement('div');
+      slide.className = 'swiper-slide';
+
+      // Create MusicItem structure
+      const musicItem = document.createElement('div');
+      musicItem.className = 'ticker-item';
+
+      const img = document.createElement('img');
+      img.src = track.imageUrl || '';
+      img.alt = artist;
+
+      const content = document.createElement('div');
+
+      const line1 = document.createElement('span');
+      line1.className = 'music-line1';
+      line1.textContent = artist;
+
+      const line2 = document.createElement('span');
+      line2.className = 'music-line2';
+      line2.textContent = song;
+
+      content.appendChild(line1);
+      content.appendChild(line2);
+
+      if (timestamp) {
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'music-timestamp';
+        timeSpan.textContent = timestamp;
+        content.appendChild(timeSpan);
+      }
+
+      musicItem.appendChild(img);
+      musicItem.appendChild(content);
+      slide.appendChild(musicItem);
+      wrapper.appendChild(slide);
+    });
 
     // Initialize Swiper
     if (!initialized) {
-      initialized = true;
-      console.log(
-        'Initializing RecentlyPlayed Swiper with',
-        wrapper.children.length,
-        'slides',
-      );
-      requestAnimationFrame(() => {
+      const swiperEl = container.querySelector(
+        '.recently-played-swiper',
+      ) as HTMLElement;
+      if (swiperEl && wrapper.children.length > 0) {
+        initialized = true;
+        console.log(
+          'Initializing RecentlyPlayed Swiper with',
+          wrapper.children.length,
+          'slides',
+        );
         requestAnimationFrame(() => {
-          const swiper = initSwiper(swiperEl, musicTickerPreset, true);
-          if (swiper) {
-            console.log('RecentlyPlayed Swiper initialized successfully');
-            requestAnimationFrame(() => {
-              swiper.update();
-              swiper.updateSize();
-            });
-          }
+          requestAnimationFrame(() => {
+            const swiper = initSwiper(swiperEl, musicTickerPreset, true);
+            if (swiper) {
+              console.log('RecentlyPlayed Swiper initialized successfully');
+              requestAnimationFrame(() => {
+                swiper.update();
+                swiper.updateSize();
+              });
+            }
+          });
         });
-      });
-      return true;
+      }
+    } else {
+      // Update existing Swiper
+      const swiperEl = container.querySelector(
+        '.recently-played-swiper',
+      ) as HTMLElement;
+      if ((swiperEl as any).swiper) {
+        (swiperEl as any).swiper.update();
+        (swiperEl as any).swiper.updateSize();
+      }
     }
+  }
 
-    return false;
-  };
-
-  // Use MutationObserver to detect when server island content is added
-  const observeForContent = () => {
+  // Load data when tab becomes active
+  function initRecentlyPlayed() {
     const container = document.querySelector(
       '[data-tab="now-listening"]',
     ) as HTMLElement;
     if (!container) {
-      setTimeout(observeForContent, 100);
+      setTimeout(initRecentlyPlayed, 100);
       return;
     }
 
-    // Try immediately
-    if (tryInitSwiper()) {
-      return;
+    // Check if tab is active
+    const tabContent = container.closest('.tab-content');
+    if (tabContent?.classList.contains('tab-content-active')) {
+      loadRecentlyPlayed();
     }
 
-    const observer = new MutationObserver(() => {
-      if (tryInitSwiper()) {
-        observer.disconnect();
-      }
-    });
+    // Listen for tab changes
+    const musicSection = document.querySelector('.music-section');
+    if (musicSection) {
+      musicSection.addEventListener('tab-change', (e: any) => {
+        if (e.detail.content === tabContent) {
+          loadRecentlyPlayed();
+        }
+      });
+    }
+  }
 
-    observer.observe(container, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-    });
-
-    // Also use interval as fallback
-    let attempts = 0;
-    const intervalId = setInterval(() => {
-      attempts++;
-      if (tryInitSwiper() || attempts > 50) {
-        clearInterval(intervalId);
-        observer.disconnect();
-      }
-    }, 100);
-
-    // Cleanup after 10 seconds
-    setTimeout(() => {
-      clearInterval(intervalId);
-      observer.disconnect();
-    }, 10000);
-  };
-
-  // Try to initialize when DOM is ready
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', observeForContent);
+    document.addEventListener('DOMContentLoaded', initRecentlyPlayed);
   } else {
-    observeForContent();
+    initRecentlyPlayed();
   }
 
   document.addEventListener('astro:page-load', () => {
     initialized = false;
-    observeForContent();
+    initRecentlyPlayed();
   });
 </script>
 
@@ -186,6 +260,13 @@ if (lastfmUsername && lastfmApiKey) {
   .recently-played {
     position: relative;
     /* min-height: 200px; */
+  }
+
+  .loading-state {
+    padding: var(--space-m);
+    text-align: center;
+    font-size: var(--fs--1);
+    opacity: 0.7;
   }
 
   .error-state {

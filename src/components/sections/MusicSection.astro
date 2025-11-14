@@ -16,17 +16,17 @@ import TabGroup from '../ui/TabGroup.astro';
 >
   <!-- Now Listening Tab -->
   <div class="tab-content tab-content-active" data-tab-content="now-listening">
-    <RecentlyPlayed server:defer />
+    <RecentlyPlayed />
   </div>
 
   <!-- Mixtapes Tab -->
   <div class="tab-content" data-tab-content="mixtapes">
-    <Mixtapes server:defer />
+    <Mixtapes />
   </div>
 
   <!-- Collections Tab -->
   <div class="tab-content" data-tab-content="collections">
-    <LatestRecords server:defer />
+    <LatestRecords />
   </div>
 </TabGroup>
 

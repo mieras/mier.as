@@ -3,17 +3,18 @@ import DefaultLayout from '../layouts/DefaultLayout.astro';
 import { getAllUris } from '../lib/sanity';
 import { getNodeData, getTemplateByRoute } from '../lib/routes';
 
-export const prerender = true;
+// Verwijder prerender = true voor dynamische rendering (SSR)
+// export const prerender = true;
 
+// getStaticPaths blijft voor route discovery (niet voor prerendering)
 export async function getStaticPaths() {
   try {
     const paths = await getAllUris();
-    // Log tijdens build om te zien wat er gebeurt
-    console.log('📦 Building static paths:', paths.length);
+    console.log('📦 Discovering routes:', paths.length);
     return paths;
   } catch (error) {
-    console.error('❌ Failed to generate static paths:', error);
-    throw error; // Laat de build falen als paths niet kunnen worden gegenereerd
+    console.error('❌ Failed to discover routes:', error);
+    throw error;
   }
 }
 
@@ -30,18 +31,20 @@ let error: string | null = null;
 
 try {
   node = await getNodeData(slug);
-  // Log tijdens build om te zien of data wordt opgehaald
-  if (!import.meta.env.DEV) {
-    console.log(`📄 Building page: ${slug}, hasData: ${!!node}, title: ${node?.title || 'N/A'}`);
-  }
+  // Log tijdens request om te zien of data wordt opgehaald
+  console.log(
+    `📄 Rendering page: ${slug}, hasData: ${!!node}, title: ${node?.title || 'N/A'}`,
+  );
 } catch (e) {
   error = e instanceof Error ? e.message : 'Unknown error';
   console.error(`❌ Failed to load data for ${slug}:`, error);
-  // Tijdens build: laat de build falen zodat je het ziet
+  console.error(`Error stack:`, e instanceof Error ? e.stack : 'No stack');
+  // Tijdens request: laat de request falen zodat je het ziet
   throw new Error(`Failed to load page data for ${slug}: ${error}`);
 }
 
 if (!node) {
+  console.error(`❌ No data returned for ${slug}`);
   throw new Error(`No data returned for ${slug}`);
 }
 

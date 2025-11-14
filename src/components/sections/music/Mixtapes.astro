@@ -1,89 +1,49 @@
 ---
-import { getRecentCloudcasts } from '../../../lib/mixcloud';
-import { getRelativeTimeMixcloud } from '../../../lib/music-helpers';
-import MusicItem from './ui/MusicItem.astro';
-
-// Try server-side env vars first, fallback to PUBLIC_ for local dev
-const mixcloudUsername =
-  import.meta.env.MIXCLOUD_USERNAME ||
-  import.meta.env.PUBLIC_MIXCLOUD_USERNAME ||
-  'mieras';
-
-let mixtapes: any[] = [];
-let error: string | null = null;
-
-try {
-  mixtapes = await getRecentCloudcasts(mixcloudUsername, 5);
-} catch (e) {
-  error = e instanceof Error ? e.message : 'Failed to fetch mixtapes';
-  console.error('Error fetching mixtapes:', e);
-}
+// Client-side data fetching - geen server-side data meer
+// getRelativeTimeMixcloud wordt gebruikt in de client-side script
+// MusicItem wordt niet gebruikt - HTML wordt dynamisch gegenereerd
 ---
 
 <div class="mixtapes" data-tab="mixtapes">
-  {
-    error ? (
-      <div class="error-state">
-        <p class="no-mixtapes">Error loading mixtapes: {error}</p>
+  <div class="loading-state" data-loading="true">
+    <p>Loading mixtapes...</p>
+  </div>
+  <div class="error-state" data-error="false" style="display: none;">
+    <p class="no-mixtapes">Error loading mixtapes</p>
+  </div>
+  <div class="content-state" data-content="false" style="display: none;">
+    <div class="swiper music-swiper mixtapes-swiper">
+      <div class="swiper-wrapper">
+        <!-- Content wordt hier geïnjecteerd via JavaScript -->
       </div>
-    ) : mixtapes.length === 0 ? (
-      <div class="content-state">
-        <p class="no-mixtapes">No mixtapes available</p>
-      </div>
-    ) : (
-      <div class="content-state">
-        <div class="swiper music-swiper mixtapes-swiper">
-          <div class="swiper-wrapper">
-            {[...mixtapes, ...mixtapes].map((mixtape) => {
-              const timestamp = mixtape.createdTime
-                ? getRelativeTimeMixcloud(mixtape.createdTime)
-                : undefined;
-
-              return (
-                <div class="swiper-slide">
-                  <div
-                    class="mixtape-item"
-                    data-mixcloud-id={mixtape.mixcloudId}
-                  >
-                    <MusicItem
-                      variant="ticker-thumbnail"
-                      thumbnail={mixtape.thumbnail}
-                      line1={mixtape.name}
-                      line2={mixtape.genres?.join(', ')}
-                      timestamp={timestamp}
-                      mixcloudId={mixtape.mixcloudId}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div class="swiper-pagination" />
-        </div>
-        {/* Embed container die over de carousel komt */}
-        <div class="mixtapes-embed-container" style="display: none;">
-          <iframe
-            class="mixtapes-embed-iframe"
-            width="100%"
-            height="400"
-            src=""
-            style="border: 0"
-            allow="encrypted-media; fullscreen; autoplay; idle-detection; speaker-selection; web-share;"
-          />
-          <button class="mixtapes-embed-close" aria-label="Close player">
-            ×
-          </button>
-        </div>
-      </div>
-    )
-  }
+      <div class="swiper-pagination"></div>
+    </div>
+    {/* Embed container die over de carousel komt */}
+    <div class="mixtapes-embed-container" style="display: none;">
+      <iframe
+        class="mixtapes-embed-iframe"
+        width="100%"
+        height="400"
+        src=""
+        style="border: 0"
+        allow="encrypted-media; fullscreen; autoplay; idle-detection; speaker-selection; web-share;"
+      ></iframe>
+      <button class="mixtapes-embed-close" aria-label="Close player">
+        ×
+      </button>
+    </div>
+  </div>
 </div>
 
 <script>
   import { initSwiper, mixtapesPreset } from '../../../lib/swiper-utils';
+  import { getRelativeTimeMixcloud } from '../../../lib/music-helpers';
 
-  // Swiper instance reference
+  let isLoading = false;
+  let swiperInitialized = false;
   let mixtapesSwiper: any = null;
+
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minuten
 
   // Function to get Swiper instance
   const getMixtapesSwiper = () => {
@@ -98,110 +58,207 @@ try {
     return mixtapesSwiper;
   };
 
-  let swiperInitialized = false;
+  async function loadMixtapes() {
+    if (isLoading) {
+      console.log('Already loading, skipping...');
+      return;
+    }
 
-  // Try to initialize Swiper - with multiple strategies
-  const tryInitSwiper = () => {
     const container = document.querySelector(
       '[data-tab="mixtapes"]',
     ) as HTMLElement;
-    if (!container) {
-      return false;
+    if (!container) return;
+
+    const loadingState = container.querySelector(
+      '[data-loading="true"]',
+    ) as HTMLElement;
+    const errorState = container.querySelector('[data-error]') as HTMLElement;
+    const contentState = container.querySelector(
+      '[data-content]',
+    ) as HTMLElement;
+
+    // Check cache
+    const cachedData = sessionStorage.getItem('mixtapes-data');
+    const cachedTimestamp = sessionStorage.getItem('mixtapes-timestamp');
+
+    if (cachedData && cachedTimestamp) {
+      const age = Date.now() - parseInt(cachedTimestamp, 10);
+      if (age < CACHE_DURATION) {
+        console.log('Using cached mixtapes');
+        const mixtapes = JSON.parse(cachedData);
+        renderMixtapes(mixtapes);
+        return;
+      }
     }
 
-    const swiperEl = container.querySelector('.mixtapes-swiper') as HTMLElement;
-    if (!swiperEl) {
-      return false;
+    isLoading = true;
+    if (loadingState) loadingState.style.display = 'block';
+    if (errorState) {
+      errorState.style.display = 'none';
+      errorState.setAttribute('data-error', 'false');
+    }
+    if (contentState) {
+      contentState.style.display = 'none';
+      contentState.setAttribute('data-content', 'false');
     }
 
-    const wrapper = swiperEl.querySelector('.swiper-wrapper');
-    if (!wrapper || wrapper.children.length === 0) {
-      return false;
+    try {
+      const response = await fetch('/api/music/mixtapes');
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}`);
+      }
+
+      const mixtapes = await response.json();
+
+      // Cache data
+      sessionStorage.setItem('mixtapes-data', JSON.stringify(mixtapes));
+      sessionStorage.setItem('mixtapes-timestamp', Date.now().toString());
+
+      renderMixtapes(mixtapes);
+    } catch (error) {
+      console.error('Failed to load mixtapes:', error);
+      if (loadingState) loadingState.style.display = 'none';
+      if (errorState) {
+        errorState.style.display = 'block';
+        errorState.setAttribute('data-error', 'true');
+      }
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  function renderMixtapes(mixtapes: any[]) {
+    const container = document.querySelector(
+      '[data-tab="mixtapes"]',
+    ) as HTMLElement;
+    if (!container) return;
+
+    const loadingState = container.querySelector(
+      '[data-loading="true"]',
+    ) as HTMLElement;
+    const errorState = container.querySelector('[data-error]') as HTMLElement;
+    const contentState = container.querySelector(
+      '[data-content]',
+    ) as HTMLElement;
+    const wrapper = contentState?.querySelector(
+      '.swiper-wrapper',
+    ) as HTMLElement;
+
+    if (!wrapper || !contentState) {
+      console.error('Wrapper or contentState not found');
+      return;
     }
 
-    // Check if already initialized
-    if ((swiperEl as any).swiper) {
-      swiperInitialized = true;
-      mixtapesSwiper = (swiperEl as any).swiper;
-      return true;
+    // Show content, hide loading/error
+    if (loadingState) loadingState.style.display = 'none';
+    if (errorState) {
+      errorState.style.display = 'none';
+      errorState.setAttribute('data-error', 'false');
     }
+    contentState.style.display = 'block';
+    contentState.setAttribute('data-content', 'true');
+
+    // Clear and render mixtapes
+    wrapper.innerHTML = '';
+
+    [...mixtapes, ...mixtapes].forEach((mixtape) => {
+      const timestamp = mixtape.createdTime
+        ? getRelativeTimeMixcloud(mixtape.createdTime)
+        : undefined;
+
+      const slide = document.createElement('div');
+      slide.className = 'swiper-slide';
+
+      const mixtapeItem = document.createElement('div');
+      mixtapeItem.className = 'mixtape-item';
+      mixtapeItem.setAttribute('data-mixcloud-id', mixtape.mixcloudId);
+
+      // Create MusicItem structure
+      const musicItem = document.createElement('div');
+      musicItem.className = 'ticker-item';
+
+      const img = document.createElement('img');
+      img.src = mixtape.thumbnail || '';
+      img.alt = mixtape.name;
+
+      const content = document.createElement('div');
+
+      const line1 = document.createElement('span');
+      line1.className = 'music-line1';
+      line1.textContent = mixtape.name;
+
+      const line2 = document.createElement('span');
+      line2.className = 'music-line2';
+      line2.textContent = mixtape.genres?.join(', ') || '';
+
+      content.appendChild(line1);
+      content.appendChild(line2);
+
+      if (timestamp) {
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'music-timestamp';
+        timeSpan.textContent = timestamp;
+        content.appendChild(timeSpan);
+      }
+
+      // Add Mixcloud icon button
+      if (mixtape.mixcloudId) {
+        const iconBtn = document.createElement('button');
+        iconBtn.className = 'music-mixcloud-icon-btn';
+        iconBtn.setAttribute('data-active', 'false');
+        iconBtn.setAttribute('data-action', 'play');
+        iconBtn.setAttribute('aria-label', `Play ${mixtape.name}`);
+        iconBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14.6663 7.33329V8.66663H13.9997V9.33329H13.333V9.99996H11.9997V10.6666H10.6663V11.3333H9.99967V12H8.66634V12.6666H7.33301V13.3333H6.66634V14H5.33301V14.6666H3.99967V15.3333H1.99967V14.6666H1.33301V1.33329H1.99967V0.666626H3.99967V1.33329H5.33301V1.99996H6.66634V2.66663H7.33301V3.33329H8.66634V3.99996H9.99967V4.66663H10.6663V5.33329H11.9997V5.99996H13.333V6.66663H13.9997V7.33329H14.6663Z" fill="currentColor"/></svg>`;
+        line1.appendChild(iconBtn);
+      }
+
+      musicItem.appendChild(img);
+      musicItem.appendChild(content);
+      mixtapeItem.appendChild(musicItem);
+      slide.appendChild(mixtapeItem);
+      wrapper.appendChild(slide);
+    });
 
     // Initialize Swiper
     if (!swiperInitialized) {
-      swiperInitialized = true;
-      console.log(
-        'Initializing Mixtapes Swiper with',
-        wrapper.children.length,
-        'slides',
-      );
-      requestAnimationFrame(() => {
+      const swiperEl = container.querySelector(
+        '.mixtapes-swiper',
+      ) as HTMLElement;
+      if (swiperEl && wrapper.children.length > 0) {
+        swiperInitialized = true;
+        console.log(
+          'Initializing Mixtapes Swiper with',
+          wrapper.children.length,
+          'slides',
+        );
         requestAnimationFrame(() => {
-          const swiper = initSwiper(swiperEl, mixtapesPreset, true);
-          if (swiper && swiperEl) {
-            (swiperEl as any).swiper = swiper;
-            mixtapesSwiper = swiper;
-            console.log('Mixtapes Swiper initialized successfully');
-            requestAnimationFrame(() => {
-              swiper.update();
-              swiper.updateSize();
-            });
-          }
+          requestAnimationFrame(() => {
+            const swiper = initSwiper(swiperEl, mixtapesPreset, true);
+            if (swiper && swiperEl) {
+              (swiperEl as any).swiper = swiper;
+              mixtapesSwiper = swiper;
+              console.log('Mixtapes Swiper initialized successfully');
+              requestAnimationFrame(() => {
+                swiper.update();
+                swiper.updateSize();
+              });
+              initEmbedHandlers();
+            }
+          });
         });
-      });
-      return true;
-    }
-
-    return false;
-  };
-
-  // Use MutationObserver to detect when server island content is added
-  const observeForContent = () => {
-    const container = document.querySelector(
-      '[data-tab="mixtapes"]',
-    ) as HTMLElement;
-    if (!container) {
-      setTimeout(observeForContent, 100);
-      return;
-    }
-
-    // Try immediately
-    if (tryInitSwiper()) {
+      }
+    } else {
+      // Update existing Swiper
+      const swiperEl = container.querySelector(
+        '.mixtapes-swiper',
+      ) as HTMLElement;
+      if ((swiperEl as any).swiper) {
+        (swiperEl as any).swiper.update();
+        (swiperEl as any).swiper.updateSize();
+      }
       initEmbedHandlers();
-      return;
     }
-
-    const observer = new MutationObserver(() => {
-      if (tryInitSwiper()) {
-        observer.disconnect();
-        initEmbedHandlers();
-      }
-    });
-
-    observer.observe(container, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-    });
-
-    // Also use interval as fallback
-    let attempts = 0;
-    const intervalId = setInterval(() => {
-      attempts++;
-      if (tryInitSwiper() || attempts > 50) {
-        clearInterval(intervalId);
-        observer.disconnect();
-        if (attempts <= 50) {
-          initEmbedHandlers();
-        }
-      }
-    }, 100);
-
-    // Cleanup after 10 seconds
-    setTimeout(() => {
-      clearInterval(intervalId);
-      observer.disconnect();
-    }, 10000);
-  };
+  }
 
   const handleEmbedOpen = (mixcloudId: string) => {
     const swiperElement = document.querySelector(
@@ -311,24 +368,54 @@ try {
       '.mixtapes-embed-close',
     ) as HTMLElement;
     if (closeButton) {
-      closeButton.addEventListener('click', () => {
+      // Remove existing listeners
+      const newCloseBtn = closeButton.cloneNode(true) as HTMLElement;
+      closeButton.parentNode?.replaceChild(newCloseBtn, closeButton);
+
+      newCloseBtn.addEventListener('click', () => {
         handleEmbedClose();
         closeAllPlayers();
       });
     }
   };
 
-  // Try to initialize when DOM is ready
+  // Load data when tab becomes active
+  function initMixtapes() {
+    const container = document.querySelector(
+      '[data-tab="mixtapes"]',
+    ) as HTMLElement;
+    if (!container) {
+      setTimeout(initMixtapes, 100);
+      return;
+    }
+
+    // Check if tab is active
+    const tabContent = container.closest('.tab-content');
+    if (tabContent?.classList.contains('tab-content-active')) {
+      loadMixtapes();
+    }
+
+    // Listen for tab changes
+    const musicSection = document.querySelector('.music-section');
+    if (musicSection) {
+      musicSection.addEventListener('tab-change', (e: any) => {
+        if (e.detail.content === tabContent) {
+          loadMixtapes();
+        }
+      });
+    }
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', observeForContent);
+    document.addEventListener('DOMContentLoaded', initMixtapes);
   } else {
-    observeForContent();
+    initMixtapes();
   }
 
   document.addEventListener('astro:page-load', () => {
     swiperInitialized = false;
     mixtapesSwiper = null;
-    observeForContent();
+    initMixtapes();
   });
 </script>
 
@@ -336,6 +423,13 @@ try {
   .mixtapes {
     position: relative;
     /* min-height: 200px; */
+  }
+
+  .loading-state {
+    padding: var(--space-m);
+    text-align: center;
+    font-size: var(--fs--1);
+    opacity: 0.7;
   }
 
   .error-state {
