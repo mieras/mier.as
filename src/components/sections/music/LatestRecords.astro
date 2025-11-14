@@ -124,6 +124,59 @@ if (discogsUsername && discogsToken) {
     });
   }
 
+  // Try to initialize Swiper - with multiple strategies
+  const tryInitSwiper = () => {
+    const container = document.querySelector(
+      '[data-tab="collections"]',
+    ) as HTMLElement;
+    if (!container) {
+      return false;
+    }
+
+    const swiperEl = container.querySelector(
+      '.latest-records-swiper',
+    ) as HTMLElement;
+    if (!swiperEl) {
+      return false;
+    }
+
+    const wrapper = swiperEl.querySelector('.swiper-wrapper');
+    if (!wrapper || wrapper.children.length === 0) {
+      return false;
+    }
+
+    // Check if already initialized
+    if ((swiperEl as any).swiper) {
+      initialized = true;
+      return true;
+    }
+
+    // Initialize Swiper
+    if (!initialized) {
+      initialized = true;
+      console.log(
+        'Initializing LatestRecords Swiper with',
+        wrapper.children.length,
+        'slides',
+      );
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const swiper = initSwiper(swiperEl, musicTickerPreset, true);
+          if (swiper) {
+            console.log('LatestRecords Swiper initialized successfully');
+            requestAnimationFrame(() => {
+              swiper.update();
+              swiper.updateSize();
+            });
+          }
+        });
+      });
+      return true;
+    }
+
+    return false;
+  };
+
   // Use MutationObserver to detect when server island content is added
   const observeForContent = () => {
     const container = document.querySelector(
@@ -134,29 +187,38 @@ if (discogsUsername && discogsToken) {
       return;
     }
 
+    // Try immediately
+    if (tryInitSwiper()) {
+      return;
+    }
+
     const observer = new MutationObserver(() => {
-      const swiperEl = container.querySelector(
-        '.latest-records-swiper',
-      ) as HTMLElement;
-      if (swiperEl) {
-        const wrapper = swiperEl.querySelector('.swiper-wrapper');
-        if (wrapper && wrapper.children.length > 0 && !initialized) {
-          observer.disconnect();
-          initLatestRecordsSwiper();
-        }
+      if (tryInitSwiper()) {
+        observer.disconnect();
       }
     });
 
     observer.observe(container, {
       childList: true,
       subtree: true,
+      attributes: true,
     });
 
-    // Also try immediately
-    initLatestRecordsSwiper();
+    // Also use interval as fallback
+    let attempts = 0;
+    const intervalId = setInterval(() => {
+      attempts++;
+      if (tryInitSwiper() || attempts > 50) {
+        clearInterval(intervalId);
+        observer.disconnect();
+      }
+    }, 100);
 
-    // Cleanup observer after 10 seconds
-    setTimeout(() => observer.disconnect(), 10000);
+    // Cleanup after 10 seconds
+    setTimeout(() => {
+      clearInterval(intervalId);
+      observer.disconnect();
+    }, 10000);
   };
 
   // Try to initialize when DOM is ready
