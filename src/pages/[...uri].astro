@@ -1,12 +1,12 @@
 ---
-import DefaultLayout from "../layouts/DefaultLayout.astro";
-import { getAllUris } from "../lib/sanity";
-import { getNodeData, getTemplateByRoute } from "../lib/routes";
+import DefaultLayout from '../layouts/DefaultLayout.astro';
+import { getAllUris } from '../lib/sanity';
+import { getNodeData, getTemplateByRoute } from '../lib/routes';
 
 export const prerender = true;
 
 export async function getStaticPaths() {
-    return await getAllUris();
+  return await getAllUris();
 }
 
 import { getSiteSettings } from '../lib/sanity';
@@ -15,7 +15,7 @@ import { getSeoData } from '../lib/seo-helpers';
 // Dynamische parameter ophalen
 const { uri } = Astro.params;
 // Als uri undefined of lege string is, is het de homepage
-const slug = (uri === undefined || uri === '') ? "/" : `/${uri}/`;
+const slug = uri === undefined || uri === '' ? '/' : `/${uri}/`;
 
 let node = await getNodeData(slug);
 const Template = getTemplateByRoute(node);
@@ -34,7 +34,7 @@ const seoData = getSeoData(
   siteSettings,
   node.title,
   'Our amazing studio from Rotterdam',
-  pageUrl
+  pageUrl,
 );
 
 // Debug logging (uitgecomment - alleen nodig bij troubleshooting)
