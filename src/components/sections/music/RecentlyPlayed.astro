@@ -79,7 +79,7 @@ if (lastfmUsername && lastfmApiKey) {
       '[data-tab="now-listening"]',
     ) as HTMLElement;
     if (!container) {
-      console.warn('Recently played container not found, retrying...');
+      // Retry if container not found (server island might not be loaded yet)
       setTimeout(initRecentlyPlayedSwiper, 100);
       return;
     }
@@ -88,7 +88,16 @@ if (lastfmUsername && lastfmApiKey) {
       '.recently-played-swiper',
     ) as HTMLElement;
     if (!swiperEl) {
-      console.warn('Swiper element not found');
+      // Retry if swiper not found (server island might not be loaded yet)
+      setTimeout(initRecentlyPlayedSwiper, 100);
+      return;
+    }
+
+    // Wait for content to be loaded (server:defer might still be loading)
+    const wrapper = swiperEl.querySelector('.swiper-wrapper');
+    if (!wrapper || wrapper.children.length === 0) {
+      // Content not loaded yet, retry
+      setTimeout(initRecentlyPlayedSwiper, 100);
       return;
     }
 
@@ -100,32 +109,65 @@ if (lastfmUsername && lastfmApiKey) {
 
     initialized = true;
 
-    // Initialize Swiper after a short delay to ensure DOM is ready
+    // Initialize Swiper now that content is loaded
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        setTimeout(() => {
-          const swiper = initSwiper(swiperEl, musicTickerPreset, true);
-          if (swiper) {
-            requestAnimationFrame(() => {
-              swiper.update();
-              swiper.updateSize();
-            });
-          }
-        }, 50);
+        const swiper = initSwiper(swiperEl, musicTickerPreset, true);
+        if (swiper) {
+          requestAnimationFrame(() => {
+            swiper.update();
+            swiper.updateSize();
+          });
+        }
       });
     });
   }
 
-  // Try to initialize immediately if DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initRecentlyPlayedSwiper);
-  } else {
+  // Use MutationObserver to detect when server island content is added
+  const observeForContent = () => {
+    const container = document.querySelector(
+      '[data-tab="now-listening"]',
+    ) as HTMLElement;
+    if (!container) {
+      setTimeout(observeForContent, 100);
+      return;
+    }
+
+    const observer = new MutationObserver(() => {
+      const swiperEl = container.querySelector(
+        '.recently-played-swiper',
+      ) as HTMLElement;
+      if (swiperEl) {
+        const wrapper = swiperEl.querySelector('.swiper-wrapper');
+        if (wrapper && wrapper.children.length > 0 && !initialized) {
+          observer.disconnect();
+          initRecentlyPlayedSwiper();
+        }
+      }
+    });
+
+    observer.observe(container, {
+      childList: true,
+      subtree: true,
+    });
+
+    // Also try immediately
     initRecentlyPlayedSwiper();
+
+    // Cleanup observer after 10 seconds
+    setTimeout(() => observer.disconnect(), 10000);
+  };
+
+  // Try to initialize when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', observeForContent);
+  } else {
+    observeForContent();
   }
 
   document.addEventListener('astro:page-load', () => {
     initialized = false;
-    initRecentlyPlayedSwiper();
+    observeForContent();
   });
 </script>
 

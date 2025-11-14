@@ -23,21 +23,23 @@ export function getRelativeTimeLastFm(dateText: string, uts?: string): string {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'zojuist';
-    if (diffMins < 60) return `${diffMins} min geleden`;
-    if (diffHours < 24) return `${diffHours} uur geleden`;
-    if (diffDays === 1) return 'gisteren';
-    if (diffDays < 7) return `${diffDays} dagen geleden`;
+    if (diffMins < 1) return 'just now';
+    if (diffMins < 60)
+      return `${diffMins} ${diffMins === 1 ? 'minute' : 'minutes'} ago`;
+    if (diffHours < 24)
+      return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+    if (diffDays === 1) return 'yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
     if (diffDays < 30) {
       const weeks = Math.floor(diffDays / 7);
-      return `${weeks} ${weeks === 1 ? 'week' : 'weken'} geleden`;
+      return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
     }
     if (diffDays < 365) {
       const months = Math.floor(diffDays / 30);
-      return `${months} ${months === 1 ? 'maand' : 'maanden'} geleden`;
+      return `${months} ${months === 1 ? 'month' : 'months'} ago`;
     }
     const years = Math.floor(diffDays / 365);
-    return `${years} ${years === 1 ? 'jaar' : 'jaren'} geleden`;
+    return `${years} ${years === 1 ? 'year' : 'years'} ago`;
   } catch (error) {
     return dateText; // Fallback to original text
   }
@@ -55,21 +57,23 @@ export function getRelativeTimeMixcloud(dateString: string): string {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'zojuist geüpload';
-    if (diffMins < 60) return `${diffMins} min geleden geüpload`;
-    if (diffHours < 24) return `${diffHours} uur geleden geüpload`;
-    if (diffDays === 1) return 'gisteren geüpload';
-    if (diffDays < 7) return `${diffDays} dagen geleden geüpload`;
+    if (diffMins < 1) return 'just uploaded';
+    if (diffMins < 60)
+      return `${diffMins} ${diffMins === 1 ? 'minute' : 'minutes'} ago`;
+    if (diffHours < 24)
+      return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+    if (diffDays === 1) return 'yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
     if (diffDays < 30) {
       const weeks = Math.floor(diffDays / 7);
-      return `${weeks} ${weeks === 1 ? 'week' : 'weken'} geleden geüpload`;
+      return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
     }
     if (diffDays < 365) {
       const months = Math.floor(diffDays / 30);
-      return `${months} ${months === 1 ? 'maand' : 'maanden'} geleden geüpload`;
+      return `${months} ${months === 1 ? 'month' : 'months'} ago`;
     }
     const years = Math.floor(diffDays / 365);
-    return `${years} ${years === 1 ? 'jaar' : 'jaren'} geleden geüpload`;
+    return `${years} ${years === 1 ? 'year' : 'years'} ago`;
   } catch (error) {
     return '';
   }
@@ -87,23 +91,24 @@ export function getRelativeTimeDiscogs(dateString?: string): string {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'zojuist toegevoegd';
-    if (diffMins < 60) return `${diffMins} min geleden toegevoegd`;
-    if (diffHours < 24) return `${diffHours} uur geleden toegevoegd`;
-    if (diffDays === 1) return 'gisteren toegevoegd';
-    if (diffDays < 7) return `${diffDays} dagen geleden toegevoegd`;
+    if (diffMins < 1) return 'just added';
+    if (diffMins < 60)
+      return `${diffMins} ${diffMins === 1 ? 'minute' : 'minutes'} ago`;
+    if (diffHours < 24)
+      return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+    if (diffDays === 1) return 'yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
     if (diffDays < 30) {
       const weeks = Math.floor(diffDays / 7);
-      return `${weeks} ${weeks === 1 ? 'week' : 'weken'} geleden toegevoegd`;
+      return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
     }
     if (diffDays < 365) {
       const months = Math.floor(diffDays / 30);
-      return `${months} ${months === 1 ? 'maand' : 'maanden'} geleden toegevoegd`;
+      return `${months} ${months === 1 ? 'month' : 'months'} ago`;
     }
     const years = Math.floor(diffDays / 365);
-    return `${years} ${years === 1 ? 'jaar' : 'jaren'} geleden toegevoegd`;
+    return `${years} ${years === 1 ? 'year' : 'years'} ago`;
   } catch (error) {
     return '';
   }
 }
-
