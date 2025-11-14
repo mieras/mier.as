@@ -6,7 +6,15 @@ import { getNodeData, getTemplateByRoute } from '../lib/routes';
 export const prerender = true;
 
 export async function getStaticPaths() {
-  return await getAllUris();
+  try {
+    const paths = await getAllUris();
+    // Log tijdens build om te zien wat er gebeurt
+    console.log('📦 Building static paths:', paths.length);
+    return paths;
+  } catch (error) {
+    console.error('❌ Failed to generate static paths:', error);
+    throw error; // Laat de build falen als paths niet kunnen worden gegenereerd
+  }
 }
 
 import { getSiteSettings } from '../lib/sanity';
@@ -17,11 +25,37 @@ const { uri } = Astro.params;
 // Als uri undefined of lege string is, is het de homepage
 const slug = uri === undefined || uri === '' ? '/' : `/${uri}/`;
 
-let node = await getNodeData(slug);
+let node;
+let error: string | null = null;
+
+try {
+  node = await getNodeData(slug);
+  // Log tijdens build om te zien of data wordt opgehaald
+  if (!import.meta.env.DEV) {
+    console.log(`📄 Building page: ${slug}, hasData: ${!!node}, title: ${node?.title || 'N/A'}`);
+  }
+} catch (e) {
+  error = e instanceof Error ? e.message : 'Unknown error';
+  console.error(`❌ Failed to load data for ${slug}:`, error);
+  // Tijdens build: laat de build falen zodat je het ziet
+  throw new Error(`Failed to load page data for ${slug}: ${error}`);
+}
+
+if (!node) {
+  throw new Error(`No data returned for ${slug}`);
+}
+
 const Template = getTemplateByRoute(node);
 
 // Haal site settings op voor SEO fallbacks
-const siteSettings = await getSiteSettings();
+let siteSettings;
+try {
+  siteSettings = await getSiteSettings();
+} catch (e) {
+  console.error('❌ Failed to load site settings:', e);
+  // Site settings zijn niet kritiek, gebruik fallbacks
+  siteSettings = null;
+}
 
 // Build URL voor deze pagina
 const pageUrl = Astro.site
@@ -31,7 +65,7 @@ const pageUrl = Astro.site
 // Get SEO data met fallbacks
 const seoData = getSeoData(
   node.seo,
-  siteSettings,
+  siteSettings || undefined, // Convert null to undefined
   node.title,
   'Our amazing studio from Rotterdam',
   pageUrl,

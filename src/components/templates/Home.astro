@@ -23,9 +23,27 @@ type Project = {
   };
 };
 
-// Haal alle projecten en photography op
-const projects = (await getAllProjects()) as Project[];
-const photography = (await getAllPhotography()) as any[];
+// Haal alle projecten en photography op met error handling
+let projects: Project[] = [];
+let photography: any[] = [];
+
+try {
+  projects = (await getAllProjects()) as Project[];
+  console.log(`🏗️ Build: Loaded ${projects.length} projects`);
+} catch (error) {
+  console.error('❌ Failed to load projects during build:', error);
+  // Laat de build falen zodat je het ziet
+  throw error;
+}
+
+try {
+  photography = (await getAllPhotography()) as any[];
+  console.log(`🏗️ Build: Loaded ${photography.length} photography items`);
+} catch (error) {
+  console.error('❌ Failed to load photography during build:', error);
+  // Laat de build falen zodat je het ziet
+  throw error;
+}
 ---
 
 <main class="main">

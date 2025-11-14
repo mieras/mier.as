@@ -13,7 +13,7 @@ const { city = 'Rotterdam' } = Astro.props;
   <span class="nav-temperature" id="temperature">--°C</span>
 </span>
 
-<script define:vars={{ city }}>
+<script is:inline define:vars={{ city }}>
   const API_KEY = '14ca45f46d204e66bd3165215251411';
   const API_URL = 'https://api.weatherapi.com/v1/current.json';
 
