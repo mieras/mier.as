@@ -1,120 +1,149 @@
 ---
 import { getLatestRecords } from '../../../lib/discogs';
+import { getRelativeTimeDiscogs } from '../../../lib/music-helpers';
 import MusicItem from './ui/MusicItem.astro';
 
-const discogsUsername = import.meta.env.PUBLIC_DISCOGS_USERNAME || '';
-const discogsToken = import.meta.env.PUBLIC_DISCOGS_TOKEN || '';
+// Try server-side env vars first, fallback to PUBLIC_ for local dev
+const discogsUsername =
+  import.meta.env.DISCOGS_USERNAME ||
+  import.meta.env.PUBLIC_DISCOGS_USERNAME ||
+  '';
+const discogsToken =
+  import.meta.env.DISCOGS_TOKEN || import.meta.env.PUBLIC_DISCOGS_TOKEN || '';
 
-let latestRecords: any[] = [];
+let records: any[] = [];
+let error: string | null = null;
 
 if (discogsUsername && discogsToken) {
   try {
-    latestRecords = await getLatestRecords(discogsUsername, discogsToken, 5);
-  } catch (error) {
-    console.error('Error fetching Discogs data:', error);
+    records = await getLatestRecords(discogsUsername, discogsToken, 5);
+  } catch (e) {
+    error = e instanceof Error ? e.message : 'Failed to fetch records';
+    console.error('Error fetching latest records:', e);
   }
 } else {
-  console.warn(
-    '⚠️ Discogs credentials not configured. Add PUBLIC_DISCOGS_USERNAME and PUBLIC_DISCOGS_TOKEN to .env',
-  );
-}
-
-// Helper function to format relative time (similar to Last.fm)
-function getRelativeTime(dateString?: string): string {
-  if (!dateString) return '';
-
-  try {
-    const now = new Date();
-    const addedDate = new Date(dateString);
-    const diffMs = now.getTime() - addedDate.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'zojuist toegevoegd';
-    if (diffMins < 60) return `${diffMins} min geleden toegevoegd`;
-    if (diffHours < 24) return `${diffHours} uur geleden toegevoegd`;
-    if (diffDays === 1) return 'gisteren toegevoegd';
-    if (diffDays < 7) return `${diffDays} dagen geleden toegevoegd`;
-    if (diffDays < 30) {
-      const weeks = Math.floor(diffDays / 7);
-      return `${weeks} ${weeks === 1 ? 'week' : 'weken'} geleden toegevoegd`;
-    }
-    if (diffDays < 365) {
-      const months = Math.floor(diffDays / 30);
-      return `${months} ${months === 1 ? 'maand' : 'maanden'} geleden toegevoegd`;
-    }
-    const years = Math.floor(diffDays / 365);
-    return `${years} ${years === 1 ? 'jaar' : 'jaren'} geleden toegevoegd`;
-  } catch (error) {
-    return '';
-  }
+  error = 'Discogs credentials not configured';
 }
 ---
 
-<div class="latest-records">
+<div class="latest-records" data-tab="collections">
   {
-    latestRecords.length > 0 ? (
-      <div class="swiper music-swiper latest-records-swiper">
-        <div class="swiper-wrapper">
-          {latestRecords.map((record) => {
-            const artist = record.artist || '';
-            const albumYear = [record.title, record.year]
-              .filter(Boolean)
-              .join(' • ');
-            const timestamp = record.dateAdded
-              ? getRelativeTime(record.dateAdded)
-              : undefined;
-
-            return (
-              <div class="swiper-slide">
-                <MusicItem
-                  thumbnail={record.thumb}
-                  line1={artist}
-                  line2={albumYear}
-                  timestamp={timestamp}
-                  variant="ticker-thumbnail"
-                />
-              </div>
-            );
-          })}
-          {/* Duplicate for seamless loop */}
-          {latestRecords.map((record) => {
-            const artist = record.artist || '';
-            const albumYear = [record.title, record.year]
-              .filter(Boolean)
-              .join(' • ');
-            const timestamp = record.dateAdded
-              ? getRelativeTime(record.dateAdded)
-              : undefined;
-
-            return (
-              <div class="swiper-slide">
-                <MusicItem
-                  thumbnail={record.thumb}
-                  line1={artist}
-                  line2={albumYear}
-                  timestamp={timestamp}
-                  variant="ticker-thumbnail"
-                />
-              </div>
-            );
-          })}
-        </div>
-        <div class="swiper-pagination" />
+    error ? (
+      <div class="error-state">
+        <p class="no-records">Error loading records: {error}</p>
+      </div>
+    ) : records.length === 0 ? (
+      <div class="content-state">
+        <p class="no-records">No recent records available</p>
       </div>
     ) : (
-      <p class="no-records">No recent records available</p>
+      <div class="content-state">
+        <div class="swiper music-swiper latest-records-swiper">
+          <div class="swiper-wrapper">
+            {[...records, ...records].map((record, index) => {
+              const artist = record.artist || 'Unknown Artist';
+              const album = record.title || '';
+              const albumYear = record.year ? `(${record.year})` : undefined;
+              const timestamp = record.dateAdded
+                ? getRelativeTimeDiscogs(record.dateAdded)
+                : undefined;
+
+              return (
+                <div class="swiper-slide">
+                  <MusicItem
+                    variant="ticker-thumbnail"
+                    thumbnail={record.thumbnail}
+                    line1={artist}
+                    line2={albumYear ? `${album} ${albumYear}` : album}
+                    timestamp={timestamp}
+                  />
+                </div>
+              );
+            })}
+          </div>
+          <div class="swiper-pagination" />
+        </div>
+      </div>
     )
   }
 </div>
 
 <script>
-  // Swiper initialization is now handled by MusicSection component
-  // to ensure it only initializes when the tab is visible
+  import { initSwiper, musicTickerPreset } from '../../../lib/swiper-utils';
+
+  let initialized = false;
+
+  function initLatestRecordsSwiper() {
+    if (initialized) return;
+
+    const container = document.querySelector(
+      '[data-tab="collections"]',
+    ) as HTMLElement;
+    if (!container) {
+      console.warn('Latest records container not found, retrying...');
+      setTimeout(initLatestRecordsSwiper, 100);
+      return;
+    }
+
+    const swiperEl = container.querySelector(
+      '.latest-records-swiper',
+    ) as HTMLElement;
+    if (!swiperEl) {
+      console.warn('Swiper element not found');
+      return;
+    }
+
+    // Check if Swiper is already initialized
+    if ((swiperEl as any).swiper) {
+      initialized = true;
+      return;
+    }
+
+    initialized = true;
+
+    // Initialize Swiper after a short delay to ensure DOM is ready
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          const swiper = initSwiper(swiperEl, musicTickerPreset, true);
+          if (swiper) {
+            requestAnimationFrame(() => {
+              swiper.update();
+              swiper.updateSize();
+            });
+          }
+        }, 50);
+      });
+    });
+  }
+
+  // Try to initialize immediately if DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initLatestRecordsSwiper);
+  } else {
+    initLatestRecordsSwiper();
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    initialized = false;
+    initLatestRecordsSwiper();
+  });
 </script>
 
 <style>
+  .latest-records {
+    position: relative;
+    min-height: 200px;
+  }
+
+  .error-state {
+    padding: var(--space-m);
+  }
+
+  .content-state {
+    width: 100%;
+  }
+
   .latest-records-swiper {
     width: 100%;
   }
@@ -142,7 +171,6 @@ function getRelativeTime(dateString?: string): string {
 
   .latest-records-swiper .swiper-pagination {
     position: relative;
-    /* margin-top: var(--space-s); */
     text-align: center;
   }
 
@@ -159,5 +187,7 @@ function getRelativeTime(dateString?: string): string {
     font-size: var(--fs--1);
     opacity: 0.7;
     font-style: italic;
+    text-align: center;
+    padding: var(--space-m);
   }
 </style>
