@@ -40,7 +40,7 @@ if (discogsUsername && discogsToken) {
       <div class="content-state">
         <div class="swiper music-swiper latest-records-swiper">
           <div class="swiper-wrapper">
-            {[...records, ...records].map((record, index) => {
+            {[...records, ...records].map((record) => {
               const artist = record.artist || 'Unknown Artist';
               const album = record.title || '';
               const albumYear = record.year ? `(${record.year})` : undefined;
@@ -72,57 +72,6 @@ if (discogsUsername && discogsToken) {
   import { initSwiper, musicTickerPreset } from '../../../lib/swiper-utils';
 
   let initialized = false;
-
-  function initLatestRecordsSwiper() {
-    if (initialized) return;
-
-    const container = document.querySelector(
-      '[data-tab="collections"]',
-    ) as HTMLElement;
-    if (!container) {
-      // Retry if container not found (server island might not be loaded yet)
-      setTimeout(initLatestRecordsSwiper, 100);
-      return;
-    }
-
-    const swiperEl = container.querySelector(
-      '.latest-records-swiper',
-    ) as HTMLElement;
-    if (!swiperEl) {
-      // Retry if swiper not found (server island might not be loaded yet)
-      setTimeout(initLatestRecordsSwiper, 100);
-      return;
-    }
-
-    // Wait for content to be loaded (server:defer might still be loading)
-    const wrapper = swiperEl.querySelector('.swiper-wrapper');
-    if (!wrapper || wrapper.children.length === 0) {
-      // Content not loaded yet, retry
-      setTimeout(initLatestRecordsSwiper, 100);
-      return;
-    }
-
-    // Check if Swiper is already initialized
-    if ((swiperEl as any).swiper) {
-      initialized = true;
-      return;
-    }
-
-    initialized = true;
-
-    // Initialize Swiper now that content is loaded
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        const swiper = initSwiper(swiperEl, musicTickerPreset, true);
-        if (swiper) {
-          requestAnimationFrame(() => {
-            swiper.update();
-            swiper.updateSize();
-          });
-        }
-      });
-    });
-  }
 
   // Try to initialize Swiper - with multiple strategies
   const tryInitSwiper = () => {
