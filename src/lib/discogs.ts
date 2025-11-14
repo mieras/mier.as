@@ -157,7 +157,7 @@ export async function getLatestRecords(
 export async function getDiscogs(): Promise<NormalizedMusicItem[]> {
   const username = import.meta.env.PUBLIC_DISCOGS_USERNAME || '';
   const token = import.meta.env.PUBLIC_DISCOGS_TOKEN || '';
-  const limit = 5;
+  const limit = 15;
 
   if (!username || !token) {
     return [];
@@ -165,7 +165,7 @@ export async function getDiscogs(): Promise<NormalizedMusicItem[]> {
 
   try {
     const records = await getLatestRecords(username, token, limit);
-    
+
     // Normalize to common format with source and ISO date
     return records.map((record) => {
       // Convert date_added to ISO format if it exists

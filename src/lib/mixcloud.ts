@@ -126,7 +126,7 @@ export async function getRecentCloudcasts(
  */
 export async function getMixcloud(): Promise<NormalizedMusicItem[]> {
   const username = import.meta.env.PUBLIC_MIXCLOUD_USERNAME || 'mieras';
-  const limit = 5;
+  const limit = 10;
 
   if (!username) {
     return [];
@@ -134,7 +134,7 @@ export async function getMixcloud(): Promise<NormalizedMusicItem[]> {
 
   try {
     const cloudcasts = await getRecentCloudcasts(username, limit);
-    
+
     // Normalize to common format with source and ISO date
     return cloudcasts.map((cloudcast) => {
       // Convert created_time to ISO format
@@ -168,4 +168,3 @@ export async function getMixcloud(): Promise<NormalizedMusicItem[]> {
     return [];
   }
 }
-

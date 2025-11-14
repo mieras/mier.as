@@ -21,6 +21,7 @@ export interface LastFmTrack {
     '#text': string;
     uts?: string;
   };
+  imageUrl?: string; // Added by getRecentlyPlayed processing
 }
 
 export interface LastFmResponse {
@@ -127,7 +128,7 @@ export async function getRecentlyPlayed(
 export async function getLastFm(): Promise<NormalizedMusicItem[]> {
   const username = import.meta.env.PUBLIC_LASTFM_USERNAME || '';
   const apiKey = import.meta.env.PUBLIC_LASTFM_API_KEY || '';
-  const limit = 5;
+  const limit = 15;
 
   if (!username || !apiKey) {
     return [];
@@ -135,7 +136,7 @@ export async function getLastFm(): Promise<NormalizedMusicItem[]> {
 
   try {
     const tracks = await getRecentlyPlayed(username, apiKey, limit);
-    
+
     // Normalize to common format with source and ISO date
     return tracks.map((track) => {
       // Convert Last.fm date to ISO format
