@@ -3,6 +3,8 @@
  * Fetches recent cloudcasts (shows/uploads) for a user
  */
 
+import type { NormalizedMusicItem } from './discogs';
+
 export interface MixcloudCloudcast {
   key: string;
   name: string;
@@ -118,3 +120,51 @@ export async function getRecentCloudcasts(
   }
 }
 
+/**
+ * Wrapper function that reads environment variables and returns normalized data
+ * For use in API endpoint
+ */
+export async function getMixcloud(): Promise<NormalizedMusicItem[]> {
+  const username = import.meta.env.PUBLIC_MIXCLOUD_USERNAME || 'mieras';
+  const limit = 10;
+
+  if (!username) {
+    return [];
+  }
+
+  try {
+    const cloudcasts = await getRecentCloudcasts(username, limit);
+
+    // Normalize to common format with source and ISO date
+    return cloudcasts.map((cloudcast) => {
+      // Convert created_time to ISO format
+      let isoDate = '';
+      if (cloudcast.createdTime) {
+        try {
+          const date = new Date(cloudcast.createdTime);
+          isoDate = date.toISOString();
+        } catch {
+          // If date parsing fails, use current date as fallback
+          isoDate = new Date().toISOString();
+        }
+      } else {
+        // If no date, use current date
+        isoDate = new Date().toISOString();
+      }
+
+      return {
+        source: 'mixcloud' as const,
+        date: isoDate,
+        title: cloudcast.name,
+        thumb: cloudcast.thumbnail,
+        mixcloudId: cloudcast.mixcloudId,
+        genres: cloudcast.genres,
+        url: cloudcast.url,
+        slug: cloudcast.slug,
+      };
+    });
+  } catch (error) {
+    console.error('❌ Failed to fetch Mixcloud data:', error);
+    return [];
+  }
+}

@@ -1,16 +1,16 @@
 ---
-import '../assets/global.css'
-import '../assets/scss/globals.scss'
-import '../assets/default.css'
-import '@fontsource-variable/geist/index.css'
-import '@fontsource-variable/geist-mono/index.css'
-import '@fontsource/tiktok-sans/index.css'
-import SiteMeta from '../components/SiteMeta.astro'
-import SiteNavigation from '../components/SiteNavigation.astro'
-import CookieConsent from '../components/CookieConsent.astro'
-import SiteFooter from '../components/SiteFooter.astro'
+import '../assets/global.css';
+import '../assets/scss/globals.scss';
+import '../assets/default.css';
+import '@fontsource-variable/geist/index.css';
+import '@fontsource-variable/geist-mono/index.css';
+import '@fontsource/tiktok-sans/index.css';
+import SiteMeta from '../components/SiteMeta.astro';
+import SiteNavigation from '../components/SiteNavigation.astro';
+import CookieConsent from '../components/CookieConsent.astro';
+import SiteFooter from '../components/SiteFooter.astro';
 
-import { getNavigation } from '../lib/sanity'
+import { getNavigation } from '../lib/sanity';
 
 type Props = {
   children?: any;
@@ -20,11 +20,18 @@ type Props = {
   author?: any;
   seo?: any;
   url?: string;
-}
+};
 
-const { title, description, image = '/social-preview-image.png', author = 'Mier.as', seo, url } = Astro.props
-const { menus, generalSettings } = await getNavigation()
-const primaryMenu = menus.nodes[0]
+const {
+  title,
+  description,
+  image = '/social-preview-image.png',
+  author = 'Mier.as',
+  seo,
+  url,
+} = Astro.props;
+const { menus, generalSettings } = await getNavigation();
+const primaryMenu = menus.nodes[0];
 
 // Debug logging (uitgecomment - alleen nodig bij troubleshooting)
 // if (import.meta.env.DEV && seo) {
@@ -41,7 +48,10 @@ const primaryMenu = menus.nodes[0]
       // Carry current theme into the incoming document before swap
       document.addEventListener('astro:before-swap', (event) => {
         try {
-          const theme = localStorage.getItem('theme') || document.documentElement.getAttribute('data-theme') || 'light';
+          const theme =
+            localStorage.getItem('theme') ||
+            document.documentElement.getAttribute('data-theme') ||
+            'light';
           event.newDocument.documentElement.setAttribute('data-theme', theme);
         } catch (e) {}
       });
@@ -51,22 +61,27 @@ const primaryMenu = menus.nodes[0]
         try {
           const doc = document.documentElement;
           const stored = localStorage.getItem('theme');
-          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const prefersDark = window.matchMedia(
+            '(prefers-color-scheme: dark)',
+          ).matches;
           const theme = stored || (prefersDark ? 'dark' : 'light');
           doc.setAttribute('data-theme', theme);
         } catch (e) {}
       })();
     </script>
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml"  />
-    <link rel="icon" href="/favicon.ico" sizes="any">
-    
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <!-- <link rel="icon" href="/favicon.ico" sizes="any"> -->
+
     <!-- Comico Font -->
-    <link href="https://api.fontshare.com/v2/css?f[]=comico@400&display=swap" rel="stylesheet">
+    <link
+      href="https://api.fontshare.com/v2/css?f[]=comico@400&display=swap"
+      rel="stylesheet"
+    />
 
     <!-- CookieConsent CSS -->
     <link rel="stylesheet" href="/css/iframemanager.css" />
     <link rel="stylesheet" href="/css/cookieconsent.css" />
-    
+
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/gh/orestbida/cookieconsent@v3.0.1/dist/cookieconsent.css"
@@ -75,7 +90,9 @@ const primaryMenu = menus.nodes[0]
     <SiteMeta
       title={seo?.title || title}
       description={seo?.description || description}
-      url={seo?.canonicalUrl || url || (Astro.site ? Astro.site.toString() : 'https://accessible-astro.dev')}
+      url={seo?.canonicalUrl ||
+        url ||
+        (Astro.site ? Astro.site.toString() : 'https://accessible-astro.dev')}
       image={seo?.metaImage || seo?.openGraph?.image || image}
       author={author}
       seo={seo}
@@ -84,11 +101,11 @@ const primaryMenu = menus.nodes[0]
 
   <body>
     <div class="wrapper">
-    <SiteNavigation menu={primaryMenu} generalSettings={generalSettings} />
-    
+      <SiteNavigation menu={primaryMenu} generalSettings={generalSettings} />
+
       <slot />
-    
-    <SiteFooter />
+
+      <SiteFooter />
     </div>
     <CookieConsent />
     <!-- JavaScript bestanden -->
@@ -97,7 +114,11 @@ const primaryMenu = menus.nodes[0]
     <script is:inline>
       // Re-scan embeds after Astro view transitions
       const __rescanEmbeds = () => {
-        try { window.iframemanager && window.iframemanager.scan && window.iframemanager.scan(); } catch (e) {}
+        try {
+          window.iframemanager &&
+            window.iframemanager.scan &&
+            window.iframemanager.scan();
+        } catch (e) {}
       };
       document.addEventListener('astro:page-load', __rescanEmbeds);
       document.addEventListener('astro:after-swap', __rescanEmbeds);
@@ -106,18 +127,18 @@ const primaryMenu = menus.nodes[0]
 </html>
 
 <style>
-.wrapper {
-   height: auto;
-    min-height: 100vh;
-}
-
-/* Desktop: height constraint voor viewport */
-@media (min-width: 800px) {
   .wrapper {
-    display: grid;
-  grid-template-rows: auto 1fr auto;
-    height: 100vh;
-    overflow: hidden;
+    height: auto;
+    min-height: 100vh;
   }
-}
+
+  /* Desktop: height constraint voor viewport */
+  @media (min-width: 800px) {
+    .wrapper {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      height: 100vh;
+      overflow: hidden;
+    }
+  }
 </style>

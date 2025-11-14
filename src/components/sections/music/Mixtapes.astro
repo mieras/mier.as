@@ -1,49 +1,26 @@
 ---
-import { getRecentCloudcasts } from '../../../lib/mixcloud';
 import MusicItem from './ui/MusicItem.astro';
-
-const mixcloudUsername = import.meta.env.PUBLIC_MIXCLOUD_USERNAME || 'mieras';
+import { getRelativeTime } from '../../../lib/music-helpers';
 
 let mixtapes: any[] = [];
 let hasError = false;
 
 try {
-  mixtapes = await getRecentCloudcasts(mixcloudUsername, 5);
-} catch (error) {
-  console.error('Error fetching Mixcloud data:', error);
-  hasError = true;
-}
+  // Use Astro.url to construct absolute URL for SSR
+  const apiUrl = new URL('/api/music.json', Astro.url.origin);
+  const apiRes = await fetch(apiUrl);
 
-// Helper function to format relative time
-function getRelativeTime(dateString: string): string {
-  if (!dateString) return '';
-
-  try {
-    const now = new Date();
-    const uploadDate = new Date(dateString);
-    const diffMs = now.getTime() - uploadDate.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'zojuist geüpload';
-    if (diffMins < 60) return `${diffMins} min geleden geüpload`;
-    if (diffHours < 24) return `${diffHours} uur geleden geüpload`;
-    if (diffDays === 1) return 'gisteren geüpload';
-    if (diffDays < 7) return `${diffDays} dagen geleden geüpload`;
-    if (diffDays < 30) {
-      const weeks = Math.floor(diffDays / 7);
-      return `${weeks} ${weeks === 1 ? 'week' : 'weken'} geleden geüpload`;
-    }
-    if (diffDays < 365) {
-      const months = Math.floor(diffDays / 30);
-      return `${months} ${months === 1 ? 'maand' : 'maanden'} geleden geüpload`;
-    }
-    const years = Math.floor(diffDays / 365);
-    return `${years} ${years === 1 ? 'jaar' : 'jaren'} geleden geüpload`;
-  } catch (error) {
-    return '';
+  if (!apiRes.ok) {
+    throw new Error(`API returned ${apiRes.status}`);
   }
+
+  const { items } = await apiRes.json();
+
+  // Filter for mixcloud items only
+  mixtapes = items.filter((item: any) => item.source === 'mixcloud');
+} catch (error) {
+  console.error('Error fetching music data:', error);
+  hasError = true;
 }
 ---
 
@@ -54,11 +31,11 @@ function getRelativeTime(dateString: string): string {
         <div class="swiper music-swiper mixtapes-swiper">
           <div class="swiper-wrapper">
             {mixtapes.map((mixtape, index) => {
-              const thumbnail = mixtape.thumbnail;
+              const thumbnail = mixtape.thumb;
               const mixcloudId = mixtape.mixcloudId;
               const genres = mixtape.genres || [];
-              const timestamp = mixtape.createdTime
-                ? getRelativeTime(mixtape.createdTime)
+              const timestamp = mixtape.date
+                ? getRelativeTime(mixtape.date)
                 : undefined;
               const genresText =
                 genres.length > 0 ? genres.join(', ') : undefined;
@@ -71,7 +48,7 @@ function getRelativeTime(dateString: string): string {
                 >
                   <MusicItem
                     thumbnail={thumbnail}
-                    line1={mixtape.name}
+                    line1={mixtape.title}
                     line2={genresText}
                     timestamp={timestamp}
                     variant="ticker-thumbnail"
@@ -83,11 +60,11 @@ function getRelativeTime(dateString: string): string {
             })}
             {/* Duplicate for seamless loop */}
             {mixtapes.map((mixtape, index) => {
-              const thumbnail = mixtape.thumbnail;
+              const thumbnail = mixtape.thumb;
               const mixcloudId = mixtape.mixcloudId;
               const genres = mixtape.genres || [];
-              const timestamp = mixtape.createdTime
-                ? getRelativeTime(mixtape.createdTime)
+              const timestamp = mixtape.date
+                ? getRelativeTime(mixtape.date)
                 : undefined;
               const genresText =
                 genres.length > 0 ? genres.join(', ') : undefined;
@@ -100,7 +77,7 @@ function getRelativeTime(dateString: string): string {
                 >
                   <MusicItem
                     thumbnail={thumbnail}
-                    line1={mixtape.name}
+                    line1={mixtape.title}
                     line2={genresText}
                     timestamp={timestamp}
                     variant="ticker-thumbnail"
@@ -118,7 +95,7 @@ function getRelativeTime(dateString: string): string {
           <iframe
             class="mixtapes-embed-iframe"
             width="100%"
-            height="400"
+            height="100%"
             src=""
             frameborder="0"
             allow="encrypted-media; fullscreen; autoplay; idle-detection; speaker-selection; web-share;"
@@ -177,7 +154,7 @@ function getRelativeTime(dateString: string): string {
 
     // Toon embed over carousel (carousel blijft zichtbaar maar embed komt erover)
     embedContainer.style.display = 'flex';
-    embedIframe.src = `https://player-widget.mixcloud.com/widget/iframe/?hide_cover=1&mini=1&autoplay=1&feed=%2F${mixcloudId}%2F`;
+    embedIframe.src = `https://player-widget.mixcloud.com/widget/iframe/?hide_cover=1&autoplay=1&feed=%2F${mixcloudId}%2F`;
   };
 
   const handleEmbedClose = () => {
@@ -339,9 +316,9 @@ function getRelativeTime(dateString: string): string {
     width: 100%;
     height: 100%;
     background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-small);
-    padding: var(--space-m);
+    /* border: 1px solid var(--border); */
+    /* border-radius: var(--radius-small); */
+    /* padding: var(--space-m); */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -350,10 +327,12 @@ function getRelativeTime(dateString: string): string {
   }
 
   .mixtapes-embed-iframe {
-    width: 100%;
-    height: 400px;
+    width: calc(100% - 2rem);
+    padding-right: 1.5rem;
+    height: 60px;
+    background: var(--bg);
     border: none;
-    border-radius: var(--radius-small);
+    /* border-radius: var(--radius-small); */
   }
 
   .mixtapes-embed-close {

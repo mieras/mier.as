@@ -45,8 +45,9 @@ export default defineType({
       name: 'url',
       type: 'url',
       title: 'Site URL',
+      description: 'Optional - used for Open Graph URLs. If not set, will use the current page URL.',
       validation: (Rule) =>
-        Rule.required().uri({
+        Rule.uri({
           scheme: ['http', 'https'],
         }),
       group: 'general',

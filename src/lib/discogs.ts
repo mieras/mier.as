@@ -45,6 +45,30 @@ export interface ProcessedDiscogsRelease {
 }
 
 /**
+ * Normalized music item interface for API endpoint
+ */
+export interface NormalizedMusicItem {
+  source: 'discogs' | 'lastfm' | 'mixcloud';
+  date: string; // ISO format: "2025-02-21T22:11:00Z"
+  artist?: string;
+  title?: string;
+  thumb?: string;
+  // Discogs-specific fields
+  id?: number;
+  year?: number;
+  format?: string;
+  resourceUrl?: string;
+  // Last.fm specific fields
+  track?: string;
+  album?: string;
+  // Mixcloud specific fields
+  mixcloudId?: string;
+  genres?: string[];
+  url?: string;
+  slug?: string;
+}
+
+/**
  * Fetch recent releases from Discogs collection
  */
 export async function getLatestRecords(
@@ -120,6 +144,57 @@ export async function getLatestRecords(
     });
 
     return processedReleases;
+  } catch (error) {
+    console.error('❌ Failed to fetch Discogs data:', error);
+    return [];
+  }
+}
+
+/**
+ * Wrapper function that reads environment variables and returns normalized data
+ * For use in API endpoint
+ */
+export async function getDiscogs(): Promise<NormalizedMusicItem[]> {
+  const username = import.meta.env.PUBLIC_DISCOGS_USERNAME || '';
+  const token = import.meta.env.PUBLIC_DISCOGS_TOKEN || '';
+  const limit = 15;
+
+  if (!username || !token) {
+    return [];
+  }
+
+  try {
+    const records = await getLatestRecords(username, token, limit);
+
+    // Normalize to common format with source and ISO date
+    return records.map((record) => {
+      // Convert date_added to ISO format if it exists
+      let isoDate = '';
+      if (record.dateAdded) {
+        try {
+          const date = new Date(record.dateAdded);
+          isoDate = date.toISOString();
+        } catch {
+          // If date parsing fails, use current date as fallback
+          isoDate = new Date().toISOString();
+        }
+      } else {
+        // If no date, use current date
+        isoDate = new Date().toISOString();
+      }
+
+      return {
+        source: 'discogs' as const,
+        date: isoDate,
+        artist: record.artist,
+        title: record.title,
+        thumb: record.thumb,
+        id: record.id,
+        year: record.year,
+        format: record.format,
+        resourceUrl: record.resourceUrl,
+      };
+    });
   } catch (error) {
     console.error('❌ Failed to fetch Discogs data:', error);
     return [];

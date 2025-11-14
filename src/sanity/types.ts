@@ -281,7 +281,7 @@ export interface SanitySiteSettings {
   _id: string;
   title: string;
   description: string;
-  url: string;
+  url?: string;
   logo?: SanityImage;
   navigation?: {
     menuItems: Array<{

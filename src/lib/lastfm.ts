@@ -3,6 +3,8 @@
  * Fetches recently played tracks for a user
  */
 
+import type { NormalizedMusicItem } from './discogs';
+
 export interface LastFmTrack {
   name: string;
   artist: {
@@ -19,6 +21,7 @@ export interface LastFmTrack {
     '#text': string;
     uts?: string;
   };
+  imageUrl?: string; // Added by getRecentlyPlayed processing
 }
 
 export interface LastFmResponse {
@@ -112,6 +115,59 @@ export async function getRecentlyPlayed(
     }));
 
     return processedTracks.slice(0, limit);
+  } catch (error) {
+    console.error('❌ Failed to fetch Last.fm data:', error);
+    return [];
+  }
+}
+
+/**
+ * Wrapper function that reads environment variables and returns normalized data
+ * For use in API endpoint
+ */
+export async function getLastFm(): Promise<NormalizedMusicItem[]> {
+  const username = import.meta.env.PUBLIC_LASTFM_USERNAME || '';
+  const apiKey = import.meta.env.PUBLIC_LASTFM_API_KEY || '';
+  const limit = 15;
+
+  if (!username || !apiKey) {
+    return [];
+  }
+
+  try {
+    const tracks = await getRecentlyPlayed(username, apiKey, limit);
+
+    // Normalize to common format with source and ISO date
+    return tracks.map((track) => {
+      // Convert Last.fm date to ISO format
+      let isoDate = '';
+      if (track.date && track.date.uts) {
+        // Use Unix timestamp if available (more accurate)
+        const date = new Date(parseInt(track.date.uts) * 1000);
+        isoDate = date.toISOString();
+      } else if (track.date && track.date['#text']) {
+        // Parse the date text (format: "08 Nov 2025, 11:12")
+        try {
+          const date = new Date(track.date['#text']);
+          isoDate = date.toISOString();
+        } catch {
+          // If date parsing fails, use current date as fallback
+          isoDate = new Date().toISOString();
+        }
+      } else {
+        // If no date, use current date
+        isoDate = new Date().toISOString();
+      }
+
+      return {
+        source: 'lastfm' as const,
+        date: isoDate,
+        artist: track.artist?.['#text'],
+        track: track.name,
+        album: track.album?.['#text'],
+        thumb: track.imageUrl,
+      };
+    });
   } catch (error) {
     console.error('❌ Failed to fetch Last.fm data:', error);
     return [];

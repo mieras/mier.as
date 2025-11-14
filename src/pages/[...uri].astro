@@ -18,6 +18,15 @@ const { uri } = Astro.params;
 // Als uri undefined of lege string is, is het de homepage
 const slug = uri === undefined || uri === '' ? '/' : `/${uri}/`;
 
+// Skip static files (favicon, robots.txt, etc.) - these should be served from public/
+// If they don't exist, return 404 without trying to load from Sanity
+const staticFileExtensions = ['.ico', '.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.txt', '.xml'];
+const isStaticFile = staticFileExtensions.some(ext => slug.toLowerCase().endsWith(ext));
+
+if (isStaticFile) {
+  return new Response(null, { status: 404 });
+}
+
 let node = await getNodeData(slug);
 const Template = getTemplateByRoute(node);
 
