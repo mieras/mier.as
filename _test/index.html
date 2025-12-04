@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Layout Test</title>
+    <!-- Fontsource Geist fonts -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fontsource/geist@5.0.0/index.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fontsource/geist-mono@5.0.0/index.css"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <section class="hero">
+        <h1>Maarten Mieras</h1>
+        <p>Designer & Developer</p>
+      </section>
+
+      <section class="bio">
+        <h2>BIO</h2>
+        <p>
+          Ik ben een creatieve professional gespecialiseerd in digitale
+          ervaringen. Met een achtergrond in design en development, creëer ik
+          oplossingen die zowel functioneel als esthetisch zijn. Mijn werk
+          combineert visuele storytelling met technische expertise.
+        </p>
+      </section>
+
+      <section class="music">
+        <h2>Music</h2>
+        <p>
+          Muziek is een belangrijke inspiratiebron in mijn werk. Van ambient
+          soundscapes tot elektronische beats, geluid vormt vaak de basis voor
+          nieuwe creatieve projecten. Luister naar mijn laatste releases en
+          ontdek de sound die mijn visuele werk beïnvloedt.
+        </p>
+      </section>
+
+      <section class="work">
+        <h2 class="work__title">WORK</h2>
+        <ul class="work__list">
+          <li class="work-item is-active">
+            <h3>Project Alpha</h3>
+            <p>2024 · Web Design</p>
+            <div class="work-item__media">
+              <!-- Media content wordt hier via JS ingeladen -->
+            </div>
+          </li>
+          <li class="work-item">
+            <h3>Brand Identity</h3>
+            <p>2024 · Visual Design</p>
+            <div class="work-item__media">
+              <!-- Media content wordt hier via JS ingeladen -->
+            </div>
+          </li>
+          <li class="work-item">
+            <h3>Interactive Installation</h3>
+            <p>2023 · Digital Art</p>
+            <div class="work-item__media">
+              <!-- Media content wordt hier via JS ingeladen -->
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <section class="media">
+        <h3>WORK MEDIA</h3>
+        <p>
+          Hier verschijnt de media content voor het geselecteerde project. Op
+          desktop is dit een eigen kolom, op tablet en mobile wordt dit getoond
+          binnen het actieve work item.
+        </p>
+      </section>
+
+      <footer class="footer">
+        <p>© 2024 Maarten Mieras · mier.as</p>
+      </footer>
+    </div>
+    <script>
+      // POC: Media content in work items (voor tablet en kleiner)
+      // Op desktop blijft media een eigen kolom
+
+      const workItems = document.querySelectorAll('.work-item');
+      const mediaSection = document.querySelector('.media');
+
+      // Check of we op tablet/mobile zijn
+      function isTabletOrMobile() {
+        return window.matchMedia('(max-width: 1199px)').matches;
+      }
+
+      // Kopieer media content naar actief work item
+      function updateActiveWorkItem() {
+        if (isTabletOrMobile() && mediaSection) {
+          const activeItem = document.querySelector('.work-item.is-active');
+          if (activeItem) {
+            const mediaContainer =
+              activeItem.querySelector('.work-item__media');
+            if (mediaContainer) {
+              mediaContainer.innerHTML = mediaSection.innerHTML;
+            }
+          }
+        }
+      }
+
+      // Event listeners voor klikken op work items
+      workItems.forEach((item) => {
+        item.addEventListener('click', () => {
+          // Verwijder active class van alle items
+          workItems.forEach((i) => i.classList.remove('is-active'));
+          // Voeg active class toe aan geklikte item
+          item.classList.add('is-active');
+          // Update media content
+          updateActiveWorkItem();
+        });
+      });
+
+      // Update bij resize
+      window.addEventListener('resize', updateActiveWorkItem);
+
+      // Initial load
+      updateActiveWorkItem();
+    </script>
+  </body>
+</html>
