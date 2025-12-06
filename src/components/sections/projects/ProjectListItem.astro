@@ -99,26 +99,29 @@ const dataId =
 
 <style>
   .work-item {
-    padding: 1.5rem;
+    padding: var(--space-m);
     cursor: pointer;
     position: relative;
     transition:
       background 0.2s cubic-bezier(0.83, 0, 0.17, 1),
       border-radius 0.3s cubic-bezier(0.83, 0, 0.17, 1);
-    border-radius: 3.5rem;
-    border-top: 1px solid var(--border);
+    border-radius: 0;
     scroll-snap-align: start;
     scroll-snap-stop: always;
+    display: flex;
+    gap: var(--grid-gutter);
+    align-items: baseline;
+    justify-content: center;
+    background: transparent;
   }
 
   .work-item:hover {
-    background: oklch(from var(--tile-hover) l c h / 0.1);
-    border-radius: 4rem;
+    background: transparent;
   }
 
   .work-item.is-active {
-    background: var(--tile-hover);
-    border-radius: 4rem;
+    background: var(--work-items-active-bg);
+    border-radius: 999px;
   }
 
   .project-item {
@@ -147,18 +150,19 @@ const dataId =
   }
 
   .project-info {
-    grid-row: 2;
-    display: grid;
-    grid-template-columns: auto 1fr 1fr;
+    display: flex;
+    gap: var(--space-xs);
     align-items: baseline;
-    gap: var(--space-s);
+    flex: 1;
+    min-width: 0;
   }
 
   /* Desktop: verberg mobile thumbnail en gebruik normale layout */
   @media (min-width: 48em) {
     .project-item {
-      grid-template-columns: auto 1fr 1fr;
-      grid-template-rows: auto;
+      display: flex;
+      gap: var(--grid-gutter);
+      align-items: baseline;
     }
 
     .project-thumb-mobile {
@@ -166,44 +170,62 @@ const dataId =
     }
 
     .project-info {
-      grid-row: auto;
-      grid-column: 1 / -1;
-      display: contents;
+      display: flex;
+      gap: var(--space-xs);
+      align-items: baseline;
+      flex: 1;
     }
   }
 
   .project-year {
+    font-family: var(--font-mono);
     font-size: var(--fs--3);
-    font-weight: 400;
+    font-weight: 500;
+    line-height: 1.2;
     margin: 0;
+    color: var(--work-items-secondary);
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .project-client {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: var(--space-3xs);
+    flex: 1;
+    min-width: 0;
   }
 
   .project-client-title {
+    font-family: var(--font-family-heading);
     font-size: var(--fs-0);
-    font-weight: 400;
-    line-height: 112.5%;
+    font-weight: 700;
+    line-height: 1;
     margin: 0;
+    color: var(--work-items-text);
+    letter-spacing: -0.48px;
   }
 
   .project-role {
-    font-size: var(--fs--3);
-    font-weight: 500;
-    line-height: 112.5%;
-    opacity: 0.5;
+    font-size: var(--fs--2);
+    font-weight: 400;
+    line-height: 1.2;
+    color: var(--work-items-secondary);
+    margin: 0;
   }
 
   .project-name {
-    font-size: var(--fs--1);
-    line-height: 112.5%;
+    font-size: var(--fs--2);
+    line-height: 1.2;
     font-weight: 400;
     margin: 0;
-    opacity: 0.5;
+    color: var(--work-items-secondary);
+    flex: 1;
+    min-width: 0;
+  }
+
+  .work-item.is-active .project-name {
+    color: var(--work-items-text);
   }
 
   .work-item__media {

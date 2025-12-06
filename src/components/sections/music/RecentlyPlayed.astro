@@ -108,20 +108,21 @@ try {
     height: auto;
   }
 
-  .recently-played-swiper .swiper-slide .ticker-item {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: var(--space-s);
-    align-items: center;
-    padding: var(--space-s) var(--space-m);
-    background: var(--bg);
-    border-right: 1px solid var(--border);
-    white-space: nowrap;
-    height: 100%;
+  .recently-played-swiper {
+    position: relative;
+    padding: 0 var(--space-s);
   }
 
   .recently-played-swiper .swiper-slide .ticker-item {
-    border-right-color: color-mix(in srgb, var(--border) 10%, transparent);
+    display: flex;
+    gap: 11px;
+    align-items: center;
+    padding: 0;
+    background: transparent;
+    border: none;
+    white-space: nowrap;
+    height: auto;
+    min-width: 256px;
   }
 
   .recently-played-swiper .swiper-pagination {
@@ -145,35 +146,45 @@ try {
     font-style: italic;
   }
 
-  /* Navigation arrows */
+  /* Navigation arrows - chevron style met backdrop blur */
   .recently-played-swiper .swiper-button-next,
   .recently-played-swiper .swiper-button-prev {
-    color: var(--text);
-    width: 44px;
-    height: 44px;
+    color: #ffffff;
+    width: auto;
+    height: auto;
     margin-top: 0;
     top: 50%;
     transform: translateY(-50%);
-    opacity: 0.7;
-    transition: opacity 0.2s ease;
-  }
-
-  .recently-played-swiper .swiper-button-next:hover,
-  .recently-played-swiper .swiper-button-prev:hover {
-    opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(6.4px);
+    border-radius: 999px;
+    padding: 6.4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
   }
 
   .recently-played-swiper .swiper-button-prev {
     left: 0;
+    mix-blend-mode: exclusion;
   }
 
   .recently-played-swiper .swiper-button-next {
     right: 0;
+    mix-blend-mode: difference;
   }
 
   .recently-played-swiper .swiper-button-next::after,
   .recently-played-swiper .swiper-button-prev::after {
     display: none;
+  }
+
+  .recently-played-swiper .swiper-button-next svg,
+  .recently-played-swiper .swiper-button-prev svg {
+    width: 15.36px;
+    height: 15.36px;
+    fill: #ffffff;
   }
 
   /* Skeleton styles */

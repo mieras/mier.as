@@ -58,19 +58,34 @@ const workItems = Array(8).fill('Work');
     flex-direction: column;
     height: 100%;
     min-height: 0;
-    background: var(--bg);
+    background: var(--section-work-bg);
   }
 
   .work-ticker {
     padding: var(--space-s) var(--default-padding);
-    border-bottom: 1px solid var(--border);
   }
 
   .ticker-item-text {
-    font-size: var(--fs-2xl);
-    font-weight: 600;
-    line-height: 100%;
-    letter-spacing: -0.015ch;
+    font-size: 128px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.64px;
+    text-transform: uppercase;
+    color: var(--work-ticker-text);
+    white-space: nowrap;
+  }
+
+  /* Responsive: kleiner op tablet/mobile */
+  @media (max-width: 1199px) {
+    .ticker-item-text {
+      font-size: 96px;
+    }
+  }
+
+  @media (max-width: 799px) {
+    .ticker-item-text {
+      font-size: 64px;
+    }
   }
 
   .work-content {

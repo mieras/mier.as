@@ -34,6 +34,75 @@
     --tile-hover: oklch(1 0 0);
   }
 
+  /* Design tokens voor Figma design - Light Mode */
+  --color-accent-yellow: #feef7b;
+  --color-accent-yellow-oklch: oklch(0.85 0.15 95);
+  --color-black: #000;
+  --color-black-oklch: oklch(0 0 0);
+  --color-gray-secondary: #999999;
+  --color-gray-secondary-rgba: rgba(6, 2, 5, 0.4);
+  --color-dark-container: #222222;
+
+  @supports (color: oklch(0 0 0)) {
+    --color-accent-yellow: var(--color-accent-yellow-oklch);
+    --color-black: var(--color-black-oklch);
+  }
+
+  /* Sectie achtergronden - Light Mode */
+  --section-hero-bg: #000;
+  --section-hero-bg-oklch: oklch(0 0 0);
+  --section-work-bg: #f1f0ec;
+  --section-work-bg-oklch: oklch(0.95 0.01 95);
+  --section-media-bg: #ffffff;
+  --section-media-bg-oklch: oklch(1 0 0);
+  --section-music-bg: #222222;
+  --section-music-bg-oklch: oklch(0.2 0 0);
+  --section-footer-bg: #feef7b;
+  --section-footer-bg-oklch: oklch(0.85 0.15 95);
+
+  @supports (color: oklch(0 0 0)) {
+    --section-hero-bg: var(--section-hero-bg-oklch);
+    --section-work-bg: var(--section-work-bg-oklch);
+    --section-media-bg: var(--section-media-bg-oklch);
+    --section-music-bg: var(--section-music-bg-oklch);
+    --section-footer-bg: var(--section-footer-bg-oklch);
+  }
+
+  /* Work sectie tokens - Light Mode */
+  --work-ticker-text: #111111;
+  --work-ticker-text-oklch: oklch(0.2 0.01 300);
+  --work-tabs-bg: #ffffff;
+  --work-tabs-bg-oklch: oklch(1 0 0);
+  --work-tabs-active-bg: #feef7b;
+  --work-tabs-active-bg-oklch: oklch(0.85 0.15 95);
+  --work-tabs-active-text: #060205;
+  --work-tabs-active-text-oklch: oklch(0.15 0.01 300);
+  --work-tabs-inactive-text: #060205;
+  --work-tabs-inactive-text-oklch: oklch(0.15 0.01 300);
+  --work-items-active-bg: #ffffff;
+  --work-items-active-bg-oklch: oklch(1 0 0);
+  --work-items-text: #060205;
+  --work-items-text-oklch: oklch(0.15 0.01 300);
+  --work-items-secondary: rgba(6, 2, 5, 0.4);
+
+  @supports (color: oklch(0 0 0)) {
+    --work-ticker-text: var(--work-ticker-text-oklch);
+    --work-tabs-bg: var(--work-tabs-bg-oklch);
+    --work-tabs-active-bg: var(--work-tabs-active-bg-oklch);
+    --work-tabs-active-text: var(--work-tabs-active-text-oklch);
+    --work-tabs-inactive-text: var(--work-tabs-inactive-text-oklch);
+    --work-items-active-bg: var(--work-items-active-bg-oklch);
+    --work-items-text: var(--work-items-text-oklch);
+  }
+
+  /* Footer tokens - altijd hetzelfde */
+  --footer-text: #060205;
+  --footer-text-oklch: oklch(0.15 0.01 300);
+
+  @supports (color: oklch(0 0 0)) {
+    --footer-text: var(--footer-text-oklch);
+  }
+
   --default-padding: var(--space-s-l);
 
   --gap-default: var(--space-m-l);
@@ -53,6 +122,9 @@
     'Segoe UI', Roboto, sans-serif;
   --font-mono:
     'Geist Mono Variable', 'Geist Mono', 'Courier New', Courier, monospace;
+  --font-family-heading:
+    'Geist Variable', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    Roboto, sans-serif;
 
   --radius-small: 3px;
   --radius-large: 6px;
@@ -78,6 +150,41 @@
     --link: oklch(0.97 0.01 95);
     --border: oklch(0.97 0.01 95);
     --tile-hover: oklch(0 0 0);
+  }
+
+  /* Sectie achtergronden - Dark Mode (alleen work en media veranderen) */
+  --section-work-bg: #1f1e1c;
+  --section-work-bg-oklch: oklch(0.25 0 0);
+  --section-media-bg: #0d0d0d;
+  --section-media-bg-oklch: oklch(0.15 0 0);
+
+  @supports (color: oklch(0 0 0)) {
+    --section-work-bg: var(--section-work-bg-oklch);
+    --section-media-bg: var(--section-media-bg-oklch);
+  }
+
+  /* Work sectie tokens - Dark Mode */
+  --work-ticker-text: #f1f0ec;
+  --work-ticker-text-oklch: oklch(0.95 0.01 95);
+  --work-tabs-bg: #0d0d0d;
+  --work-tabs-bg-oklch: oklch(0.15 0 0);
+  --work-tabs-active-bg: #feee7b;
+  --work-tabs-active-bg-oklch: oklch(0.85 0.15 95);
+  --work-tabs-inactive-text: #f1f0ec;
+  --work-tabs-inactive-text-oklch: oklch(0.95 0.01 95);
+  --work-items-active-bg: #0d0d0d;
+  --work-items-active-bg-oklch: oklch(0.15 0 0);
+  --work-items-text: #ffffff;
+  --work-items-text-oklch: oklch(1 0 0);
+  --work-items-secondary: rgba(255, 255, 255, 0.4);
+
+  @supports (color: oklch(0 0 0)) {
+    --work-ticker-text: var(--work-ticker-text-oklch);
+    --work-tabs-bg: var(--work-tabs-bg-oklch);
+    --work-tabs-active-bg: var(--work-tabs-active-bg-oklch);
+    --work-tabs-inactive-text: var(--work-tabs-inactive-text-oklch);
+    --work-items-active-bg: var(--work-items-active-bg-oklch);
+    --work-items-text: var(--work-items-text-oklch);
   }
 
   /* Cookie Consent */

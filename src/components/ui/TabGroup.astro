@@ -8,14 +8,15 @@ interface Props {
   defaultTab?: string;
   sectionClass?: string;
   sticky?: boolean;
+  variant?: 'default' | 'work' | 'music';
 }
 
-const { tabs, defaultTab, sectionClass = '', sticky = false } = Astro.props;
+const { tabs, defaultTab, sectionClass = '', sticky = false, variant = 'default' } = Astro.props;
 const activeTab = defaultTab || tabs[0]?.id || '';
 ---
 
-<div class={`tab-group ${sectionClass}`}>
-  <div class={`tab-group-tabs ${sticky ? 'tab-group-tabs-sticky' : ''}`}>
+<div class={`tab-group ${sectionClass} tab-group-${variant}`}>
+  <div class={`tab-group-tabs ${sticky ? 'tab-group-tabs-sticky' : ''} tab-group-tabs-${variant}`}>
     {
       tabs.map((tab) => (
         <button
@@ -101,6 +102,28 @@ const activeTab = defaultTab || tabs[0]?.id || '';
     width: 100%;
   }
 
+  /* Work tabs variant: witte achtergrond, gele active state, rounded pills */
+  .tab-group-tabs-work {
+    background-color: var(--work-tabs-bg);
+    border-bottom: none;
+    border-radius: 999px;
+    padding: 0;
+    overflow: hidden;
+    margin: var(--space-s) var(--default-padding);
+    width: calc(100% - (var(--default-padding) * 2));
+  }
+
+  /* Music tabs variant: donkere container */
+  .tab-group-tabs-music {
+    background-color: var(--section-music-bg);
+    border-bottom: none;
+    border-radius: 999px;
+    padding: 0;
+    overflow: hidden;
+    margin: var(--space-s) var(--default-padding);
+    width: calc(100% - (var(--default-padding) * 2));
+  }
+
   .tab-group-tabs-sticky {
     position: sticky;
     top: 0;
@@ -123,6 +146,40 @@ const activeTab = defaultTab || tabs[0]?.id || '';
     color: var(--text);
   }
 
+  /* Work tabs styling */
+  .tab-group-tabs-work .tab-button {
+    font-family: var(--font-family-heading);
+    font-size: var(--fs-0);
+    font-weight: 900;
+    text-transform: uppercase;
+    padding: var(--space-s) var(--space-xs);
+    color: var(--work-tabs-inactive-text);
+    border-radius: 999px;
+  }
+
+  .tab-group-tabs-work .tab-button.tab-active {
+    background-color: var(--work-tabs-active-bg);
+    color: var(--work-tabs-active-text);
+    border-radius: 999px;
+  }
+
+  /* Music tabs styling */
+  .tab-group-tabs-music .tab-button {
+    font-size: var(--fs--2);
+    font-weight: 500;
+    padding: var(--space-xs) var(--space-m);
+    color: #f1f0ec;
+    opacity: 0.8;
+  }
+
+  .tab-group-tabs-music .tab-button.tab-active {
+    background-color: var(--color-accent-yellow);
+    color: #060205;
+    border-radius: 999px;
+    opacity: 1;
+  }
+
+  /* Default tabs styling */
   .tab-button.tab-active {
     background-color: var(--text);
     color: var(--bg);
