@@ -10,15 +10,15 @@ const companyName = siteSettings?.title || 'Mier.as';
 const city = siteSettings?.footer?.address?.city || 'Rotterdam';
 ---
 
-<nav class="z-10 w-full page-layout nav-monochrome">
-  <div class="flex justify-between items-center page inner">
-    <div class="flex gap-4 items-center nav-left">
+<nav class="nav-monochrome z-10 w-full">
+  <div class="inner flex items-center justify-between">
+    <div class="nav-left flex items-center gap-4">
       <a href="/" aria-label="Homepage" class="nav-company">
         {companyName}
       </a>
       <span class="nav-city">{city}</span>
     </div>
-    <div class="flex gap-4 items-center nav-right">
+    <div class="nav-right flex items-center gap-4">
       <span class="nav-time" id="local-time"></span>
       <Weather city={city} />
       <div class="nav-darkmode">
@@ -50,24 +50,39 @@ const city = siteSettings?.footer?.address?.city || 'Rotterdam';
 <style>
   nav.nav-monochrome {
     z-index: 999;
-    border-bottom: 1px solid var(--border);
+    border-bottom: none;
+  }
+
+  /* Hero overlay variant - witte tekst */
+  .hero-navigation nav.nav-monochrome {
+    color: #ffffff;
+  }
+
+  .hero-navigation nav.nav-monochrome .nav-company,
+  .hero-navigation nav.nav-monochrome .nav-city,
+  .hero-navigation nav.nav-monochrome .nav-time {
+    color: #ffffff;
   }
 
   nav .inner {
     position: relative;
     z-index: 2;
-    margin-block: var(--space-s);
+    /* margin-block: var(--space-s); */
+    padding: var(--space-s) var(--default-padding);
   }
 
   .nav-left,
   .nav-right {
-    font-family: var(--font-body);
-    font-size: var(--fs--1);
-    font-weight: 400;
+    font-family: var(--font-family-default);
+    font-size: var(--fs--3);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.0463px;
+    line-height: 1;
   }
 
   .nav-company {
-    font-weight: 600;
+    font-weight: 700;
     text-decoration: none;
     transition: opacity 0.3s ease;
   }
@@ -78,7 +93,13 @@ const city = siteSettings?.footer?.address?.city || 'Rotterdam';
 
   .nav-city,
   .nav-time {
-    opacity: 0.8;
+    opacity: 1;
+  }
+
+  .nav-right {
+    display: flex;
+    gap: var(--space-xs);
+    align-items: center;
   }
 
   .nav-darkmode {
@@ -91,6 +112,10 @@ const city = siteSettings?.footer?.address?.city || 'Rotterdam';
     transform: scale(0.8);
     width: 2rem;
     height: 2rem;
-    border-color: var(--border);
+    border-color: #ffffff;
+  }
+
+  .hero-navigation .nav-darkmode :global(.dark-mode-toggle) {
+    border-color: #ffffff;
   }
 </style>

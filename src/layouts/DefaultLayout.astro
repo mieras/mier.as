@@ -20,6 +20,7 @@ type Props = {
   author?: any;
   seo?: any;
   url?: string;
+  isHomepage?: boolean;
 };
 
 const {
@@ -29,6 +30,7 @@ const {
   author = 'Mier.as',
   seo,
   url,
+  isHomepage = false,
 } = Astro.props;
 const { menus, generalSettings } = await getNavigation();
 const primaryMenu = menus.nodes[0];
@@ -100,12 +102,14 @@ const primaryMenu = menus.nodes[0];
   </head>
 
   <body>
-    <div class="wrapper">
-      <SiteNavigation menu={primaryMenu} generalSettings={generalSettings} />
+    <div class={`wrapper ${isHomepage ? 'wrapper-homepage' : ''}`}>
+      {!isHomepage && (
+        <SiteNavigation menu={primaryMenu} generalSettings={generalSettings} />
+      )}
 
       <slot />
 
-      <SiteFooter />
+      {!isHomepage && <SiteFooter />}
     </div>
     <CookieConsent />
     <!-- JavaScript bestanden -->
@@ -132,13 +136,21 @@ const primaryMenu = menus.nodes[0];
     min-height: 100vh;
   }
 
-  /* Desktop: height constraint voor viewport */
+  /* Desktop: height constraint voor viewport - alleen voor niet-homepage */
   @media (min-width: 800px) {
-    .wrapper {
+    .wrapper:not(.wrapper-homepage) {
       display: grid;
       grid-template-rows: auto 1fr auto;
       height: 100vh;
       overflow: hidden;
+    }
+
+    /* Homepage wrapper: geen grid, laat .page zijn eigen grid doen */
+    .wrapper-homepage {
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
   }
 </style>

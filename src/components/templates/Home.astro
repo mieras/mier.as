@@ -1,10 +1,12 @@
 ---
 import { getAllProjects } from '../../lib/sanity';
 import { getAllPhotography } from '../../lib/sanity';
-import IntroSection from '../sections/IntroSection.astro';
-import ProjectsSection from '../sections/ProjectsSection.astro';
+import { getHomeData } from '../../lib/sanity';
+import HeroSection from '../sections/HeroSection.astro';
+import WorkSection from '../sections/WorkSection.astro';
 import ProjectsMedia from '../sections/ProjectsMedia.astro';
 import MusicSection from '../sections/MusicSection.astro';
+import SiteFooter from '../SiteFooter.astro';
 
 type Project = {
   _id: string;
@@ -23,121 +25,244 @@ type Project = {
   };
 };
 
-// Haal alle projecten en photography op
+// Haal alle data op
+const homeData = await getHomeData();
 const projects = (await getAllProjects()) as Project[];
 const photography = (await getAllPhotography()) as any[];
+
+// Extract hero data
+const heroMedia = homeData?.heroMedia;
+const introCols = homeData?.introCols;
+
+// Debug logging
+if (import.meta.env.DEV) {
+  console.log('🏠 Home template - homeData:', {
+    hasHomeData: !!homeData,
+    hasHeroMedia: !!heroMedia,
+    heroMediaType: heroMedia?.mediaType,
+    hasImage: !!heroMedia?.image,
+    introColsCount: introCols?.length || 0,
+  });
+}
 ---
 
-<main class="main">
-  <div class="left">
-    <IntroSection />
+<main class="page">
+  <section class="hero">
+    <HeroSection heroMedia={heroMedia} introCols={introCols} />
+  </section>
 
-    <ProjectsSection {projects} {photography} />
-  </div>
-  <div class="right">
-    <div class="project-image">
-      <ProjectsMedia {projects} {photography} />
-    </div>
-    <section class="music">
-      <MusicSection />
-    </section>
-  </div>
+  <section class="work">
+    <WorkSection {projects} {photography} />
+  </section>
+
+  <section class="media">
+    <ProjectsMedia {projects} {photography} />
+  </section>
+
+  <section class="music">
+    <MusicSection />
+  </section>
+
+  <footer class="footer">
+    <SiteFooter />
+  </footer>
 </main>
 
 <style>
-  .main {
+  .page {
+    height: 100vh;
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    min-height: 0;
-    height: 100%;
-    overflow: hidden;
-    position: relative;
-  }
-
-  /* Left column (nested grid) */
-  .left {
-    position: relative;
-    display: grid;
-    grid-template-rows: auto 1fr;
-    border-right: 1px solid var(--border);
-    min-height: 0;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows:
+      1fr /* hero */
+      auto /* bio (in hero section) */
+      auto /* music */
+      auto; /* footer */
+    grid-template-areas:
+      'hero   work   media'
+      'hero   work   media'
+      'music  work   media'
+      'footer footer footer';
     overflow: hidden;
   }
 
   .hero {
-    /* display: flex; */
-    align-items: center;
-    justify-content: flex-start;
-  }
-
-  .projects {
-    display: grid;
-    grid-template-rows: auto 1fr;
+    grid-area: hero;
+    min-height: 0;
     overflow: hidden;
-    min-height: 0; /* Important for overflow to work */
+    background: var(--section-hero-bg);
   }
 
-  /* Right column (nested grid) */
-  .right {
-    display: grid;
-    grid-template-rows: 1fr auto;
-    min-height: 0; /* Important for overflow to work */
-  }
-
-  .project-image {
-    padding: var(--space-xs) var(--default-padding);
-    display: grid;
-    align-items: center;
-    min-height: 0; /* Important for overflow to work */
+  .work {
+    grid-area: work;
+    min-height: 0;
     overflow: hidden;
+    background: var(--section-work-bg);
+  }
+
+  .media {
+    grid-area: media;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--section-media-bg);
   }
 
   .music {
-    border-top: 1px solid var(--border);
-    overflow-y: auto;
+    grid-area: music;
     min-height: 0;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
+    overflow: hidden;
+    background: var(--section-music-bg);
   }
 
-  /* Mobile: stack everything */
-  @media (max-width: 799px) {
-    .grid {
-      display: block;
-      height: auto;
-      overflow: visible;
+  .footer {
+    grid-area: footer;
+    background: var(--section-footer-bg);
+  }
+
+  /* Tablet (≤1199px): 2 kolommen, media verborgen */
+  @media (max-width: 1199px) {
+    .page {
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows:
+        1fr
+        auto
+        auto
+        auto;
+      grid-template-areas:
+        'hero   work'
+        'hero   work'
+        'music  work'
+        'footer footer';
     }
 
-    .main {
-      display: block;
-      border-top: none;
-      overflow: visible;
-    }
-
-    .left,
-    .right {
-      display: block;
-      border-right: none;
-      overflow: visible;
-      height: auto;
-    }
-
-    .left {
-      border-bottom: 1px solid var(--border);
-    }
-
-    .hero {
-      padding: var(--default-padding);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .projects {
-      overflow: visible;
-    }
-
-    .project-image {
+    .media {
       display: none;
     }
   }
+
+  /* Mobile (≤799px): 1 kolom, alles gestapeld */
+  @media (max-width: 799px) {
+    .page {
+      height: auto;
+      grid-template-columns: 1fr;
+      grid-template-rows:
+        auto
+        auto
+        auto
+        auto;
+      grid-template-areas:
+        'hero'
+        'work'
+        'music'
+        'footer';
+    }
+
+    .hero {
+      min-height: 50vh;
+    }
+  }
 </style>
+
+<script>
+  // Work item interactie: hover (desktop) en click (mobile/tablet)
+  function initWorkInteractions() {
+    const workItems = document.querySelectorAll(
+      '.work-item, [data-project-id], [data-photo-id]',
+    );
+    const mediaSection = document.querySelector('.media');
+
+    if (workItems.length === 0) return;
+
+    // Check of we op desktop zijn (≥1200px)
+    function isDesktop() {
+      return window.matchMedia('(min-width: 1200px)').matches;
+    }
+
+    // Check of we op tablet/mobile zijn (≤1199px)
+    function isTabletOrMobile() {
+      return window.matchMedia('(max-width: 1199px)').matches;
+    }
+
+    // Update media content op basis van viewport
+    function updateActiveWorkItem() {
+      const activeItem = document.querySelector(
+        '.work-item.is-active, [data-project-id].is-active, [data-photo-id].is-active',
+      );
+
+      if (isTabletOrMobile()) {
+        // Op tablet/mobiel: kopieer media content naar actief work item
+        if (activeItem) {
+          const mediaContainer = activeItem.querySelector('.work-item__media');
+          if (mediaContainer && mediaSection) {
+            // Clone media content (alleen thumbnails)
+            const thumbContainer =
+              mediaSection.querySelector('.thumb-container');
+            if (thumbContainer) {
+              mediaContainer.innerHTML = thumbContainer.innerHTML;
+            }
+          }
+        }
+      } else {
+        // Op desktop: verwijder media content uit alle work items
+        workItems.forEach((item) => {
+          const mediaContainer = item.querySelector('.work-item__media');
+          if (mediaContainer) {
+            mediaContainer.innerHTML = '';
+          }
+        });
+      }
+    }
+
+    // Click handlers voor mobile/tablet
+    workItems.forEach((item) => {
+      item.addEventListener('click', () => {
+        if (isTabletOrMobile()) {
+          // Verwijder active class van alle items
+          workItems.forEach((i) => i.classList.remove('is-active'));
+          // Voeg active class toe aan geklikte item
+          item.classList.add('is-active');
+          // Update media content
+          updateActiveWorkItem();
+        } else {
+          // Op desktop: navigeer naar project pagina
+          const projectId = item.getAttribute('data-project-id');
+          const photoId = item.getAttribute('data-photo-id');
+
+          if (projectId) {
+            // Find project slug from data
+            const projectSlug = item.getAttribute('data-project-slug');
+            if (projectSlug) {
+              window.location.href = `/project/${projectSlug}`;
+            }
+          } else if (photoId) {
+            // Handle photography click (later)
+            console.log('Photography item clicked:', photoId);
+          }
+        }
+      });
+    });
+
+    // Update bij resize
+    let resizeTimeout: ReturnType<typeof setTimeout>;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(updateActiveWorkItem, 100);
+    });
+
+    // Initial load
+    updateActiveWorkItem();
+  }
+
+  // Initialize on DOM ready and Astro page load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initWorkInteractions);
+  } else {
+    initWorkInteractions();
+  }
+
+  document.addEventListener('astro:page-load', initWorkInteractions);
+</script>

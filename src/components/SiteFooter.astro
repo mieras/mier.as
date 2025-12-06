@@ -47,8 +47,12 @@ const legalString = legalParts.length > 0 ? `${legalParts.join(' / ')} /T+C` : '
   .footer-simple {
     width: 100%;
     padding: var(--space-xs) var(--default-padding);
-    border-top: 1px solid var(--border);
+    background: var(--section-footer-bg);
     font-size: var(--fs--2);
+    color: var(--footer-text);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.3333px;
   }
 
   .footer-content {
@@ -61,9 +65,11 @@ const legalString = legalParts.length > 0 ? `${legalParts.join(' / ')} /T+C` : '
   .footer-address,
   .footer-legal {
     font-size: var(--fs--2);
-    font-weight: 400;
+    font-weight: 500;
     margin: 0;
     line-height: 1.4;
+    opacity: 0.5;
+    color: var(--footer-text);
   }
 
   .footer-address a,

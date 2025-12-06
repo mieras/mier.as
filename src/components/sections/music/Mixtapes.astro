@@ -4,6 +4,7 @@ import { getRelativeTime } from '../../../lib/music-helpers';
 
 let mixtapes: any[] = [];
 let hasError = false;
+let isLoading = true;
 
 try {
   // Use Astro.url to construct absolute URL for SSR
@@ -18,78 +19,88 @@ try {
 
   // Filter for mixcloud items only
   mixtapes = items.filter((item: any) => item.source === 'mixcloud');
+  isLoading = false;
 } catch (error) {
   console.error('Error fetching music data:', error);
   hasError = true;
+  isLoading = false;
 }
 ---
 
 <div class="mixtapes">
-  {
-    mixtapes.length > 0 ? (
-      <>
-        <div class="swiper music-swiper mixtapes-swiper">
-          <div class="swiper-wrapper">
-            {mixtapes.map((mixtape, index) => {
-              const thumbnail = mixtape.thumb;
-              const mixcloudId = mixtape.mixcloudId;
-              const genres = mixtape.genres || [];
-              const timestamp = mixtape.date
-                ? getRelativeTime(mixtape.date)
-                : undefined;
-              const genresText =
-                genres.length > 0 ? genres.join(', ') : undefined;
-
-              return (
-                <div
-                  class="swiper-slide mixtape-item"
-                  data-mixcloud-id={mixcloudId}
-                  data-index={index}
-                >
-                  <MusicItem
-                    thumbnail={thumbnail}
-                    line1={mixtape.title}
-                    line2={genresText}
-                    timestamp={timestamp}
-                    variant="ticker-thumbnail"
-                    showPlayButton={false}
-                    mixcloudId={mixcloudId}
-                  />
-                </div>
-              );
-            })}
-            {/* Duplicate for seamless loop */}
-            {mixtapes.map((mixtape, index) => {
-              const thumbnail = mixtape.thumb;
-              const mixcloudId = mixtape.mixcloudId;
-              const genres = mixtape.genres || [];
-              const timestamp = mixtape.date
-                ? getRelativeTime(mixtape.date)
-                : undefined;
-              const genresText =
-                genres.length > 0 ? genres.join(', ') : undefined;
-
-              return (
-                <div
-                  class="swiper-slide mixtape-item"
-                  data-mixcloud-id={mixcloudId}
-                  data-index={index}
-                >
-                  <MusicItem
-                    thumbnail={thumbnail}
-                    line1={mixtape.title}
-                    line2={genresText}
-                    timestamp={timestamp}
-                    variant="ticker-thumbnail"
-                    showPlayButton={false}
-                    mixcloudId={mixcloudId}
-                  />
-                </div>
-              );
-            })}
+  {isLoading ? (
+    <!-- Skeleton loading state -->
+    <div class="swiper music-swiper mixtapes-swiper">
+      <div class="swiper-wrapper">
+        {[1, 2, 3, 4, 5].map(() => (
+          <div class="swiper-slide">
+            <div class="ticker-item skeleton-item">
+              <div class="skeleton-thumbnail"></div>
+              <div class="skeleton-content">
+                <div class="skeleton-line"></div>
+                <div class="skeleton-line skeleton-line-short"></div>
+              </div>
+            </div>
           </div>
-          <div class="swiper-pagination" />
+        ))}
+      </div>
+      <div class="swiper-button-next">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 11V13H15V14H14V15H13V16H12V17H11V18H10V19H9V20H8V19H7V18H8V17H9V16H10V15H11V14H12V13H13V11H12V10H11V9H10V8H9V7H8V6H7V5H8V4H9V5H10V6H11V7H12V8H13V9H14V10H15V11H16Z" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="swiper-button-prev">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M11 13H12V14H13V15H14V16H15V17H16V18H17V19H16V20H15V19H14V18H13V17H12V16H11V15H10V14H9V13H8V11H9V10H10V9H11V8H12V7H13V6H14V5H15V4H16V5H17V6H16V7H15V8H14V9H13V10H12V11H11V13Z" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="swiper-pagination" />
+    </div>
+  ) : mixtapes.length > 0 ? (
+    <>
+      <div class="swiper music-swiper mixtapes-swiper">
+        <div class="swiper-wrapper">
+          {mixtapes.map((mixtape, index) => {
+            const thumbnail = mixtape.thumb;
+            const mixcloudId = mixtape.mixcloudId;
+            const genres = mixtape.genres || [];
+            const timestamp = mixtape.date
+              ? getRelativeTime(mixtape.date)
+              : undefined;
+            const genresText =
+              genres.length > 0 ? genres.join(', ') : undefined;
+
+            return (
+              <div
+                class="swiper-slide mixtape-item"
+                data-mixcloud-id={mixcloudId}
+                data-index={index}
+              >
+                <MusicItem
+                  thumbnail={thumbnail}
+                  line1={mixtape.title}
+                  line2={genresText}
+                  timestamp={timestamp}
+                  variant="ticker-thumbnail"
+                  showPlayButton={false}
+                  mixcloudId={mixcloudId}
+                />
+              </div>
+            );
+          })}
         </div>
+        <div class="swiper-button-next">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 11V13H15V14H14V15H13V16H12V17H11V18H10V19H9V20H8V19H7V18H8V17H9V16H10V15H11V14H12V13H13V11H12V10H11V9H10V8H9V7H8V6H7V5H8V4H9V5H10V6H11V7H12V8H13V9H14V10H15V11H16Z" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="swiper-button-prev">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M11 13H12V14H13V15H14V16H15V17H16V18H17V19H16V20H15V19H14V18H13V17H12V16H11V15H10V14H9V13H8V11H9V10H10V9H11V8H12V7H13V6H14V5H15V4H16V5H17V6H16V7H15V8H14V9H13V10H12V11H11V13Z" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="swiper-pagination" />
+      </div>
         {/* Embed container die over de carousel komt */}
         <div class="mixtapes-embed-container" style="display: none;">
           <iframe
@@ -363,5 +374,83 @@ try {
     font-size: var(--fs--1);
     opacity: 0.7;
     font-style: italic;
+  }
+
+  /* Navigation arrows */
+  .mixtapes-swiper .swiper-button-next,
+  .mixtapes-swiper .swiper-button-prev {
+    color: var(--text);
+    width: 44px;
+    height: 44px;
+    margin-top: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+  }
+
+  .mixtapes-swiper .swiper-button-next:hover,
+  .mixtapes-swiper .swiper-button-prev:hover {
+    opacity: 1;
+  }
+
+  .mixtapes-swiper .swiper-button-prev {
+    left: 0;
+  }
+
+  .mixtapes-swiper .swiper-button-next {
+    right: 0;
+  }
+
+  .mixtapes-swiper .swiper-button-next::after,
+  .mixtapes-swiper .swiper-button-prev::after {
+    display: none;
+  }
+
+  /* Skeleton styles */
+  .skeleton-item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--space-s);
+    align-items: center;
+    padding: var(--space-s) var(--space-m);
+    background: var(--bg);
+    border-right: 1px solid var(--border);
+    height: 100%;
+  }
+
+  .skeleton-thumbnail {
+    width: 48px;
+    height: 48px;
+    background: var(--border);
+    border-radius: var(--radius-small);
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+  }
+
+  .skeleton-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3xs);
+    flex: 1;
+  }
+
+  .skeleton-line {
+    height: 14px;
+    background: var(--border);
+    border-radius: 2px;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+  }
+
+  .skeleton-line-short {
+    width: 60%;
+  }
+
+  @keyframes skeleton-pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
   }
 </style>

@@ -13,6 +13,7 @@ import TabGroup from '../ui/TabGroup.astro';
   ]}
   defaultTab="now-listening"
   sectionClass="music-section"
+  variant="music"
 >
   <!-- Now Listening Tab -->
   <div class="tab-content tab-content-active" data-tab-content="now-listening">
@@ -50,7 +51,7 @@ import TabGroup from '../ui/TabGroup.astro';
       // Stop embed by clearing src
       embedIframe.src = '';
       embedContainer.style.display = 'none';
-      
+
       // Reset all mixtape button states
       const mixtapeItems = document.querySelectorAll('.mixtape-item');
       mixtapeItems.forEach((item) => {
@@ -243,6 +244,14 @@ import TabGroup from '../ui/TabGroup.astro';
 </script>
 
 <style>
+  .music-section {
+    background-color: var(--section-music-bg);
+    padding: var(--space-s);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-s);
+  }
+
   .tab-content {
     display: none;
   }

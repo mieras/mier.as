@@ -161,6 +161,56 @@ export default defineType({
       group: 'homepage',
     }),
     defineField({
+      name: 'heroMedia',
+      type: 'object',
+      title: 'Hero Media',
+      description: 'Image or video for the hero section (only visible on homepage)',
+      hidden: ({ document }) => document?.pageType !== 'homepage',
+      group: 'homepage',
+      fields: [
+        defineField({
+          name: 'mediaType',
+          type: 'string',
+          title: 'Media Type',
+          options: {
+            list: [
+              { title: 'Image', value: 'image' },
+              { title: 'Video (MP4 URL)', value: 'video' },
+            ],
+          },
+          initialValue: 'image',
+          validation: (Rule) => Rule.required(),
+        }),
+        defineField({
+          name: 'image',
+          type: 'image',
+          title: 'Image',
+          hidden: ({ parent }) => parent?.mediaType !== 'image',
+          options: {
+            hotspot: true,
+          },
+        }),
+        defineField({
+          name: 'videoUrl',
+          type: 'url',
+          title: 'Video URL (MP4)',
+          description: 'URL to an MP4 video file',
+          hidden: ({ parent }) => parent?.mediaType !== 'video',
+          validation: (Rule) =>
+            Rule.custom((value, context) => {
+              const parent = context.parent as { mediaType?: string };
+              if (parent?.mediaType === 'video' && !value) {
+                return 'Video URL is required when media type is video';
+              }
+              if (value && !value.match(/\.mp4$/i)) {
+                return 'Video URL must be an MP4 file';
+              }
+              return true;
+            }),
+        }),
+      ],
+    }),
+    defineField({
       name: 'featuredProjects',
       type: 'array',
       title: 'Featured Projects',

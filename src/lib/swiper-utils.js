@@ -1,7 +1,7 @@
 // @ts-nocheck
 // Centrale Swiper utility met preset configuraties
 import Swiper from 'swiper';
-import { Autoplay, Navigation, Pagination, FreeMode } from 'swiper/modules';
+import { Navigation, Pagination, FreeMode } from 'swiper/modules';
 
 // Import Swiper CSS
 import 'swiper/css';
@@ -51,7 +51,7 @@ export function initSwiper(element, config = {}, destroyExisting = true) {
   }
 
   // Merge default modules met config modules
-  const defaultModules = [Autoplay, Navigation, Pagination, FreeMode];
+  const defaultModules = [Navigation, Pagination, FreeMode];
   const modules = config.modules || defaultModules;
 
   // Maak Swiper instance
@@ -73,83 +73,42 @@ export function initSwiper(element, config = {}, destroyExisting = true) {
 }
 
 /**
- * Preset configuratie voor music ticker carousels (LatestRecords, RecentlyPlayed)
- * Gebaseerd op CodePen configuratie
+ * Preset configuratie voor music carousels (LatestRecords, RecentlyPlayed)
+ * Geen autoplay, geen loop, wel navigation arrows
  */
 export const musicTickerPreset = {
-  slidesPerView: 2,
+  slidesPerView: 1.5,
   spaceBetween: 0,
-  loop: true,
+  loop: false,
   freeMode: {
     enabled: true,
     momentum: false,
   },
   allowTouchMove: true,
-  speed: 5000,
-  autoplay: {
-    delay: 0,
-    disableOnInteraction: false,
-    pauseOnMouseEnter: true,
+  navigation: {
+    nextEl: '.swiper-button-next',
+    prevEl: '.swiper-button-prev',
   },
   breakpoints: {
     640: {
-      slidesPerView: 2,
+      slidesPerView: 1.5,
     },
     768: {
+      slidesPerView: 1.5,
+    },
+    1024: {
       slidesPerView: 2,
     },
     1512: {
       slidesPerView: 3,
-    },
-  },
-  freeModeMomentum: false,
-  on: {
-    touchStart(swiper) {
-      swiper.autoplay.stop();
-    },
-    touchEnd(swiper) {
-      swiper.autoplay.start();
     },
   },
 };
 
 /**
  * Preset configuratie voor mixtapes carousel
- * Gebruikt dezelfde ticker configuratie als andere music carousels
+ * Gebruikt dezelfde configuratie als andere music carousels
  */
 export const mixtapesPreset = {
-  slidesPerView: 2,
-  spaceBetween: 0,
-  loop: true,
-  freeMode: {
-    enabled: true,
-    momentum: false,
-  },
-  allowTouchMove: true,
-  speed: 5000,
-  autoplay: {
-    delay: 0,
-    disableOnInteraction: false,
-    pauseOnMouseEnter: true,
-  },
-  breakpoints: {
-    640: {
-      slidesPerView: 2,
-    },
-    768: {
-      slidesPerView: 2,
-    },
-    1512: {
-      slidesPerView: 3,
-    },
-  },
-  freeModeMomentum: false,
-  on: {
-    touchStart(swiper) {
-      swiper.autoplay.stop();
-    },
-    touchEnd(swiper) {
-      swiper.autoplay.start();
-    },
-  },
+  ...musicTickerPreset,
 };
