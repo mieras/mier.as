@@ -64,10 +64,10 @@ const camera = photography?.camera || '';
 const dataId =
   type === 'photography'
     ? { 'data-photo-id': item._id }
-    : { 'data-project-id': item._id };
+    : { 'data-project-id': item._id, 'data-project-slug': project?.slug || '' };
 ---
 
-<li class="project-item" {...dataId}>
+<li class="work-item project-item" {...dataId}>
   {
     showThumbnail && imageUrl && (
       <div class="project-thumb project-thumb-mobile">
@@ -94,17 +94,37 @@ const dataId =
     </div>
     <p class="project-name">{title}</p>
   </div>
+  <div class="work-item__media"></div>
 </li>
 
 <style>
+  .work-item {
+    padding: 1.5rem;
+    cursor: pointer;
+    position: relative;
+    transition:
+      background 0.2s cubic-bezier(0.83, 0, 0.17, 1),
+      border-radius 0.3s cubic-bezier(0.83, 0, 0.17, 1);
+    border-radius: 3.5rem;
+    border-top: 1px solid var(--border);
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .work-item:hover {
+    background: oklch(from var(--tile-hover) l c h / 0.1);
+    border-radius: 4rem;
+  }
+
+  .work-item.is-active {
+    background: var(--tile-hover);
+    border-radius: 4rem;
+  }
+
   .project-item {
     display: grid;
     grid-template-rows: auto 1fr;
     gap: var(--space-s);
-    padding: var(--space-s) var(--default-padding);
-    border-top: 1px solid var(--border);
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
   }
 
   .project-thumb-mobile {
@@ -184,5 +204,30 @@ const dataId =
     font-weight: 400;
     margin: 0;
     opacity: 0.5;
+  }
+
+  .work-item__media {
+    display: none;
+    margin-top: 1rem;
+    padding-top: 1rem;
+  }
+
+  /* Op desktop: media blijft altijd verborgen in work items */
+  @media (min-width: 1200px) {
+    .work-item__media {
+      display: none !important;
+    }
+  }
+
+  /* Op tablet/mobiel: toon media in actief work item */
+  @media (max-width: 1199px) {
+    .work-item,
+    .work-item.is-active {
+      border-radius: 1.5rem;
+    }
+
+    .work-item.is-active .work-item__media {
+      display: block;
+    }
   }
 </style>

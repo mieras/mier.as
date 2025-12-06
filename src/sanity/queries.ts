@@ -13,6 +13,16 @@ export const HOME_QUERY = `*[_type == "page" && pageType == "homepage"][0] {
     _type,
     content
   },
+  heroMedia {
+    mediaType,
+    image {
+      ...,
+      asset->,
+      crop,
+      hotspot
+    },
+    videoUrl
+  },
   slides[] {
     _key,
     _type,
@@ -124,6 +134,16 @@ export const HOME_FALLBACK_QUERY = `*[_type == "page" && title == "Homepage"][0]
     _key,
     _type,
     content
+  },
+  heroMedia {
+    mediaType,
+    image {
+      ...,
+      asset->,
+      crop,
+      hotspot
+    },
+    videoUrl
   },
   slides[] {
     _key,

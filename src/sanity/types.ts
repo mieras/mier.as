@@ -66,6 +66,11 @@ export interface SanityHome {
     _key: string;
     content: any[]; // Portable Text
   }>;
+  heroMedia?: {
+    mediaType: 'image' | 'video';
+    image?: SanityImage;
+    videoUrl?: string;
+  };
   slides: SanitySlide[];
   featuredProjects: SanityProject[];
   seo?: SanitySEO;

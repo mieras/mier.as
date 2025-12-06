@@ -1,0 +1,89 @@
+---
+import Ticker from '../Ticker.astro';
+import ProjectsSection from './ProjectsSection.astro';
+
+type Project = {
+  _id: string;
+  title: string;
+  slug: string;
+  year?: number;
+  subtitle?: string;
+  intro?: string;
+  role?: string;
+  thumbnail?: {
+    image?: any;
+    aspectRatio?: string;
+  };
+  client?: {
+    title: string;
+  };
+};
+
+type PhotographyItem = {
+  _id: string;
+  title: string;
+  year?: number;
+  city?: string;
+  country?: string;
+  camera?: string;
+  thumbnail?: any;
+};
+
+type Props = {
+  projects: Project[];
+  photography: PhotographyItem[];
+};
+
+const { projects, photography } = Astro.props;
+
+// Create array of "Work" items for ticker (repeat multiple times)
+const workItems = Array(8).fill('Work');
+---
+
+<section class="work-section">
+  <div class="work-ticker">
+    <Ticker items={workItems} speed={20}>
+      <span slot="item" class="ticker-item-text">Work</span>
+    </Ticker>
+  </div>
+  
+  <div class="work-content">
+    <ProjectsSection {projects} {photography} />
+  </div>
+</section>
+
+<style>
+  .work-section {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    background: var(--bg);
+  }
+
+  .work-ticker {
+    padding: var(--space-s) var(--default-padding);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .ticker-item-text {
+    font-size: var(--fs-2xl);
+    font-weight: 600;
+    line-height: 100%;
+    letter-spacing: -0.015ch;
+  }
+
+  .work-content {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Mobile: adjust padding */
+  @media (max-width: 799px) {
+    .work-ticker {
+      padding: var(--space-xs) var(--default-padding);
+    }
+  }
+</style>
+

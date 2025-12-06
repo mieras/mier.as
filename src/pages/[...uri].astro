@@ -30,6 +30,9 @@ if (isStaticFile) {
 let node = await getNodeData(slug);
 const Template = getTemplateByRoute(node);
 
+// Check if this is homepage
+const isHomepage = node?.pageType === 'homepage' || slug === '/';
+
 // Haal site settings op voor SEO fallbacks
 const siteSettings = await getSiteSettings();
 
@@ -58,6 +61,7 @@ const seoData = getSeoData(
   description={seoData.description}
   seo={seoData}
   url={pageUrl}
+  isHomepage={isHomepage}
 >
   <Template data={node} />
 </DefaultLayout>

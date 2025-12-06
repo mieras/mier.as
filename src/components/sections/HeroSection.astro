@@ -1,0 +1,172 @@
+---
+import { PortableText } from 'astro-portabletext';
+import { urlForImage } from '../../sanity/lib/image';
+import SiteNavigation from '../SiteNavigation.astro';
+
+type HeroMedia = {
+  mediaType: 'image' | 'video';
+  image?: any;
+  videoUrl?: string;
+};
+
+type Props = {
+  heroMedia?: HeroMedia;
+  introCols?: Array<{
+    _key: string;
+    content: any[];
+  }>;
+};
+
+const { heroMedia, introCols } = Astro.props;
+
+// PortableText components
+const components = {
+  types: {},
+  marks: {},
+  block: {},
+  list: {},
+  listItem: {},
+};
+
+// Get bio content from first intro column
+const bioContent = introCols?.[0]?.content;
+
+// Debug logging
+if (import.meta.env.DEV) {
+  console.log('🎨 HeroSection props:', {
+    hasHeroMedia: !!heroMedia,
+    mediaType: heroMedia?.mediaType,
+    hasImage: !!heroMedia?.image,
+    imageAsset: !!heroMedia?.image?.asset,
+  });
+}
+
+// Get image URL if media type is image
+const imageUrl = heroMedia?.mediaType === 'image' && heroMedia?.image?.asset
+  ? urlForImage(heroMedia.image)?.width(1920).height(1080).url()
+  : null;
+
+if (import.meta.env.DEV) {
+  console.log('🖼️ HeroSection image URL:', imageUrl);
+}
+---
+
+<section class="hero-section">
+  <div class="hero-media">
+    {heroMedia?.mediaType === 'image' && imageUrl ? (
+      <img 
+        src={imageUrl} 
+        alt="Hero image" 
+        loading="eager"
+        class="hero-image"
+      />
+    ) : heroMedia?.mediaType === 'image' && heroMedia?.image ? (
+      <div class="hero-image-placeholder">
+        <p>Image loading...</p>
+        {import.meta.env.DEV && (
+          <pre>{JSON.stringify(heroMedia.image, null, 2)}</pre>
+        )}
+      </div>
+    ) : null}
+    {heroMedia?.mediaType === 'video' && heroMedia?.videoUrl && (
+      <video 
+        src={heroMedia.videoUrl}
+        autoplay
+        loop
+        muted
+        playsinline
+        class="hero-video"
+      />
+    )}
+    {!heroMedia && import.meta.env.DEV && (
+      <div class="hero-image-placeholder">
+        <p>No hero media configured</p>
+      </div>
+    )}
+    <div class="hero-navigation">
+      <SiteNavigation />
+    </div>
+  </div>
+  
+  {bioContent && (
+    <div class="hero-bio">
+      <PortableText value={bioContent} components={components} />
+    </div>
+  )}
+</section>
+
+<style>
+  .hero-section {
+    display: grid;
+    grid-template-rows: 1fr auto;
+    min-height: 0;
+    height: 100%;
+  }
+
+  .hero-media {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    grid-row: 1;
+    min-height: 0;
+  }
+
+  .hero-image,
+  .hero-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .hero-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    color: var(--text);
+    padding: var(--space-m);
+  }
+
+  .hero-image-placeholder pre {
+    font-size: var(--fs-xs);
+    overflow: auto;
+    max-width: 100%;
+    max-height: 100%;
+  }
+
+  .hero-navigation {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+  }
+
+  .hero-bio {
+    grid-row: 2;
+    padding: var(--space-m) var(--default-padding);
+    max-width: 65ch;
+  }
+
+  .hero-bio :global(p) {
+    font-size: var(--fs-sm);
+    line-height: 133%;
+    margin: 0;
+  }
+
+  .hero-bio :global(p + p) {
+    margin-top: 1em;
+  }
+
+  /* Mobile: adjust padding */
+  @media (max-width: 799px) {
+    .hero-bio {
+      padding: var(--space-s) var(--default-padding);
+    }
+  }
+</style>
+
