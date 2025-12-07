@@ -46,7 +46,7 @@ const workItems = Array(8).fill('Work');
       <span slot="item" class="ticker-item-text">Work</span>
     </Ticker>
   </div>
-  
+
   <div class="work-content">
     <ProjectsSection {projects} {photography} />
   </div>
@@ -62,7 +62,7 @@ const workItems = Array(8).fill('Work');
   }
 
   .work-ticker {
-    padding: var(--space-s) var(--default-padding);
+    padding: var(--space-s) 0;
   }
 
   .ticker-item-text {
@@ -97,8 +97,7 @@ const workItems = Array(8).fill('Work');
   /* Mobile: adjust padding */
   @media (max-width: 799px) {
     .work-ticker {
-      padding: var(--space-xs) var(--default-padding);
+      padding: var(--space-xs) 0;
     }
   }
 </style>
-

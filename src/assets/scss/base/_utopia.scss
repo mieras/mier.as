@@ -1,0 +1,63 @@
+// | -------------------------------------------------------------
+// | Utopia
+// | -------------------------------------------------------------
+// | Fluid typography, spacing en radius via Utopia
+// | @link https://utopia.fyi
+
+@use 'utopia-core-scss/src/utopia' as utopia;
+
+/* Type Scale */
+/* @link https://utopia.fyi/type/calculator?c=320,18,1.2,2560,24,1.333,5,2,&s=0.75|0.5|0.25,1.5|2|3|4|6,s-l&g=s,l,xl,12 */
+
+:root {
+  @include utopia.generateTypeScale(("minWidth": 320,
+      "maxWidth": 2560,
+      "minFontSize": 18,
+      "maxFontSize": 24,
+      "minTypeScale": 1.2,
+      "maxTypeScale": 1.333,
+      "positiveSteps": 8,
+      "negativeSteps": 3,
+      "prefix": "fs-",
+      "relativeTo": "viewport-width"
+    ));
+
+  /* Space Scale */
+  /* @link https://utopia.fyi/space/calculator?c=320,16,1.2,2560,24,1.333,5,2,&s=0.75|0.5|0.25,1.5|2|3|4|6,s-l&g=s,l,xl,12 */
+
+  @include utopia.generateSpaceScale(("minWidth": 320,
+      "maxWidth": 2560,
+      "minSize": 16,
+      "maxSize": 24,
+      "positiveSteps": (1.5, 2, 3, 4, 6, 8),
+      "negativeSteps": (0.75, 0.5, 0.25),
+      "customSizes": ("s-l", "s-m", "m-l"),
+      "prefix": "space-",
+      "relativeTo": "viewport-width"
+    ));
+
+  /* Radius Clamps */
+  /* Radius small: 3px → 6px */
+  @include utopia.generateClamp(("minWidth": 320,
+      "maxWidth": 2560,
+      "minSize": 3,
+      "maxSize": 6,
+      "prefix": "radius-"
+    ));
+
+  /* Radius large: 6px → 12px */
+  @include utopia.generateClamp(("minWidth": 320,
+      "maxWidth": 2560,
+      "minSize": 6,
+      "maxSize": 12,
+      "prefix": "radius-"
+    ));
+
+  /* Radius default: 1rem → 2rem */
+  @include utopia.generateClamp(("minWidth": 320,
+      "maxWidth": 2560,
+      "minSize": 16,
+      "maxSize": 32,
+      "prefix": "radius-"
+    ));
+}

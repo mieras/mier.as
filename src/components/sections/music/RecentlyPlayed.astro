@@ -146,45 +146,35 @@ try {
     font-style: italic;
   }
 
-  /* Navigation arrows - chevron style met backdrop blur */
+  /* Navigation arrows */
   .recently-played-swiper .swiper-button-next,
   .recently-played-swiper .swiper-button-prev {
     color: #ffffff;
-    width: auto;
-    height: auto;
+    width: 44px;
+    height: 44px;
     margin-top: 0;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(6.4px);
-    border-radius: 999px;
-    padding: 6.4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+  }
+
+  .recently-played-swiper .swiper-button-next:hover,
+  .recently-played-swiper .swiper-button-prev:hover {
+    opacity: 1;
   }
 
   .recently-played-swiper .swiper-button-prev {
     left: 0;
-    mix-blend-mode: exclusion;
   }
 
   .recently-played-swiper .swiper-button-next {
     right: 0;
-    mix-blend-mode: difference;
   }
 
   .recently-played-swiper .swiper-button-next::after,
   .recently-played-swiper .swiper-button-prev::after {
     display: none;
-  }
-
-  .recently-played-swiper .swiper-button-next svg,
-  .recently-played-swiper .swiper-button-prev svg {
-    width: 15.36px;
-    height: 15.36px;
-    fill: #ffffff;
   }
 
   /* Skeleton styles */

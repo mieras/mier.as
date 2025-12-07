@@ -2,7 +2,7 @@
   /* Color palette - OKLCH */
   --color-text: oklch(0.15 0.02 180); /* #031610 */
   --color-bg: oklch(0.88 0.02 120); /* #D8DFCF */
-  --color-accent-yellow: oklch(0.85 0.15 95); /* #DCDA27 */
+  --color-accent-yellow: oklch(91.45% 0.13868 95.474); /* #FEEE7B */
   --color-accent-pink: oklch(0.7 0.25 340); /* #FD60BB */
   --color-accent-pink-light: oklch(0.8 0.2 340); /* #F399BF */
   --color-accent-blue: oklch(0.55 0.2 250); /* #2880EA */

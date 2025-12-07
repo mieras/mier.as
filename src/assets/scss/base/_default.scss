@@ -1,0 +1,35 @@
+// | -------------------------------------------------------------
+// | Default Styles & Utilities
+// | -------------------------------------------------------------
+// | Grid tokens, container utilities, basis body layout
+
+:root {
+  /* Grid tokens */
+  --grid-max-width: var(--content-max-width);
+  --grid-gutter: var(--grid-gutter);
+}
+
+/* Body layout */
+body {
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+/* Logo utility */
+.logo {
+  width: 6rem;
+  color: var(--text);
+}
+
+/* Container utility */
+.u-container {
+  max-width: var(--grid-max-width);
+  margin-inline: auto;
+  padding-inline: var(--site-padding);
+}
+
+/* Grid utility */
+.u-grid {
+  display: grid;
+  gap: var(--grid-gutter);
+}

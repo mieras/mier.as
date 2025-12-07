@@ -3,6 +3,7 @@ import { getAllProjects } from '../../lib/sanity';
 import { getAllPhotography } from '../../lib/sanity';
 import { getHomeData } from '../../lib/sanity';
 import HeroSection from '../sections/HeroSection.astro';
+import BioSection from '../sections/BioSection.astro';
 import WorkSection from '../sections/WorkSection.astro';
 import ProjectsMedia from '../sections/ProjectsMedia.astro';
 import MusicSection from '../sections/MusicSection.astro';
@@ -48,7 +49,11 @@ if (import.meta.env.DEV) {
 
 <main class="page">
   <section class="hero">
-    <HeroSection heroMedia={heroMedia} introCols={introCols} />
+    <HeroSection heroMedia={heroMedia} />
+  </section>
+
+  <section class="bio">
+    <BioSection introCols={introCols} />
   </section>
 
   <section class="work">
@@ -75,12 +80,12 @@ if (import.meta.env.DEV) {
     grid-template-columns: 1fr 1fr 1fr;
     grid-template-rows:
       1fr /* hero */
-      auto /* bio (in hero section) */
+      auto /* bio */
       auto /* music */
       auto; /* footer */
     grid-template-areas:
       'hero   work   media'
-      'hero   work   media'
+      'bio    work   media'
       'music  work   media'
       'footer footer footer';
     overflow: hidden;
@@ -90,6 +95,11 @@ if (import.meta.env.DEV) {
     grid-area: hero;
     min-height: 0;
     overflow: hidden;
+    background: var(--section-hero-bg);
+  }
+
+  .bio {
+    grid-area: bio;
     background: var(--section-hero-bg);
   }
 
@@ -115,6 +125,7 @@ if (import.meta.env.DEV) {
     grid-area: music;
     min-height: 0;
     overflow: hidden;
+
     background: var(--section-music-bg);
   }
 
@@ -134,7 +145,7 @@ if (import.meta.env.DEV) {
         auto;
       grid-template-areas:
         'hero   work'
-        'hero   work'
+        'bio    work'
         'music  work'
         'footer footer';
     }

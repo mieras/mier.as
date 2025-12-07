@@ -1,0 +1,113 @@
+// | -------------------------------------------------------------
+// | Typography
+// | -------------------------------------------------------------
+// | Heading styles, paragraaf, links, code, blockquote, lists
+// | Gebruikt Utopia type scale variabelen
+
+body {
+
+  /* Heading font families */
+  :where(h1, h2) {
+    font-family: var(--font-family-special);
+  }
+
+  /* Heading font weights */
+  h1,
+  h2 {
+    font-weight: 800;
+  }
+
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 600;
+  }
+
+  /* Heading styles met Utopia type scale */
+  h1 {
+    font-size: var(--fs-4);
+    line-height: 1.1;
+  }
+
+  h2 {
+    font-size: var(--fs-3);
+    line-height: 1.1;
+  }
+
+  h3 {
+    font-size: var(--fs-2);
+    line-height: 1.2;
+  }
+
+  h4 {
+    font-size: var(--fs-1);
+    line-height: 1.2;
+  }
+
+  h5 {
+    font-size: var(--fs-0);
+    line-height: 1.3;
+  }
+
+  h6 {
+    font-size: var(--fs--1);
+    line-height: 1.3;
+  }
+
+  /* Paragraaf styling */
+  p {
+    font-size: var(--fs-0);
+    line-height: 1.5;
+    max-width: var(--font-measure);
+  }
+
+  /* Links */
+  a:not(.button) {
+    color: var(--link);
+    text-decoration: underline;
+
+    &:visited {
+      color: var(--link);
+    }
+
+    &:hover,
+    &:focus {
+      text-decoration: none;
+    }
+  }
+
+  :where(main) a {
+    word-wrap: break-word;
+    word-break: break-word;
+  }
+
+  /* Code */
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+  }
+
+  pre {
+    font-family: var(--font-mono);
+    overflow-x: auto;
+  }
+
+  /* Blockquote */
+  blockquote {
+    border-left: 2px solid var(--color-border);
+    padding-left: var(--space-m);
+    margin-left: 0;
+    font-style: italic;
+  }
+
+  /* Lists */
+  ul,
+  ol {
+    padding-left: var(--space-m);
+  }
+
+  li {
+    margin-bottom: var(--space-xs);
+  }
+}

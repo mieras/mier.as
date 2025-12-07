@@ -1,7 +1,6 @@
 ---
 import '../assets/global.css';
 import '../assets/scss/globals.scss';
-import '../assets/default.css';
 import '@fontsource-variable/geist/index.css';
 import '@fontsource-variable/geist-mono/index.css';
 import '@fontsource/tiktok-sans/index.css';
@@ -103,9 +102,14 @@ const primaryMenu = menus.nodes[0];
 
   <body>
     <div class={`wrapper ${isHomepage ? 'wrapper-homepage' : ''}`}>
-      {!isHomepage && (
-        <SiteNavigation menu={primaryMenu} generalSettings={generalSettings} />
-      )}
+      {
+        !isHomepage && (
+          <SiteNavigation
+            menu={primaryMenu}
+            generalSettings={generalSettings}
+          />
+        )
+      }
 
       <slot />
 
