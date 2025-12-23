@@ -28,104 +28,138 @@ try {
 <div class="latest-records">
   {isLoading ? (
     <!-- Skeleton loading state -->
-    <div class="swiper music-swiper latest-records-swiper">
-      <div class="swiper-wrapper">
-        {[1, 2, 3, 4, 5].map(() => (
-          <div class="swiper-slide">
-            <div class="ticker-item skeleton-item">
-              <div class="skeleton-thumbnail"></div>
-              <div class="skeleton-content">
-                <div class="skeleton-line"></div>
-                <div class="skeleton-line skeleton-line-short"></div>
-              </div>
-            </div>
+    <ul class="music__list">
+      {[1, 2, 3, 4, 5].map(() => (
+        <li class="music-item skeleton-item">
+          <div class="skeleton-thumbnail"></div>
+          <div class="skeleton-content">
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line skeleton-line-short"></div>
           </div>
-        ))}
-      </div>
-      <div class="swiper-button-next">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M16 11V13H15V14H14V15H13V16H12V17H11V18H10V19H9V20H8V19H7V18H8V17H9V16H10V15H11V14H12V13H13V11H12V10H11V9H10V8H9V7H8V6H7V5H8V4H9V5H10V6H11V7H12V8H13V9H14V10H15V11H16Z" fill="currentColor"/>
-        </svg>
-      </div>
-      <div class="swiper-button-prev">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M11 13H12V14H13V15H14V16H15V17H16V18H17V19H16V20H15V19H14V18H13V17H12V16H11V15H10V14H9V13H8V11H9V10H10V9H11V8H12V7H13V6H14V5H15V4H16V5H17V6H16V7H15V8H14V9H13V10H12V11H11V13Z" fill="currentColor"/>
-        </svg>
-      </div>
-      <div class="swiper-pagination" />
-    </div>
+        </li>
+      ))}
+    </ul>
   ) : latestRecords.length > 0 ? (
-    <div class="swiper music-swiper latest-records-swiper">
-      <div class="swiper-wrapper">
-        {latestRecords.map((record) => {
-          const artist = record.artist || '';
-          const albumYear = [record.title, record.year]
-            .filter(Boolean)
-            .join(' • ');
-          const timestamp = record.date
-            ? getRelativeTime(record.date)
-            : undefined;
+    <ul class="music__list">
+      {latestRecords.map((record) => {
+        const artist = record.artist || '';
+        const albumYear = [record.title, record.year]
+          .filter(Boolean)
+          .join(' • ');
+        const timestamp = record.date
+          ? getRelativeTime(record.date)
+          : undefined;
 
-          return (
-            <div class="swiper-slide">
-              <MusicItem
-                thumbnail={record.thumb}
-                line1={artist}
-                line2={albumYear}
-                timestamp={timestamp}
-                variant="ticker-thumbnail"
-              />
-            </div>
-          );
-        })}
-      </div>
-      <div class="swiper-button-next">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M16 11V13H15V14H14V15H13V16H12V17H11V18H10V19H9V20H8V19H7V18H8V17H9V16H10V15H11V14H12V13H13V11H12V10H11V9H10V8H9V7H8V6H7V5H8V4H9V5H10V6H11V7H12V8H13V9H14V10H15V11H16Z" fill="currentColor"/>
-        </svg>
-      </div>
-      <div class="swiper-button-prev">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M11 13H12V14H13V15H14V16H15V17H16V18H17V19H16V20H15V19H14V18H13V17H12V16H11V15H10V14H9V13H8V11H9V10H10V9H11V8H12V7H13V6H14V5H15V4H16V5H17V6H16V7H15V8H14V9H13V10H12V11H11V13Z" fill="currentColor"/>
-        </svg>
-      </div>
-      <div class="swiper-pagination" />
-    </div>
+        return (
+          <li>
+            <MusicItem
+              thumbnail={record.thumb}
+              line1={artist}
+              line2={albumYear}
+              timestamp={timestamp}
+              variant="list"
+            />
+          </li>
+        );
+      })}
+    </ul>
   ) : (
     <p class="no-records">No recent records available</p>
   )}
+  <a class="music__source" href="https://discogs.com" target="_blank" rel="noopener">
+    discogs.com
+  </a>
 </div>
 
-<script>
-  // Swiper initialization is now handled by MusicSection component
-  // to ensure it only initializes when the tab is visible
-</script>
-
 <style>
-  .latest-records-swiper {
-    width: 100%;
+  .latest-records {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
   }
 
-  .latest-records-swiper .swiper-slide {
-    width: auto;
-    height: auto;
-  }
-
-  .latest-records-swiper .swiper-slide .ticker-item {
+  .music__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
     display: grid;
-    grid-template-columns: auto 1fr;
+    gap: var(--space-s);
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .music-item {
+    display: grid;
+    grid-template-columns: 56px 1fr;
     gap: var(--space-s);
     align-items: center;
-    padding: var(--space-s) var(--space-m);
-    background: var(--bg);
-    border-right: 1px solid var(--border);
-    white-space: nowrap;
-    height: 100%;
   }
 
-  .latest-records-swiper .swiper-slide .ticker-item {
-    border-right-color: color-mix(in srgb, var(--border) 10%, transparent);
+  .music__source {
+    display: inline-flex;
+    margin-top: var(--space-s);
+    opacity: 0.6;
+    text-decoration: none;
+    color: var(--text-light);
+    font-size: var(--fs--2);
   }
+
+  .music__source:hover {
+    opacity: 0.9;
+  }
+
+  .no-records {
+    font-size: var(--fs--2);
+    opacity: 0.7;
+    font-style: italic;
+    color: var(--text-light);
+  }
+
+  /* Skeleton styles */
+  .skeleton-item {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: var(--space-s);
+    align-items: center;
+  }
+
+  .skeleton-thumbnail {
+    width: 56px;
+    height: 56px;
+    background: var(--text-light-secondary);
+    border-radius: 10px;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+  }
+
+  .skeleton-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3xs);
+    flex: 1;
+  }
+
+  .skeleton-line {
+    height: 14px;
+    background: var(--text-light-secondary);
+    border-radius: 2px;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+  }
+
+  .skeleton-line-short {
+    width: 60%;
+  }
+
+  @keyframes skeleton-pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
 
   .latest-records-swiper .swiper-pagination {
     position: relative;

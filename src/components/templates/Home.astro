@@ -3,9 +3,7 @@ import { getAllProjects } from '../../lib/sanity';
 import { getAllPhotography } from '../../lib/sanity';
 import { getHomeData } from '../../lib/sanity';
 import HeroSection from '../sections/HeroSection.astro';
-import BioSection from '../sections/BioSection.astro';
 import WorkSection from '../sections/WorkSection.astro';
-import ProjectsMedia from '../sections/ProjectsMedia.astro';
 import MusicSection from '../sections/MusicSection.astro';
 import SiteFooter from '../SiteFooter.astro';
 
@@ -42,240 +40,65 @@ if (import.meta.env.DEV) {
     hasHeroMedia: !!heroMedia,
     heroMediaType: heroMedia?.mediaType,
     hasImage: !!heroMedia?.image,
+    imageAsset: !!heroMedia?.image?.asset,
+    videoUrl: heroMedia?.videoUrl,
     introColsCount: introCols?.length || 0,
+    fullHeroMedia: heroMedia,
   });
+
+  if (!heroMedia) {
+    console.warn(
+      '⚠️ No heroMedia found in homeData. Make sure heroMedia is configured in Sanity for the homepage.',
+    );
+  }
 }
 ---
 
 <main class="page">
-  <section class="hero">
-    <HeroSection heroMedia={heroMedia} />
-  </section>
+  <SiteFooter />
 
-  <section class="bio">
-    <BioSection introCols={introCols} />
-  </section>
+  <div class="main-content">
+    <section class="hero" id="hero">
+      <HeroSection
+        heroMedia={heroMedia}
+        introCols={introCols}
+        useThreeJs={true}
+      />
+    </section>
 
-  <section class="work">
-    <WorkSection {projects} {photography} />
-  </section>
+    <section class="work">
+      <WorkSection {projects} {photography} />
+    </section>
 
-  <section class="media">
-    <ProjectsMedia {projects} {photography} />
-  </section>
-
-  <section class="music">
-    <MusicSection />
-  </section>
-
-  <footer class="footer">
-    <SiteFooter />
-  </footer>
+    <section class="music">
+      <MusicSection />
+    </section>
+  </div>
 </main>
 
 <style>
   .page {
-    height: 100vh;
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows:
-      1fr /* hero */
-      auto /* bio */
-      auto /* music */
-      auto; /* footer */
-    grid-template-areas:
-      'hero   work   media'
-      'bio    work   media'
-      'music  work   media'
-      'footer footer footer';
-    overflow: hidden;
+    position: relative;
+    min-height: 100vh;
+  }
+
+  /* Main content: padding voor footer ruimte op desktop */
+  .main-content {
+    display: flex;
+    flex-direction: column;
   }
 
   .hero {
-    grid-area: hero;
-    min-height: 0;
-    overflow: hidden;
-    background: var(--section-hero-bg);
-  }
-
-  .bio {
-    grid-area: bio;
+    min-height: 90dvh;
     background: var(--section-hero-bg);
   }
 
   .work {
-    grid-area: work;
-    min-height: 0;
-    overflow: hidden;
+    min-height: 100dvh;
     background: var(--section-work-bg);
   }
 
-  .media {
-    grid-area: media;
-    min-height: 0;
-    overflow: hidden;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--section-media-bg);
-  }
-
   .music {
-    grid-area: music;
-    min-height: 0;
-    overflow: hidden;
-
     background: var(--section-music-bg);
   }
-
-  .footer {
-    grid-area: footer;
-    background: var(--section-footer-bg);
-  }
-
-  /* Tablet (≤1199px): 2 kolommen, media verborgen */
-  @media (max-width: 1199px) {
-    .page {
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows:
-        1fr
-        auto
-        auto
-        auto;
-      grid-template-areas:
-        'hero   work'
-        'bio    work'
-        'music  work'
-        'footer footer';
-    }
-
-    .media {
-      display: none;
-    }
-  }
-
-  /* Mobile (≤799px): 1 kolom, alles gestapeld */
-  @media (max-width: 799px) {
-    .page {
-      height: auto;
-      grid-template-columns: 1fr;
-      grid-template-rows:
-        auto
-        auto
-        auto
-        auto
-        auto;
-      grid-template-areas:
-        'hero'
-        'bio'
-        'work'
-        'music'
-        'footer';
-    }
-
-    .hero {
-      min-height: 50vh;
-    }
-  }
 </style>
-
-<script>
-  // Work item interactie: hover (desktop) en click (mobile/tablet)
-  function initWorkInteractions() {
-    const workItems = document.querySelectorAll(
-      '.work-item, [data-project-id], [data-photo-id]',
-    );
-    const mediaSection = document.querySelector('.media');
-
-    if (workItems.length === 0) return;
-
-    // Check of we op desktop zijn (≥1200px)
-    function isDesktop() {
-      return window.matchMedia('(min-width: 1200px)').matches;
-    }
-
-    // Check of we op tablet/mobile zijn (≤1199px)
-    function isTabletOrMobile() {
-      return window.matchMedia('(max-width: 1199px)').matches;
-    }
-
-    // Update media content op basis van viewport
-    function updateActiveWorkItem() {
-      const activeItem = document.querySelector(
-        '.work-item.is-active, [data-project-id].is-active, [data-photo-id].is-active',
-      );
-
-      if (isTabletOrMobile()) {
-        // Op tablet/mobiel: kopieer media content naar actief work item
-        if (activeItem) {
-          const mediaContainer = activeItem.querySelector('.work-item__media');
-          if (mediaContainer && mediaSection) {
-            // Clone media content (alleen thumbnails)
-            const thumbContainer =
-              mediaSection.querySelector('.thumb-container');
-            if (thumbContainer) {
-              mediaContainer.innerHTML = thumbContainer.innerHTML;
-            }
-          }
-        }
-      } else {
-        // Op desktop: verwijder media content uit alle work items
-        workItems.forEach((item) => {
-          const mediaContainer = item.querySelector('.work-item__media');
-          if (mediaContainer) {
-            mediaContainer.innerHTML = '';
-          }
-        });
-      }
-    }
-
-    // Click handlers voor mobile/tablet
-    workItems.forEach((item) => {
-      item.addEventListener('click', () => {
-        if (isTabletOrMobile()) {
-          // Verwijder active class van alle items
-          workItems.forEach((i) => i.classList.remove('is-active'));
-          // Voeg active class toe aan geklikte item
-          item.classList.add('is-active');
-          // Update media content
-          updateActiveWorkItem();
-        } else {
-          // Op desktop: navigeer naar project pagina
-          const projectId = item.getAttribute('data-project-id');
-          const photoId = item.getAttribute('data-photo-id');
-
-          if (projectId) {
-            // Find project slug from data
-            const projectSlug = item.getAttribute('data-project-slug');
-            if (projectSlug) {
-              window.location.href = `/project/${projectSlug}`;
-            }
-          } else if (photoId) {
-            // Handle photography click (later)
-            console.log('Photography item clicked:', photoId);
-          }
-        }
-      });
-    });
-
-    // Update bij resize
-    let resizeTimeout: ReturnType<typeof setTimeout>;
-    window.addEventListener('resize', () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(updateActiveWorkItem, 100);
-    });
-
-    // Initial load
-    updateActiveWorkItem();
-  }
-
-  // Initialize on DOM ready and Astro page load
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initWorkInteractions);
-  } else {
-    initWorkInteractions();
-  }
-
-  document.addEventListener('astro:page-load', initWorkInteractions);
-</script>

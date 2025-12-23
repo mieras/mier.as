@@ -258,6 +258,54 @@ export const ALL_PHOTOGRAPHY_QUERY = `*[_type == "photography"] | order(_created
     asset->,
     crop,
     hotspot
+  },
+  projectMedia[] {
+    _key,
+    image {
+      ...,
+      asset->,
+      crop,
+      hotspot
+    },
+    video {
+      ...,
+      asset->
+    }
+  }
+}`;
+
+// Photography by ID query
+export const PHOTOGRAPHY_BY_ID_QUERY = `*[_type == "photography" && _id == $id][0] {
+  _id,
+  _type,
+  title,
+  year,
+  city,
+  country,
+  camera,
+  hero {
+    title,
+    subtitle,
+    intro
+  },
+  thumbnail {
+    ...,
+    asset->,
+    crop,
+    hotspot
+  },
+  projectMedia[] {
+    _key,
+    image {
+      ...,
+      asset->,
+      crop,
+      hotspot
+    },
+    video {
+      ...,
+      asset->
+    }
   }
 }`;
 
@@ -294,7 +342,12 @@ export const ALL_PROJECTS_QUERY = `*[_type == "work"] | order(_createdAt desc) {
       hotspot
     },
     size,
-    aspectRatio
+    aspectRatio,
+    video {
+      ...,
+      asset->
+    },
+    videoUrl
   },
   "client": client-> {
     _id,
@@ -334,7 +387,12 @@ export const PROJECT_BY_SLUG_QUERY = `*[_type == "work" && slug.current == $slug
       hotspot
     },
     size,
-    aspectRatio
+    aspectRatio,
+    video {
+      ...,
+      asset->
+    },
+    videoUrl
   },
   vimeoUrl,
   "client": client-> {
@@ -365,96 +423,17 @@ export const PROJECT_BY_SLUG_QUERY = `*[_type == "work" && slug.current == $slug
       title
     }
   },
-  content[] {
-    _type,
+  projectMedia[] {
     _key,
-    ...,
     image {
       ...,
       asset->,
       crop,
       hotspot
     },
-    images[] {
+    video {
       ...,
-      asset->,
-      crop,
-      hotspot
-    },
-    items[] {
-      _key,
-      title,
-      text
-    },
-    media {
-      image {
-        ...,
-        asset->,
-        crop,
-        hotspot
-      },
-      imgposition
-    },
-    gallery[] {
-      ...,
-      asset->,
-      crop,
-      hotspot
-    },
-    quote,
-    name,
-    role,
-    photo {
-      ...,
-      asset->,
-      crop,
-      hotspot
-    },
-    layout,
-    columns,
-    showCaptions,
-    showTitle,
-    showTitle,
-    size,
-    slidesPerView,
-    slidesPerViewAuto,
-    "members": members[]-> {
-      _id,
-      title,
-      featuredImage {
-        ...,
-        asset->,
-        crop,
-        hotspot
-      },
-      roles[] {
-        name,
-        description
-      }
-    },
-    "team": team[]-> {
-      _id,
-      title,
-      roles,
-      featuredImage {
-        ...,
-        asset->
-      }
-    },
-    "services": services[]-> {
-      _id,
-      title,
-      content
-    },
-    "clients": clients[]-> {
-      _id,
-      title,
-      logo {
-        ...,
-        asset->,
-        crop,
-        hotspot
-      }
+      asset->
     }
   },
   seo {

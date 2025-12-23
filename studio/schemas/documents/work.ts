@@ -85,20 +85,83 @@ export default defineType({
       group: 'hero',
     }),
     defineField({
-      name: 'content',
+      name: 'projectMedia',
       type: 'array',
-      title: 'Project Content',
+      title: 'Project Media',
+      description: 'Media slides for the project carousel. Each slide can contain an image or video.',
       of: [
-        { type: 'textBlock' },
-        { type: 'imageBlock' },
-        { type: 'videoBlock' },
-        { type: 'embedBlock' },
-        { type: 'testimonialBlock' },
-        { type: 'columnsBlock' },
-        { type: 'colorBlock' },
-        { type: 'galleryBlock' },
-        { type: 'carouselBlock' },
-        { type: 'textGridBlock' },
+        {
+          type: 'object',
+          name: 'mediaSlide',
+          title: 'Media Slide',
+          fields: [
+            defineField({
+              name: 'mediaType',
+              type: 'string',
+              title: 'Media Type',
+              description: 'Choose whether this slide contains an image or video',
+              options: {
+                list: [
+                  { title: 'Image', value: 'image' },
+                  { title: 'Video (MP4)', value: 'video' },
+                ],
+              },
+              initialValue: 'image',
+              validation: (Rule) => Rule.required(),
+            }),
+            defineField({
+              name: 'image',
+              type: 'image',
+              title: 'Image',
+              options: { hotspot: true },
+              fields: [
+                defineField({
+                  name: 'alt',
+                  type: 'string',
+                  title: 'Alt Text',
+                }),
+              ],
+              hidden: ({ parent }) => parent?.mediaType !== 'image',
+            }),
+            defineField({
+              name: 'video',
+              type: 'file',
+              title: 'Video (MP4)',
+              description: 'Upload MP4 video file. Media will fill the slide (object-fit: cover).',
+              options: {
+                accept: 'video/mp4',
+              },
+              hidden: ({ parent }) => parent?.mediaType !== 'video',
+            }),
+          ],
+          preview: {
+            select: {
+              mediaType: 'mediaType',
+              image: 'image',
+              video: 'video',
+            },
+            prepare({ mediaType, image, video }) {
+              return {
+                title: mediaType === 'video' ? 'Video Slide' : 'Image Slide',
+                media: image || video,
+              };
+            },
+          },
+          validation: (Rule) =>
+            Rule.custom((value) => {
+              if (!value) return true;
+              if (!value.mediaType) {
+                return 'Media type is required';
+              }
+              if (value.mediaType === 'image' && !value.image) {
+                return 'Image is required when media type is image';
+              }
+              if (value.mediaType === 'video' && !value.video) {
+                return 'Video is required when media type is video';
+              }
+              return true;
+            }),
+        },
       ],
       group: 'content',
     }),
@@ -179,9 +242,18 @@ export default defineType({
         }),
         defineField({
           name: 'video',
+          type: 'file',
+          title: 'Video (MP4)',
+          description: 'Upload MP4 video file for thumbnail. Alternatively, use videoUrl for external video.',
+          options: {
+            accept: 'video/mp4',
+          },
+        }),
+        defineField({
+          name: 'videoUrl',
           type: 'url',
-          title: 'Video URL',
-          description: 'Optional video URL for thumbnail',
+          title: 'Video URL (Fallback)',
+          description: 'Optional video URL as fallback if no MP4 file is uploaded',
         }),
         defineField({
           name: 'aspectRatio',

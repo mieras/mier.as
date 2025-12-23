@@ -1,14 +1,15 @@
 ---
-import Ticker from '../Ticker.astro';
-import ProjectsSection from './ProjectsSection.astro';
+import WorkMarquee from './WorkMarquee.astro';
+import TabGroup from '../ui/TabGroup.astro';
+import WorkList from './work/WorkList.astro';
+import WorkPanel from './work/WorkPanel.astro';
+import { urlForImage } from '../../sanity/lib/image';
 
 type Project = {
   _id: string;
   title: string;
-  slug: string;
+  slug?: string;
   year?: number;
-  subtitle?: string;
-  intro?: string;
   role?: string;
   thumbnail?: {
     image?: any;
@@ -30,74 +31,138 @@ type PhotographyItem = {
 };
 
 type Props = {
-  projects: Project[];
-  photography: PhotographyItem[];
+  projects?: Project[];
+  photography?: PhotographyItem[];
 };
 
-const { projects, photography } = Astro.props;
+const { projects = [], photography = [] } = Astro.props;
 
-// Create array of "Work" items for ticker (repeat multiple times)
-const workItems = Array(8).fill('Work');
+// Get default preview images for each tab
+const defaultDesignImage = projects[0]?.thumbnail?.image?.asset
+  ? urlForImage(projects[0].thumbnail.image)?.width(1200).height(800).url()
+  : '';
+
+const defaultPhotoImage = photography[0]?.thumbnail?.asset
+  ? urlForImage(photography[0].thumbnail)?.width(1200).height(800).url()
+  : '';
+
+const tabs = [
+  { id: 'design', label: 'Design', ariaLabel: 'Show design projects' },
+  { id: 'photography', label: 'Photography', ariaLabel: 'Show photography' },
+];
 ---
 
-<section class="work-section">
-  <div class="work-ticker">
-    <Ticker items={workItems} speed={20}>
-      <span slot="item" class="ticker-item-text">Work</span>
-    </Ticker>
+<section class="work" id="work" aria-label="Work">
+  <div class="work__marquee">
+    <WorkMarquee />
   </div>
 
-  <div class="work-content">
-    <ProjectsSection {projects} {photography} />
+  <div class="work__grid" aria-label="Work grid">
+    <div class="work__left" aria-label="Project list">
+      <div class="work__tabs">
+        <TabGroup
+          tabs={tabs}
+          defaultTab="design"
+          sectionClass="work-section"
+          sticky={true}
+          variant="work"
+        >
+          <!-- Design Projects Tab -->
+          <div class="tab-content tab-content-active" data-tab-content="design">
+            <WorkList projects={projects} activeTab="design" />
+          </div>
+
+          <!-- Photography Tab -->
+          <div class="tab-content" data-tab-content="photography">
+            <WorkList photography={photography} activeTab="photography" />
+          </div>
+        </TabGroup>
+      </div>
+    </div>
+
+    <WorkPanel mode="preview" defaultImage={defaultDesignImage} />
   </div>
 </section>
 
 <style>
-  .work-section {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+  .work {
+    height: 100dvh;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    overflow: hidden;
     min-height: 0;
     background: var(--section-work-bg);
   }
 
-  .work-ticker {
-    padding: var(--space-s) 0;
-  }
-
-  .ticker-item-text {
-    font-size: 128px;
-    font-weight: 700;
-    line-height: 1;
-    letter-spacing: 0.64px;
-    text-transform: uppercase;
-    color: var(--work-ticker-text);
-    white-space: nowrap;
-  }
-
-  /* Responsive: kleiner op tablet/mobile */
-  @media (max-width: 1199px) {
-    .ticker-item-text {
-      font-size: 96px;
-    }
-  }
-
-  @media (max-width: 799px) {
-    .ticker-item-text {
-      font-size: 64px;
-    }
-  }
-
-  .work-content {
-    flex: 1;
-    min-height: 0;
+  /* Sticky marquee wrapper */
+  .work__marquee {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: var(--section-work-bg);
+    width: 100%;
     overflow: hidden;
   }
 
-  /* Mobile: adjust padding */
-  @media (max-width: 799px) {
-    .work-ticker {
-      padding: var(--space-xs) 0;
+  /* Grid */
+  .work__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 34rem), 1fr));
+    align-items: start;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  /* Left */
+  .work__left {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    min-height: 0;
+    min-width: 0;
+  }
+
+  .work__tabs {
+    padding: 0 var(--space-xs);
+    margin: var(--space-xs) 0;
+  }
+
+  .tab-content {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .tab-content.tab-content-active {
+    display: flex;
+  }
+
+  /* Mobile: stack everything */
+  @media (max-width: 899px) {
+    .work {
+      height: auto;
+      min-height: 50vh;
+    }
+
+    .work__grid {
+      grid-template-columns: 1fr;
+    }
+
+    .work__marquee {
+      position: relative;
     }
   }
 </style>
+
+<script>
+  import { initWorkController } from '../../lib/workController';
+
+  // Initialize work controller
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initWorkController);
+  } else {
+    initWorkController();
+  }
+
+  document.addEventListener('astro:page-load', initWorkController);
+</script>

@@ -1,0 +1,109 @@
+---
+interface Props {
+  text: string;
+  variant?: 'light' | 'dark';
+  ariaLabel?: string;
+}
+
+const { text, variant = 'dark', ariaLabel } = Astro.props;
+---
+
+<header
+  class={`marquee marquee--${variant}`}
+  aria-label={ariaLabel || `Section title: ${text}`}
+>
+  <div class="marquee__track">
+    <div class="marquee__content">
+      <ul class="marquee__list">
+        {
+          Array.from({ length: 7 }).map(() => (
+            <li class="marquee__item marquee__item--text">
+              <h3>{text}</h3>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <div class="marquee__content" aria-hidden="true">
+      <ul class="marquee__list">
+        {
+          Array.from({ length: 7 }).map(() => (
+            <li class="marquee__item marquee__item--text">
+              <h3>{text}</h3>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</header>
+
+<style>
+  .marquee {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+  }
+
+  .marquee__track {
+    display: flex;
+    flex-shrink: 0;
+    white-space: nowrap;
+    width: max-content;
+    gap: var(--fs-8);
+    animation: marquee-scroll 20s linear infinite;
+    will-change: transform;
+  }
+
+  @keyframes marquee-scroll {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  .marquee__content {
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+
+  .marquee__list {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    gap: var(--fs-8);
+  }
+
+  .marquee__item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .marquee__item--text h3 {
+    font-size: var(--fs-8);
+    text-transform: uppercase;
+    margin: 0;
+    white-space: nowrap;
+    font-family: var(--font-family-heading);
+    font-weight: 900;
+  }
+
+  /* Variant: light (witte tekst op donkere achtergrond) */
+  .marquee--light .marquee__item--text h3 {
+    color: var(--text-light);
+  }
+
+  /* Variant: dark (donkere tekst op lichte achtergrond) */
+  .marquee--dark .marquee__item--text h3 {
+    color: var(--work-ticker-text);
+  }
+</style>

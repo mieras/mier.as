@@ -1,0 +1,170 @@
+---
+import { urlForImage } from '../../../sanity/lib/image';
+
+type Project = {
+  _id: string;
+  title: string;
+  slug?: string;
+  year?: number;
+  role?: string;
+  thumbnail?: {
+    image?: any;
+    aspectRatio?: string;
+  };
+  client?: {
+    title: string;
+  };
+};
+
+type PhotographyItem = {
+  _id: string;
+  title: string;
+  year?: number;
+  city?: string;
+  country?: string;
+  camera?: string;
+  thumbnail?: any;
+};
+
+type Props = {
+  project?: Project;
+  photography?: PhotographyItem;
+  type?: 'design' | 'photography';
+};
+
+const { project, photography, type = 'design' } = Astro.props;
+
+// Determine which data to use
+const item = type === 'photography' ? photography : project;
+if (!item) return null;
+
+const imageUrl = project?.thumbnail?.image?.asset
+  ? urlForImage(project.thumbnail.image)?.width(1200).height(800).url()
+  : photography?.thumbnail?.asset
+    ? urlForImage(photography.thumbnail)?.width(1200).height(800).url()
+    : null;
+
+const year = item.year || null;
+const title = item.title || '';
+
+// For design projects
+const client = project?.client?.title || '';
+const description = title;
+
+// For photography
+const city = photography?.city || '';
+const country = photography?.country || '';
+const location = [city, country].filter(Boolean).join(', ');
+const camera = photography?.camera || '';
+const photoDescription = camera || title;
+
+const dataId =
+  type === 'photography'
+    ? { 'data-photo-id': item._id }
+    : {
+        'data-project-id': item._id,
+        'data-project-slug': project?.slug || '',
+        'data-preview': imageUrl || '',
+      };
+---
+
+<a
+  class="work-row"
+  href="#"
+  data-type={type}
+  {...dataId}
+  role="button"
+  tabindex="0"
+  aria-label={`${type === 'design' ? client : location} - ${title}`}
+>
+  <span class="work-row__client">{type === 'design' ? client : location}</span>
+  <span class="work-row__desc"
+    >{type === 'design' ? description : photoDescription}</span
+  >
+  {year && <span class="work-row__year">{year}</span>}
+</a>
+
+<style>
+  .work-row {
+    display: grid;
+    grid-template-columns: 1.25fr 1.5fr 0.5fr;
+    gap: var(--space-s);
+    align-items: center;
+    padding: var(--space-xs);
+    text-decoration: none;
+    color: inherit;
+    background: var(--section-work-bg);
+    border-top: 1px solid var(--work-items-hover-bg);
+    transition:
+      background 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .work-row:hover {
+    background: var(--work-items-hover-bg);
+    color: var(--work-items-text);
+  }
+
+  .work-row.is-active {
+    background: var(--work-items-active-bg);
+    color: var(--text-light);
+  }
+
+  .work-row.is-active:hover {
+    background: var(--work-items-active-bg);
+    color: var(--text-light);
+  }
+
+  .work-row__client {
+    font-family: var(--font-family-heading);
+    font-size: var(--fs-0);
+    font-weight: 650;
+    line-height: 1.2;
+  }
+
+  .work-row__desc {
+    font-size: var(--fs--2);
+    opacity: 0.6;
+    line-height: 1.2;
+  }
+
+  .work-row.is-active .work-row__desc {
+    opacity: 0.9;
+  }
+
+  .work-row__year {
+    justify-self: end;
+    font-family: var(--font-mono);
+    font-size: var(--fs--2);
+    opacity: 0.6;
+    line-height: 1.2;
+  }
+
+  .work-row.is-active .work-row__year {
+    opacity: 0.9;
+  }
+
+  /* Mobile: stack columns */
+  @media (max-width: 768px) {
+    .work-row {
+      grid-template-columns: 1fr;
+      gap: var(--space-3xs);
+    }
+
+    .work-row__year {
+      justify-self: start;
+    }
+  }
+
+  /* Focus states for accessibility */
+  .work-row:focus-visible {
+    outline: 2px solid var(--work-tabs-active-bg);
+    outline-offset: 2px;
+    background: var(--work-items-hover-bg);
+  }
+
+  .work-row.is-active:focus-visible {
+    background: var(--work-items-active-bg);
+    outline-color: var(--text-light);
+  }
+</style>

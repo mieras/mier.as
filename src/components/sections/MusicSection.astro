@@ -1,271 +1,79 @@
 ---
+import MusicMarquee from './MusicMarquee.astro';
 import RecentlyPlayed from './music/RecentlyPlayed.astro';
 import Mixtapes from './music/Mixtapes.astro';
 import LatestRecords from './music/LatestRecords.astro';
-import TabGroup from '../ui/TabGroup.astro';
 ---
 
-<TabGroup
-  tabs={[
-    { id: 'now-listening', label: 'Now listening' },
-    { id: 'collections', label: 'Collection' },
-    { id: 'mixtapes', label: 'Mixtapes' },
-  ]}
-  defaultTab="now-listening"
-  sectionClass="music-section"
-  variant="music"
->
-  <!-- Now Listening Tab -->
-  <div class="tab-content tab-content-active" data-tab-content="now-listening">
-    <RecentlyPlayed />
+<section class="music" id="music" aria-label="Music">
+  <div class="music__marquee">
+    <MusicMarquee />
   </div>
 
-  <!-- Collections Tab -->
-  <div class="tab-content" data-tab-content="collections">
-    <LatestRecords />
+  <div class="music__grid" aria-label="Music grid">
+    <section class="music__col" aria-label="Now listening">
+      <header class="music__col-header">
+        <h4 class="music__title">Now listening</h4>
+      </header>
+      <RecentlyPlayed />
+    </section>
+
+    <section class="music__col" aria-label="Collection">
+      <header class="music__col-header">
+        <h4 class="music__title">Collection</h4>
+      </header>
+      <LatestRecords />
+    </section>
+
+    <section class="music__col" aria-label="Mixtapes">
+      <header class="music__col-header">
+        <h4 class="music__title">Mixtapes</h4>
+      </header>
+      <Mixtapes />
+    </section>
   </div>
-
-  <!-- Mixtapes Tab -->
-  <div class="tab-content" data-tab-content="mixtapes">
-    <Mixtapes />
-  </div>
-</TabGroup>
-
-<script>
-  import {
-    initSwiper,
-    musicTickerPreset,
-    mixtapesPreset,
-  } from '../../lib/swiper-utils';
-
-  // Close Mixcloud embed when switching away from mixtapes tab
-  const closeMixcloudEmbed = () => {
-    const embedContainer = document.querySelector(
-      '.mixtapes-embed-container',
-    ) as HTMLElement;
-    const embedIframe = document.querySelector(
-      '.mixtapes-embed-iframe',
-    ) as HTMLIFrameElement;
-
-    if (embedContainer && embedIframe) {
-      // Stop embed by clearing src
-      embedIframe.src = '';
-      embedContainer.style.display = 'none';
-
-      // Reset all mixtape button states
-      const mixtapeItems = document.querySelectorAll('.mixtape-item');
-      mixtapeItems.forEach((item) => {
-        const mixcloudIconBtn = item.querySelector(
-          '.music-mixcloud-icon-btn',
-        ) as HTMLElement;
-        if (mixcloudIconBtn) {
-          mixcloudIconBtn.setAttribute('data-active', 'false');
-          mixcloudIconBtn.setAttribute('data-action', 'play');
-        }
-      });
-    }
-  };
-
-  // Re-initialize Swiper instances when tab changes
-  const handleTabChange = (event: CustomEvent) => {
-    const { content, tabId } = event.detail;
-
-    // Close Mixcloud embed if switching away from mixtapes tab
-    if (tabId !== 'mixtapes') {
-      closeMixcloudEmbed();
-    }
-
-    // Wait for content to be visible before initializing Swiper
-    // Use requestAnimationFrame and timeout to ensure DOM is fully updated and layout calculated
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          const latestRecordsSwiper = content.querySelector(
-            '.latest-records-swiper',
-          ) as HTMLElement;
-          const recentlyPlayedSwiper = content.querySelector(
-            '.recently-played-swiper',
-          ) as HTMLElement;
-          const mixtapesSwiper = content.querySelector(
-            '.mixtapes-swiper',
-          ) as HTMLElement;
-
-          if (
-            latestRecordsSwiper &&
-            content.classList.contains('tab-content-active')
-          ) {
-            // Destroy existing instance if any, then reinitialize
-            const swiper = initSwiper(
-              latestRecordsSwiper,
-              musicTickerPreset,
-              true,
-            );
-            // Force update after initialization
-            if (swiper) {
-              requestAnimationFrame(() => {
-                swiper.update();
-                swiper.updateSize();
-              });
-            }
-          }
-
-          if (
-            recentlyPlayedSwiper &&
-            content.classList.contains('tab-content-active')
-          ) {
-            // Destroy existing instance if any, then reinitialize
-            const swiper = initSwiper(
-              recentlyPlayedSwiper,
-              musicTickerPreset,
-              true,
-            );
-            // Force update after initialization
-            if (swiper) {
-              requestAnimationFrame(() => {
-                swiper.update();
-                swiper.updateSize();
-              });
-            }
-          }
-
-          if (
-            mixtapesSwiper &&
-            content.classList.contains('tab-content-active')
-          ) {
-            // Destroy existing instance if any, then reinitialize
-            const swiperInstance = initSwiper(
-              mixtapesSwiper,
-              mixtapesPreset,
-              true,
-            );
-            // Store reference for Mixtapes component embed handlers
-            if (swiperInstance && mixtapesSwiper) {
-              (mixtapesSwiper as any).swiper = swiperInstance;
-              // Force update after initialization
-              requestAnimationFrame(() => {
-                swiperInstance.update();
-                swiperInstance.updateSize();
-              });
-            }
-          }
-        }, 50);
-      });
-    });
-  };
-
-  // Initialize Swiper for the default active tab on load
-  const initDefaultTabSwiper = () => {
-    const activeTab = document.querySelector(
-      '.music-section .tab-content.tab-content-active',
-    );
-    if (!activeTab) return;
-
-    const latestRecordsSwiper = activeTab.querySelector(
-      '.latest-records-swiper',
-    ) as HTMLElement;
-    const recentlyPlayedSwiper = activeTab.querySelector(
-      '.recently-played-swiper',
-    ) as HTMLElement;
-    const mixtapesSwiper = activeTab.querySelector(
-      '.mixtapes-swiper',
-    ) as HTMLElement;
-
-    // Wait for layout to be calculated, especially on desktop with grid layout
-    // Use multiple requestAnimationFrame calls and a small timeout
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          if (latestRecordsSwiper) {
-            const swiper = initSwiper(
-              latestRecordsSwiper,
-              musicTickerPreset,
-              true,
-            );
-            // Force update after initialization to ensure correct dimensions
-            if (swiper) {
-              requestAnimationFrame(() => {
-                swiper.update();
-                swiper.updateSize();
-              });
-            }
-          }
-
-          if (recentlyPlayedSwiper) {
-            const swiper = initSwiper(
-              recentlyPlayedSwiper,
-              musicTickerPreset,
-              true,
-            );
-            // Force update after initialization
-            if (swiper) {
-              requestAnimationFrame(() => {
-                swiper.update();
-                swiper.updateSize();
-              });
-            }
-          }
-
-          if (mixtapesSwiper) {
-            const swiperInstance = initSwiper(
-              mixtapesSwiper,
-              mixtapesPreset,
-              true,
-            );
-            // Store reference for Mixtapes component embed handlers
-            if (swiperInstance && mixtapesSwiper) {
-              (mixtapesSwiper as any).swiper = swiperInstance;
-              // Force update after initialization
-              requestAnimationFrame(() => {
-                swiperInstance.update();
-                swiperInstance.updateSize();
-              });
-            }
-          }
-        }, 50);
-      });
-    });
-  };
-
-  const initMusicSection = () => {
-    const musicSection = document.querySelector('.music-section');
-    if (!musicSection) return;
-
-    musicSection.addEventListener(
-      'tab-change',
-      handleTabChange as EventListener,
-    );
-
-    // Initialize Swiper for default active tab
-    initDefaultTabSwiper();
-  };
-
-  document.addEventListener('DOMContentLoaded', initMusicSection);
-  document.addEventListener('astro:page-load', initMusicSection);
-</script>
+</section>
 
 <style>
-  .music-section {
+  .music {
     background-color: var(--section-music-bg);
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
+    color: var(--text-light);
     width: 100%;
-    height: 100%;
-    min-height: 0;
-    overflow: hidden;
-    color: #ffffff;
   }
 
-  .tab-content {
-    display: none;
-    flex: 1;
-    min-height: 0;
+  .music__marquee {
+    width: 100%;
     overflow: hidden;
   }
 
-  .tab-content.tab-content-active {
-    display: flex;
-    flex-direction: column;
+  .music__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: var(--space-s);
+    gap: var(--space-s);
+  }
+
+  .music__col {
+    padding: var(--space-s);
+    border-top: 1px solid var(--text-light-secondary);
+  }
+
+  .music__col-header {
+    margin-bottom: var(--space-s);
+  }
+
+  .music__title {
+    font-size: var(--fs-0);
+    font-weight: 600;
+    opacity: 0.9;
+    margin: 0;
+    color: var(--text-light);
+  }
+
+  /* Mobile: altijd 1 kolom (nooit 2) */
+  @media (max-width: 900px) {
+    .music__grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

@@ -141,20 +141,18 @@ const primaryMenu = menus.nodes[0];
   }
 
   /* Desktop: height constraint voor viewport - alleen voor niet-homepage */
-  @media (min-width: 800px) {
+  @media (min-width: 900px) {
     .wrapper:not(.wrapper-homepage) {
       display: grid;
-      grid-template-rows: auto 1fr auto;
-      height: 100vh;
-      overflow: hidden;
+      grid-template-rows: auto 1fr;
+      padding-left: 120px; /* Ruimte voor footer links */
     }
 
     /* Homepage wrapper: geen grid, laat .page zijn eigen grid doen */
     .wrapper-homepage {
-      height: 100vh;
-      overflow: hidden;
       display: flex;
       flex-direction: column;
+      padding-left: 2rem; /* Ruimte voor footer links */
     }
   }
 </style>

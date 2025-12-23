@@ -97,6 +97,8 @@ export interface SanityProject {
     image?: SanityImage;
     size?: 'small' | 'default' | 'large';
     aspectRatio?: string;
+    video?: SanityFile;
+    videoUrl?: string;
   };
   client?: {
     _type: 'reference';
@@ -108,7 +110,11 @@ export interface SanityProject {
   }>;
   credits?: string;
   relatedProjects?: SanityProject[];
-  content?: SanityBlock[];
+  projectMedia?: Array<{
+    _key: string;
+    image?: SanityImage;
+    video?: SanityFile;
+  }>;
   seo?: SanitySEO;
 }
 
@@ -365,6 +371,28 @@ export interface SanitySEO {
     noIndex?: boolean;
     noFollow?: boolean;
   };
+}
+
+// Photography types
+export interface SanityPhotography {
+  _type: 'photography';
+  _id: string;
+  title: string;
+  year?: number;
+  city?: string;
+  country?: string;
+  camera?: string;
+  hero?: {
+    title?: string;
+    subtitle?: string;
+    intro?: string;
+  };
+  thumbnail?: SanityImage;
+  projectMedia?: Array<{
+    _key: string;
+    image?: SanityImage;
+    video?: SanityFile;
+  }>;
 }
 
 // Columns Block types

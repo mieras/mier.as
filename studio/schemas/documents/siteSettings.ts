@@ -45,7 +45,8 @@ export default defineType({
       name: 'url',
       type: 'url',
       title: 'Site URL',
-      description: 'Optional - used for Open Graph URLs. If not set, will use the current page URL.',
+      description:
+        'Optional - used for Open Graph URLs. If not set, will use the current page URL.',
       validation: (Rule) =>
         Rule.uri({
           scheme: ['http', 'https'],
@@ -191,6 +192,11 @@ export default defineType({
           title: 'Legal Information',
           fields: [
             defineField({
+              name: 'kvk',
+              type: 'string',
+              title: 'KVK Number',
+            }),
+            defineField({
               name: 'btw',
               type: 'string',
               title: 'BTW Number',
@@ -199,11 +205,6 @@ export default defineType({
               name: 'bank',
               type: 'string',
               title: 'Bank Account',
-            }),
-            defineField({
-              name: 'kvk',
-              type: 'string',
-              title: 'KVK Number',
             }),
           ],
         }),
@@ -229,7 +230,8 @@ export default defineType({
       name: 'defaultSeo',
       type: 'seoFields',
       title: 'Default SEO Settings',
-      description: 'Default SEO settings used as fallback for pages without their own SEO',
+      description:
+        'Default SEO settings used as fallback for pages without their own SEO',
       group: 'seo',
     }),
   ],

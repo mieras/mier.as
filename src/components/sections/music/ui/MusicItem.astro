@@ -65,9 +65,7 @@ const hasThumbnail = variant === 'ticker-thumbnail' || variant === 'list';
         </div>
       )}
       <div class="music-info">
-        <span class="music-line1">
-          {line1}
-        </span>
+        <span class="music-line1">{line1}</span>
         {line2 && <span class="music-line2">{line2}</span>}
         {timestamp && <span class="music-timestamp">{timestamp}</span>}
       </div>
@@ -264,7 +262,7 @@ const hasThumbnail = variant === 'ticker-thumbnail' || variant === 'list';
     display: flex;
     align-items: center;
     gap: var(--space-3xs);
-    color: #ffffff;
+    color: var(--text-light);
   }
 
   .music-mixcloud-icon-btn {
@@ -278,7 +276,7 @@ const hasThumbnail = variant === 'ticker-thumbnail' || variant === 'list';
     flex-shrink: 0;
     width: 1rem;
     height: 1rem;
-    color: #ffffff;
+    color: var(--text-light);
     opacity: 0.7;
     transition: opacity 0.2s ease;
   }
@@ -296,7 +294,7 @@ const hasThumbnail = variant === 'ticker-thumbnail' || variant === 'list';
     font-size: var(--fs--2);
     font-weight: 500;
     line-height: 1.2;
-    color: #ffffff;
+    color: var(--text-light);
   }
 
   .ticker-item .music-timestamp {
@@ -304,7 +302,7 @@ const hasThumbnail = variant === 'ticker-thumbnail' || variant === 'list';
     font-size: var(--fs--3);
     font-weight: 500;
     line-height: 1.2;
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--text-light-secondary);
   }
 
   /* List variant */
@@ -436,7 +434,7 @@ const hasThumbnail = variant === 'ticker-thumbnail' || variant === 'list';
     margin: 0;
     line-height: 1;
     flex: 1;
-    color: #ffffff;
+    color: var(--text-light);
   }
 
   .music-item .music-line2 {
@@ -444,14 +442,14 @@ const hasThumbnail = variant === 'ticker-thumbnail' || variant === 'list';
     opacity: 0.7;
     font-weight: 300;
     line-height: 1;
-    color: #ffffff;
+    color: var(--text-light);
   }
 
   .music-item .music-timestamp {
     font-size: var(--fs--2);
     opacity: 0.6;
     font-weight: 300;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--text-light-secondary);
   }
 
   .music-genres {
@@ -465,8 +463,8 @@ const hasThumbnail = variant === 'ticker-thumbnail' || variant === 'list';
     opacity: 0.6;
     font-weight: 300;
     padding: var(--space-3xs) var(--space-2xs);
-    background-color: #ffffff;
-    color: #000000;
-    border-radius: 0.125rem;
+    background-color: var(--text-light);
+    color: var(--color-black);
+    border-radius: var(--radius-small);
   }
 </style>

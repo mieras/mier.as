@@ -27,13 +27,17 @@ const activeTab = defaultTab || tabs[0]?.id || '';
       <div class="tab-group-tabs-wrapper-music">
         <div
           class={`tab-group-tabs ${sticky ? 'tab-group-tabs-sticky' : ''} tab-group-tabs-${variant}`}
-          style={`--active-tab-index: ${tabs.findIndex(t => t.id === activeTab)}; --tab-count: ${tabs.length};`}
+          role="tablist"
+          aria-label="Tabs"
+          style={`--active-tab-index: ${tabs.findIndex((t) => t.id === activeTab)}; --tab-count: ${tabs.length};`}
         >
-          <div class="tab-active-indicator"></div>
+          <div class="tab-active-indicator" aria-hidden="true" />
           {tabs.map((tab) => (
             <button
               class={`tab-button ${tab.id === activeTab ? 'tab-active' : ''}`}
               data-tab={tab.id}
+              role="tab"
+              aria-selected={tab.id === activeTab ? 'true' : 'false'}
               aria-label={tab.ariaLabel || `Show ${tab.label}`}
             >
               {tab.label}
@@ -44,13 +48,17 @@ const activeTab = defaultTab || tabs[0]?.id || '';
     ) : (
       <div
         class={`tab-group-tabs ${sticky ? 'tab-group-tabs-sticky' : ''} tab-group-tabs-${variant}`}
-        style={`--active-tab-index: ${tabs.findIndex(t => t.id === activeTab)}; --tab-count: ${tabs.length};`}
+        role="tablist"
+        aria-label={variant === 'work' ? 'Work categories' : 'Tabs'}
+        style={`--active-tab-index: ${tabs.findIndex((t) => t.id === activeTab)}; --tab-count: ${tabs.length};`}
       >
-        <div class="tab-active-indicator"></div>
+        <div class="tab-active-indicator" aria-hidden="true" />
         {tabs.map((tab) => (
           <button
             class={`tab-button ${tab.id === activeTab ? 'tab-active' : ''}`}
             data-tab={tab.id}
+            role="tab"
+            aria-selected={tab.id === activeTab ? 'true' : 'false'}
             aria-label={tab.ariaLabel || `Show ${tab.label}`}
           >
             {tab.label}
@@ -69,7 +77,9 @@ const activeTab = defaultTab || tabs[0]?.id || '';
       '.tab-group-tabs .tab-button',
     );
     const tabContents = container.querySelectorAll('.tab-content');
-    const tabGroupTabs = container.querySelector('.tab-group-tabs') as HTMLElement;
+    const tabGroupTabs = container.querySelector(
+      '.tab-group-tabs',
+    ) as HTMLElement;
 
     tabButtons.forEach((button, index) => {
       button.addEventListener('click', () => {
@@ -78,12 +88,17 @@ const activeTab = defaultTab || tabs[0]?.id || '';
         // Update active button
         tabButtons.forEach((btn) => {
           btn.classList.remove('tab-active');
+          btn.setAttribute('aria-selected', 'false');
         });
         button.classList.add('tab-active');
+        button.setAttribute('aria-selected', 'true');
 
         // Update active indicator positie (CSS-only animatie)
         if (tabGroupTabs) {
-          tabGroupTabs.style.setProperty('--active-tab-index', index.toString());
+          tabGroupTabs.style.setProperty(
+            '--active-tab-index',
+            index.toString(),
+          );
         }
 
         // Update active content
@@ -145,13 +160,13 @@ const activeTab = defaultTab || tabs[0]?.id || '';
     width: 100%;
     position: relative;
   }
-  
+
   /* Active indicator - slide animatie (zoals CodePen voorbeeld) */
   .tab-active-indicator {
     position: absolute;
     top: 0;
     left: 0;
-    height: 100%;
+
     width: calc(100% / var(--tab-count, 1));
     /* Horizontale slide animatie - CSS only */
     transform: translateX(calc(var(--active-tab-index, 0) * 100%));
@@ -162,23 +177,25 @@ const activeTab = defaultTab || tabs[0]?.id || '';
 
   /* Work tabs variant: witte achtergrond, gele active state, rounded pills */
   .tab-group-tabs-work {
+    --pad: 0.35rem;
     background-color: var(--work-tabs-bg);
     border-bottom: none;
     border-radius: 999px;
-    /* padding: var(--space-s); */
+    padding: var(--pad);
     overflow: hidden;
     margin: 0;
     width: 100%;
   }
-  
+
   /* Active indicator voor work variant */
   .tab-group-tabs-work .tab-active-indicator {
+    position: absolute;
+    inset: var(--pad);
+    width: calc((100% - (var(--pad) * 2)) / var(--tab-count, 1));
     background-color: var(--work-tabs-active-bg);
     border-radius: 999px;
-    height: calc(100% - 10px);
-    top: 5px;
-    width: calc(100% / var(--tab-count, 1));
     transform: translateX(calc(var(--active-tab-index, 0) * 100%));
+    transition: transform 200ms ease;
   }
 
   /* Music tabs wrapper: padding voor de tabs container */
@@ -196,7 +213,7 @@ const activeTab = defaultTab || tabs[0]?.id || '';
     margin: 0;
     width: 100%;
   }
-  
+
   /* Active indicator voor music variant */
   .tab-group-tabs-music .tab-active-indicator {
     background-color: var(--color-accent-yellow);
@@ -235,11 +252,15 @@ const activeTab = defaultTab || tabs[0]?.id || '';
   .tab-group-tabs-work .tab-button {
     font-family: var(--font-family-heading);
     font-size: var(--fs-0);
-    font-weight: 900;
-    text-transform: uppercase;
-    padding: var(--space-s) var(--space-xs);
+    font-weight: 600;
+    text-align: center;
+    padding: var(--space-xs) var(--space-m);
     color: var(--work-tabs-inactive-text);
     border-radius: 999px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    z-index: 2;
   }
 
   .tab-group-tabs-work .tab-button.tab-active {
@@ -276,9 +297,10 @@ const activeTab = defaultTab || tabs[0]?.id || '';
     color: var(--bg);
     border-bottom-color: var(--border);
   }
-  
+
   /* Active indicator voor default variant */
-  .tab-group-tabs:not(.tab-group-tabs-work):not(.tab-group-tabs-music) .tab-active-indicator {
+  .tab-group-tabs:not(.tab-group-tabs-work):not(.tab-group-tabs-music)
+    .tab-active-indicator {
     background-color: var(--text);
     height: calc(100% + 1px);
     top: 0;

@@ -1,0 +1,243 @@
+---
+import { urlForImage } from '../../sanity/lib/image';
+
+type HeroMedia = {
+  mediaType: 'image' | 'video';
+  image?: any;
+  videoUrl?: string;
+};
+
+type Props = {
+  heroMedia?: HeroMedia;
+};
+
+const { heroMedia } = Astro.props;
+
+// Debug logging
+if (import.meta.env.DEV) {
+  console.log('🎨 HeroMediaThree props:', {
+    hasHeroMedia: !!heroMedia,
+    mediaType: heroMedia?.mediaType,
+    hasImage: !!heroMedia?.image,
+    imageAsset: !!heroMedia?.image?.asset,
+    videoUrl: heroMedia?.videoUrl,
+  });
+}
+
+// Get image URL if media type is image
+const imageUrl =
+  heroMedia?.mediaType === 'image' && heroMedia?.image?.asset
+    ? urlForImage(heroMedia.image)?.width(1920).height(1080).url()
+    : null;
+
+// Get video URL if media type is video
+const videoUrl = heroMedia?.mediaType === 'video' ? heroMedia?.videoUrl : null;
+
+if (import.meta.env.DEV) {
+  console.log('🖼️ HeroMediaThree URLs:', {
+    imageUrl,
+    videoUrl,
+    hasImageUrl: !!imageUrl,
+    hasVideoUrl: !!videoUrl,
+  });
+}
+---
+
+<div class="hero-media-three" data-image-url={imageUrl || ''} data-video-url={videoUrl || ''}></div>
+
+<script client:load>
+  import * as THREE from 'three';
+  import { EffectComposer, RenderPass, BloomEffect } from 'postprocessing';
+
+  // Get container element
+  const container = document.querySelector('.hero-media-three');
+  if (!container) {
+    console.warn('HeroMediaThree: Container element not found');
+    return;
+  }
+
+  const imageUrl = container.dataset.imageUrl || '';
+  const videoUrl = container.dataset.videoUrl || '';
+
+  console.log('🎨 HeroMediaThree script loaded:', {
+    hasContainer: !!container,
+    imageUrl,
+    videoUrl,
+    hasImageUrl: !!imageUrl,
+    hasVideoUrl: !!videoUrl,
+  });
+
+  if (!imageUrl && !videoUrl) {
+    console.warn('HeroMediaThree: No image or video URL provided');
+    return;
+  }
+
+  // Scene setup
+  const scene = new THREE.Scene();
+  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+  camera.position.z = 1;
+
+  // Get container dimensions
+  const getContainerSize = () => {
+    const rect = container.getBoundingClientRect();
+    return {
+      width: rect.width || window.innerWidth,
+      height: rect.height || window.innerHeight,
+    };
+  };
+
+  const { width, height } = getContainerSize();
+
+  // Renderer setup
+  const renderer = new THREE.WebGLRenderer({ 
+    antialias: true,
+    alpha: true,
+    powerPreference: 'high-performance',
+  });
+  renderer.setSize(width, height);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.appendChild(renderer.domElement);
+
+  // Create plane geometry for fullscreen quad
+  const geometry = new THREE.PlaneGeometry(2, 2);
+  let material = null;
+  let texture = null;
+  let videoElement = null;
+
+  // Load texture based on media type
+  const textureLoader = new THREE.TextureLoader();
+
+  if (imageUrl) {
+    // Load image texture
+    textureLoader.load(
+      imageUrl,
+      (loadedTexture) => {
+        loadedTexture.minFilter = THREE.LinearFilter;
+        loadedTexture.magFilter = THREE.LinearFilter;
+        texture = loadedTexture;
+        material = new THREE.MeshBasicMaterial({ map: texture });
+        const mesh = new THREE.Mesh(geometry, material);
+        scene.add(mesh);
+      },
+      undefined,
+      (error) => {
+        console.error('HeroMediaThree: Error loading image texture', error);
+      }
+    );
+  } else if (videoUrl) {
+    // Create video element and texture
+    videoElement = document.createElement('video');
+    videoElement.src = videoUrl;
+    videoElement.loop = true;
+    videoElement.muted = true;
+    videoElement.playsInline = true;
+    videoElement.autoplay = true;
+    videoElement.play().catch((err) => {
+      console.warn('HeroMediaThree: Video autoplay failed', err);
+    });
+
+    texture = new THREE.VideoTexture(videoElement);
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    material = new THREE.MeshBasicMaterial({ map: texture });
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+  }
+
+  // Post-processing setup
+  const composer = new EffectComposer(renderer);
+  const renderPass = new RenderPass(scene, camera);
+  composer.addPass(renderPass);
+
+  // Bloom effect
+  const bloomEffect = new BloomEffect({
+    intensity: 0.2, // Subtle bloom
+    radius: 0.5,
+    threshold: 0.3,
+  });
+  composer.addEffect(bloomEffect);
+
+  // Animation loop
+  let animationId: number;
+  const animate = () => {
+    animationId = requestAnimationFrame(animate);
+
+    // Update video texture if it exists
+    if (texture && videoElement && texture instanceof THREE.VideoTexture) {
+      if (videoElement.readyState >= videoElement.HAVE_CURRENT_DATA) {
+        texture.needsUpdate = true;
+      }
+    }
+
+    composer.render();
+  };
+
+  // Handle resize
+  let resizeTimeout: ReturnType<typeof setTimeout>;
+  const handleResize = () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      const { width: newWidth, height: newHeight } = getContainerSize();
+      camera.aspect = newWidth / newHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(newWidth, newHeight);
+      composer.setSize(newWidth, newHeight);
+    }, 100);
+  };
+
+  window.addEventListener('resize', handleResize);
+
+  // Start animation
+  animate();
+
+  // Cleanup function
+  const cleanup = () => {
+    window.removeEventListener('resize', handleResize);
+    cancelAnimationFrame(animationId);
+    
+    if (texture) {
+      texture.dispose();
+    }
+    
+    if (videoElement) {
+      videoElement.pause();
+      videoElement.src = '';
+      videoElement.load();
+    }
+    
+    material?.dispose();
+    geometry.dispose();
+    renderer.dispose();
+    composer.dispose();
+    
+    if (container && renderer.domElement.parentNode === container) {
+      container.removeChild(renderer.domElement);
+    }
+  };
+
+  // Cleanup on page unload
+  window.addEventListener('beforeunload', cleanup);
+  
+  // Cleanup on Astro view transitions
+  document.addEventListener('astro:before-swap', cleanup);
+</script>
+
+<style>
+  .hero-media-three {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .hero-media-three canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+  }
+</style>
+

@@ -1,6 +1,8 @@
 ---
 import { urlForImage } from '../../sanity/lib/image';
 import SiteNavigation from '../SiteNavigation.astro';
+import { PortableText } from 'astro-portabletext';
+import HeroMediaThree from './HeroMediaThree.astro';
 
 type HeroMedia = {
   mediaType: 'image' | 'video';
@@ -8,11 +10,18 @@ type HeroMedia = {
   videoUrl?: string;
 };
 
-type Props = {
-  heroMedia?: HeroMedia;
+type IntroCol = {
+  _key: string;
+  content: any[];
 };
 
-const { heroMedia } = Astro.props;
+type Props = {
+  heroMedia?: HeroMedia;
+  introCols?: IntroCol[];
+  useThreeJs?: boolean;
+};
+
+const { heroMedia, introCols, useThreeJs = false } = Astro.props;
 
 // Debug logging
 if (import.meta.env.DEV) {
@@ -21,6 +30,7 @@ if (import.meta.env.DEV) {
     mediaType: heroMedia?.mediaType,
     hasImage: !!heroMedia?.image,
     imageAsset: !!heroMedia?.image?.asset,
+    introColsCount: introCols?.length || 0,
   });
 }
 
@@ -30,81 +40,177 @@ const imageUrl =
     ? urlForImage(heroMedia.image)?.width(1920).height(1080).url()
     : null;
 
+// Get intro text from first introCol (if available)
+const introContent = introCols?.[0]?.content;
+
+// PortableText components
+const components = {
+  types: {},
+  marks: {},
+  block: {},
+  list: {},
+  listItem: {},
+};
+
 if (import.meta.env.DEV) {
   console.log('🖼️ HeroSection image URL:', imageUrl);
 }
 ---
 
-<section class="hero-section">
+<section class="hero-section" aria-labelledby="hero-title">
   <div class="hero-navigation">
     <SiteNavigation />
   </div>
-  <div class="hero-media">
+  <div class="hero__media">
     {
-      heroMedia?.mediaType === 'image' && imageUrl ? (
-        <img
-          src={imageUrl}
-          alt="Hero image"
-          loading="eager"
-          class="hero-image"
-        />
-      ) : heroMedia?.mediaType === 'image' && heroMedia?.image ? (
-        <div class="hero-image-placeholder">
-          <p>Image loading...</p>
-          {import.meta.env.DEV && (
-            <pre>{JSON.stringify(heroMedia.image, null, 2)}</pre>
+      useThreeJs && heroMedia ? (
+        <HeroMediaThree heroMedia={heroMedia} />
+      ) : (
+        <>
+          {heroMedia?.mediaType === 'image' && imageUrl ? (
+            <img
+              src={imageUrl}
+              alt="Maarten Mieras"
+              loading="eager"
+              class="hero__image"
+            />
+          ) : heroMedia?.mediaType === 'image' && heroMedia?.image ? (
+            <div class="hero-image-placeholder">
+              <p>Image loading...</p>
+              {import.meta.env.DEV && (
+                <pre>{JSON.stringify(heroMedia.image, null, 2)}</pre>
+              )}
+            </div>
+          ) : null}
+          {heroMedia?.mediaType === 'video' && heroMedia?.videoUrl && (
+            <video
+              src={heroMedia.videoUrl}
+              autoplay
+              loop
+              muted
+              playsinline
+              class="hero__video"
+            />
           )}
-        </div>
-      ) : null
-    }
-    {
-      heroMedia?.mediaType === 'video' && heroMedia?.videoUrl && (
-        <video
-          src={heroMedia.videoUrl}
-          autoplay
-          loop
-          muted
-          playsinline
-          class="hero-video"
-        />
+          {!heroMedia && import.meta.env.DEV && (
+            <div class="hero-image-placeholder">
+              <p>No hero media configured</p>
+            </div>
+          )}
+        </>
       )
     }
+  </div>
+
+  <div class="hero__content">
+    <h1 id="hero-title" class="hero__title">Maarten Mieras</h1>
     {
-      !heroMedia && import.meta.env.DEV && (
-        <div class="hero-image-placeholder">
-          <p>No hero media configured</p>
-        </div>
+      introContent && (
+        <p class="hero__text">
+          <PortableText value={introContent} components={components} />
+        </p>
       )
     }
+    <a class="hero__cta" href="#work" aria-label="Scroll to work section">
+      View work
+    </a>
   </div>
 </section>
 
 <style>
   .hero-section {
+    --col-min: 24rem;
+    --media-min-h: 14rem;
     position: relative;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(min(100%, var(--col-min)), 1fr)
+    );
+    min-height: 90dvh;
     background: var(--section-hero-bg);
   }
 
-  .hero-media {
+  .hero-navigation {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+  }
+
+  .hero__media {
+    min-block-size: var(--media-min-h);
     position: relative;
-    width: 100%;
-    height: 100%;
     overflow: hidden;
-    min-height: 0;
-    flex: 1;
-    background: var(--section-hero-bg);
   }
 
-  .hero-image,
-  .hero-video {
+  .hero__image,
+  .hero__video {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
+  }
+
+  .hero__content {
+    background: var(--section-hero-bg);
+    color: var(--text-light);
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    padding: var(--space-m-l);
+    text-align: center;
+    gap: var(--space-xs);
+  }
+
+  .hero__title {
+    font-size: var(--fs--2);
+    font-weight: 400;
+    opacity: 0.4;
+    margin: 0;
+    font-family: var(--font-family-heading);
+  }
+
+  .hero__text {
+    font-size: var(--fs-4);
+    font-weight: 600;
+    line-height: 112.5%;
+    letter-spacing: -0.05ch;
+    text-wrap: balance;
+    max-width: 32ch;
+    margin: 0;
+  }
+
+  .hero__text :global(strong),
+  .hero__text :global(em) {
+    text-decoration: underline;
+  }
+
+  .hero__cta {
+    background: var(--work-tabs-active-bg);
+    color: var(--color-black);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-xs) var(--space-m);
+    font-size: var(--fs-0);
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 999px;
+    border: 1px solid currentColor;
+    width: fit-content;
+    margin-top: var(--space-s);
+    transition: opacity 0.2s ease;
+  }
+
+  .hero__cta:hover {
+    opacity: 0.9;
+  }
+
+  .hero__cta:focus-visible {
+    outline: 2px solid var(--work-tabs-active-bg);
+    outline-offset: 2px;
   }
 
   .hero-image-placeholder {
@@ -114,7 +220,7 @@ if (import.meta.env.DEV) {
     align-items: center;
     justify-content: center;
     background: var(--section-hero-bg);
-    color: #ffffff;
+    color: var(--text-light);
     padding: var(--space-m);
   }
 
@@ -125,12 +231,19 @@ if (import.meta.env.DEV) {
     max-height: 100%;
   }
 
-  .hero-navigation {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 10;
-    /* mix-blend-mode: exclusion; */
+  /* Mobile: stack layout */
+  @media (max-width: 799px) {
+    .hero-section {
+      grid-template-columns: 1fr;
+      min-height: auto;
+    }
+
+    .hero__media {
+      min-height: 50vh;
+    }
+
+    .hero__content {
+      padding: var(--space-m);
+    }
   }
 </style>

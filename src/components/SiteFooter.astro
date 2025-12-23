@@ -1,101 +1,225 @@
 ---
 import { getSiteSettings } from '../lib/sanity';
-import DarkMode from './DarkMode.astro';
 
 const siteSettings = await getSiteSettings();
-
-// Extract footer data
-const address = siteSettings?.footer?.address || {};
-const contact = siteSettings?.footer?.contact || {};
-const legal = siteSettings?.footer?.legal || {};
-
-// Build address string: "Studio: Het Industriegebouw, Goudsesingel 136 UNIT 5, 3011 KD, Rotterdam (NL), hello@mier.as"
-const addressParts = [];
-if (address.company) addressParts.push(address.company);
-if (address.street) addressParts.push(address.street);
-if (address.city) {
-  const cityParts = [address.city];
-  if (address.country) cityParts.push(`(${address.country})`);
-  addressParts.push(cityParts.join(' '));
-}
-const addressString = addressParts.length > 0 ? addressParts.join(', ') : '';
-
-// Build legal string: "BTW: NL001619749B74 / BANK: NL11INGB0005505348 / KVK: 24486874 /T+C"
-const legalParts = [];
-if (legal.btw) legalParts.push(`BTW: ${legal.btw}`);
-if (legal.bank) legalParts.push(`BANK: ${legal.bank}`);
-if (legal.kvk) legalParts.push(`KVK: ${legal.kvk}`);
-const legalString =
-  legalParts.length > 0 ? `${legalParts.join(' / ')} /T+C` : '/T+C';
+const title = siteSettings?.title || '';
+const contact = siteSettings?.footer?.contact;
+const legal = siteSettings?.footer?.legal;
+const tAndCFile = (legal as any)?.termsAndConditions?.asset;
 ---
 
-<footer class="footer-simple">
-  <div class="footer-content">
+<footer class="footer" aria-label="Footer">
+  <ul class="footer__list">
     {
-      addressString && (
-        <p class="footer-address">
-          Studio: {addressString}
-          {contact.email && (
-            <>
-              , <a href={`mailto:${contact.email}`}>{contact.email}</a>
-            </>
-          )}
-        </p>
+      title && (
+        <li class="footer__item">
+          <span>{title.toUpperCase()}</span>
+        </li>
       )
     }
-    {legalString && <p class="footer-legal">{legalString}</p>}
-    <div class="footer-darkmode">
-      <DarkMode />
-    </div>
-  </div>
+
+    {
+      contact?.email && (
+        <li class="footer__item">
+          <a href={`mailto:${contact.email}`}>{contact.email}</a>
+        </li>
+      )
+    }
+
+    {
+      legal?.btw && (
+        <li class="footer__item">
+          <button type="button" class="footer__copy" data-copy={legal.btw}>
+            <span class="footer__copy-text">BTW: {legal.btw}</span>
+            <span class="footer__copy-feedback" aria-hidden="true">
+              Copied
+            </span>
+          </button>
+        </li>
+      )
+    }
+
+    {
+      legal?.kvk && (
+        <li class="footer__item">
+          <button type="button" class="footer__copy" data-copy={legal.kvk}>
+            <span class="footer__copy-text">KVK: {legal.kvk}</span>
+            <span class="footer__copy-feedback" aria-hidden="true">
+              Copied
+            </span>
+          </button>
+        </li>
+      )
+    }
+
+    {
+      legal?.bank && (
+        <li class="footer__item">
+          <button type="button" class="footer__copy" data-copy={legal.bank}>
+            <span class="footer__copy-text">BANK: {legal.bank}</span>
+            <span class="footer__copy-feedback" aria-hidden="true">
+              Copied
+            </span>
+          </button>
+        </li>
+      )
+    }
+
+    {
+      tAndCFile?.url && (
+        <li class="footer__item">
+          <a href={tAndCFile.url} target="_blank" rel="noopener">
+            T&C
+          </a>
+        </li>
+      )
+    }
+  </ul>
 </footer>
 
+<script>
+  // Footer copy buttons
+  document.addEventListener('click', (e) => {
+    if (!e.target) return;
+    const btn = (e.target as HTMLElement).closest(
+      '[data-copy]',
+    ) as HTMLButtonElement | null;
+    if (!btn) return;
+
+    const value = btn.dataset.copy;
+    if (!value) return;
+
+    navigator.clipboard.writeText(value).then(() => {
+      btn.classList.add('is-copied');
+      setTimeout(() => btn.classList.remove('is-copied'), 1200);
+    });
+  });
+</script>
+
 <style>
-  .footer-simple {
+  .footer {
+    z-index: 100;
     position: relative;
     width: 100%;
-    padding: var(--space-3xs) var(--space-s);
-    background: var(--section-footer-bg);
-    font-size: var(--fs--3);
-    color: var(--footer-text);
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.3333px;
+    background: var(--section-footer-bg, var(--color-footer-bg));
+    padding: var(--space-3xs) var(--space-xs);
   }
 
-  .footer-content {
+  .footer__list {
     display: flex;
-    flex-direction: row;
-    align-items: center;
     justify-content: space-between;
-    gap: var(--space-xs);
-  }
-
-  .footer-darkmode {
-    /* position: absolute; */
-    bottom: var(--space-xs);
-    right: var(--default-padding);
-  }
-
-  .footer-address,
-  .footer-legal {
-    font-size: var(--fs--3);
-    font-weight: 500;
+    align-items: center;
+    flex-wrap: wrap;
+    list-style: none;
+    padding: 0;
     margin: 0;
-    line-height: 1;
-    opacity: 0.5;
+    gap: var(--space-3xs);
+    width: 100%;
+  }
+
+  .footer__item {
+    font-size: var(--fs--2);
     color: var(--footer-text);
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 !important;
   }
 
-  .footer-address a,
-  .footer-link {
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 2px;
+  .footer__item a {
+    color: inherit;
+    text-decoration: none;
+    transition: opacity 0.2s ease;
   }
 
-  .footer-address a:hover,
-  .footer-link:hover {
+  .footer__item a:hover {
     opacity: 0.7;
+  }
+
+  .footer__item a:focus-visible {
+    outline: 2px solid var(--footer-text);
+    outline-offset: 4px;
+  }
+
+  .footer__copy {
+    position: relative;
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: opacity 0.2s ease;
+  }
+
+  .footer__copy:hover {
+    opacity: 0.7;
+  }
+
+  .footer__copy:focus-visible {
+    outline: 2px solid var(--footer-text);
+    outline-offset: 4px;
+  }
+
+  .footer__copy-feedback {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    opacity: 0;
+    pointer-events: none;
+    background: var(--section-footer-bg, var(--color-footer-bg));
+    color: currentColor;
+    transition: opacity 0.15s ease;
+  }
+
+  .footer__copy.is-copied .footer__copy-feedback {
+    opacity: 1;
+  }
+
+  /* Desktop: links, verticaal, 100dvh hoog */
+  @media (min-width: 900px) {
+    .footer {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 2rem;
+      height: 100dvh;
+      padding: var(--space-xs) 0;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      overflow: hidden;
+    }
+
+    .footer__list {
+      justify-content: space-between;
+      align-items: center;
+      height: 100%;
+      gap: 0;
+    }
+  }
+
+  /* Mobile: onderaan, horizontale layout */
+  @media (max-width: 899px) {
+    .footer {
+      margin-top: auto;
+      padding: var(--space-s);
+    }
+
+    .footer__list {
+      gap: var(--space-xs);
+    }
+
+    .footer__item {
+      font-size: var(--fs--3);
+      line-height: 100%;
+    }
+
+    .footer__item--full {
+      width: 100%;
+      text-align: center;
+    }
   }
 </style>
