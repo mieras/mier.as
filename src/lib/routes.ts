@@ -4,7 +4,6 @@ import { getHomeData, getPageData, getProjectData } from './sanity';
 // templates
 import Single from '../components/templates/Single.astro';
 import WorkOverview from '../components/templates/WorkOverview.astro';
-import WorkDetail from '../components/templates/WorkDetail.astro';
 import Page from '../components/templates/Page.astro';
 import Home from '../components/templates/Home.astro';
 
@@ -25,24 +24,8 @@ export async function getNodeData(slug: string) {
     }
   }
 
-  // Project detail pages - alleen Sanity
-  if (slug.startsWith('/project/')) {
-    const projectSlug = slug.replace('/project/', '').replace(/\/$/, ''); // Verwijder trailing slash
-    try {
-      const sanityProject = await getProjectData(projectSlug);
-      return {
-        ...sanityProject,
-        dataSource: 'sanity',
-      };
-    } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error('❌ Sanity project query failed:', error);
-      }
-      throw error;
-    }
-  }
-
   // Andere pages - alleen Sanity
+  // Note: Project routing is now handled via /work/[slug].astro and index.astro
   try {
     const cleanSlug = slug.replace(/^\//, '').replace(/\/$/, '');
     const sanityPage = await getPageData(cleanSlug);
@@ -97,9 +80,7 @@ export function getTemplateByRoute(node: any) {
         }
         if (import.meta.env.DEV) console.log('📄 Selected Page template');
         return Page;
-      case 'work':
-        if (import.meta.env.DEV) console.log('🎨 Selected WorkDetail template');
-        return WorkDetail;
+      // Note: 'work' type projects are now handled via /work/[slug].astro route
       default:
         if (import.meta.env.DEV)
           console.log('📄 Selected Single template (default)');

@@ -53,8 +53,8 @@ const processedSlides = slides.map((slide: any) => {
       
       if (slug) {
         if (internalLink._type === 'work') {
-          // Project link - use /project/ prefix
-          updatedUrl = `/project/${slug}`;
+          // Project link - use /work/ prefix
+          updatedUrl = `/work/${slug}`;
         } else if (internalLink._type === 'page') {
           // Page link - use direct slug
           updatedUrl = `/${slug}`;
@@ -70,7 +70,7 @@ const processedSlides = slides.map((slide: any) => {
       
       if (slug) {
         if (internalLink._type === 'work') {
-          updatedUrl = `/project/${slug}`;
+          updatedUrl = `/work/${slug}`;
         } else {
           updatedUrl = `/${slug}`;
         }

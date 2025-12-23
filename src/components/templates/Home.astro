@@ -24,6 +24,12 @@ type Project = {
   };
 };
 
+type Props = {
+  initialProjectSlug?: string | null;
+};
+
+const { initialProjectSlug = null } = Astro.props as Props;
+
 // Haal alle data op
 const homeData = await getHomeData();
 const projects = (await getAllProjects()) as Project[];
@@ -67,12 +73,31 @@ if (import.meta.env.DEV) {
     </section>
 
     <section class="work">
-      <WorkSection {projects} {photography} />
+      <WorkSection
+        {projects}
+        {photography}
+        initialProjectSlug={initialProjectSlug}
+      />
     </section>
 
     <section class="music">
       <MusicSection />
     </section>
+
+    <!-- Mixcloud player - fixed bottom -->
+    <div class="mixcloud-player" style="display: none;">
+      <iframe
+        class="mixcloud-player__iframe"
+        width="100%"
+        height="60"
+        src=""
+        frameborder="0"
+        allow="encrypted-media; fullscreen; autoplay; idle-detection; speaker-selection; web-share;"
+      ></iframe>
+      <button class="mixcloud-player__close" aria-label="Close player">
+        ×
+      </button>
+    </div>
   </div>
 </main>
 
@@ -86,6 +111,7 @@ if (import.meta.env.DEV) {
   .main-content {
     display: flex;
     flex-direction: column;
+    position: relative;
   }
 
   .hero {
@@ -100,5 +126,56 @@ if (import.meta.env.DEV) {
 
   .music {
     background: var(--section-music-bg);
+  }
+
+  /* Mixcloud player - fixed bottom of main-content */
+  .mixcloud-player {
+    position: fixed;
+    bottom: 0;
+
+    right: 0;
+    width: calc(100% - 2rem);
+    height: 4rem;
+    max-width: 100%;
+    background: var(--section-music-bg);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* padding: var(--space-s); */
+    box-sizing: border-box;
+  }
+
+  .mixcloud-player__iframe {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    border: none;
+    background: var(--section-music-bg);
+  }
+
+  .mixcloud-player__close {
+    position: absolute;
+    top: -1rem;
+    right: 1rem;
+    background: var(--text-light);
+    color: var(--section-music-bg);
+    border: none;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 100vw;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s ease;
+    z-index: 10;
+  }
+
+  .mixcloud-player__close:hover {
+    opacity: 0.8;
   }
 </style>

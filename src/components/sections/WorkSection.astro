@@ -33,9 +33,14 @@ type PhotographyItem = {
 type Props = {
   projects?: Project[];
   photography?: PhotographyItem[];
+  initialProjectSlug?: string | null;
 };
 
-const { projects = [], photography = [] } = Astro.props;
+const {
+  projects = [],
+  photography = [],
+  initialProjectSlug = null,
+} = Astro.props;
 
 // Get default preview images for each tab
 const defaultDesignImage = projects[0]?.thumbnail?.image?.asset
@@ -52,7 +57,15 @@ const tabs = [
 ];
 ---
 
-<section class="work" id="work" aria-label="Work">
+<section
+  class="work"
+  id="work"
+  aria-label="Work"
+  data-initial-project-slug={initialProjectSlug || ''}
+  data-default-design-image={defaultDesignImage}
+  data-default-photo-image={defaultPhotoImage}
+  data-projects={JSON.stringify(projects)}
+>
   <div class="work__marquee">
     <WorkMarquee />
   </div>
@@ -80,7 +93,11 @@ const tabs = [
       </div>
     </div>
 
-    <WorkPanel mode="preview" defaultImage={defaultDesignImage} />
+    <WorkPanel
+      mode="preview"
+      defaultImage={defaultDesignImage}
+      initialProjectSlug={initialProjectSlug}
+    />
   </div>
 </section>
 

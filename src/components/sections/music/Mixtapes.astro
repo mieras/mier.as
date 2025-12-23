@@ -17,8 +17,8 @@ try {
 
   const { items } = await apiRes.json();
 
-  // Filter for mixcloud items only
-  mixtapes = items.filter((item: any) => item.source === 'mixcloud');
+  // Filter for mixcloud items only and limit to 5
+  mixtapes = items.filter((item: any) => item.source === 'mixcloud').slice(0, 5);
   isLoading = false;
 } catch (error) {
   console.error('Error fetching music data:', error);
@@ -32,7 +32,7 @@ try {
     <!-- Skeleton loading state -->
     <ul class="music__list">
       {[1, 2, 3, 4, 5].map(() => (
-        <li class="music-item skeleton-item">
+        <li class="skeleton-item">
           <div class="skeleton-thumbnail"></div>
           <div class="skeleton-content">
             <div class="skeleton-line"></div>
@@ -65,7 +65,6 @@ try {
                 line1={mixtape.title}
                 line2={genresText}
                 timestamp={timestamp}
-                variant="list"
                 showPlayButton={true}
                 mixcloudId={mixcloudId}
               />
@@ -73,20 +72,6 @@ try {
           );
         })}
       </ul>
-      {/* Embed container */}
-      <div class="mixtapes-embed-container" style="display: none;">
-        <iframe
-          class="mixtapes-embed-iframe"
-          width="100%"
-          height="100%"
-          src=""
-          frameborder="0"
-          allow="encrypted-media; fullscreen; autoplay; idle-detection; speaker-selection; web-share;"
-        />
-        <button class="mixtapes-embed-close" aria-label="Close player">
-          ×
-        </button>
-      </div>
     </>
   ) : hasError ? (
     <p class="no-mixtapes">Error loading mixtapes</p>
@@ -100,33 +85,33 @@ try {
 
 <script>
   const handleEmbedOpen = (mixcloudId: string) => {
-    const embedContainer = document.querySelector(
-      '.mixtapes-embed-container',
+    const playerContainer = document.querySelector(
+      '.mixcloud-player',
     ) as HTMLElement;
-    const embedIframe = document.querySelector(
-      '.mixtapes-embed-iframe',
+    const playerIframe = document.querySelector(
+      '.mixcloud-player__iframe',
     ) as HTMLIFrameElement;
 
-    if (!embedContainer || !embedIframe) return;
+    if (!playerContainer || !playerIframe) return;
 
-    // Toon embed
-    embedContainer.style.display = 'flex';
-    embedIframe.src = `https://player-widget.mixcloud.com/widget/iframe/?hide_cover=1&autoplay=1&feed=%2F${mixcloudId}%2F`;
+    // Toon player
+    playerContainer.style.display = 'flex';
+    playerIframe.src = `https://player-widget.mixcloud.com/widget/iframe/?hide_cover=1&autoplay=1&feed=%2F${mixcloudId}%2F`;
   };
 
   const handleEmbedClose = () => {
-    const embedContainer = document.querySelector(
-      '.mixtapes-embed-container',
+    const playerContainer = document.querySelector(
+      '.mixcloud-player',
     ) as HTMLElement;
-    const embedIframe = document.querySelector(
-      '.mixtapes-embed-iframe',
+    const playerIframe = document.querySelector(
+      '.mixcloud-player__iframe',
     ) as HTMLIFrameElement;
 
-    if (!embedContainer || !embedIframe) return;
+    if (!playerContainer || !playerIframe) return;
 
-    // Stop embed
-    embedIframe.src = '';
-    embedContainer.style.display = 'none';
+    // Stop player
+    playerIframe.src = '';
+    playerContainer.style.display = 'none';
   };
 
   const initEmbedHandlers = () => {
@@ -136,25 +121,29 @@ try {
     // Close all players and reset buttons
     const closeAllPlayers = () => {
       mixtapeItems.forEach((item) => {
-        const mixcloudIconBtn = item.querySelector(
-          '.music-mixcloud-icon-btn',
-        ) as HTMLElement;
         const playBtn = item.querySelector(
-          '.music-play-btn, .ticker-play-btn',
+          '.music-item__play-btn',
         ) as HTMLElement;
-
-        // Reset mixcloud icon button
-        if (mixcloudIconBtn) {
-          mixcloudIconBtn.setAttribute('data-active', 'false');
-          mixcloudIconBtn.setAttribute('data-action', 'play');
-        }
+        const inlinePlayBtn = item.querySelector(
+          '.music-item__play-btn-inline',
+        ) as HTMLElement;
 
         // Reset play button on thumbnail
         if (playBtn) {
           playBtn.setAttribute('data-active', 'false');
           playBtn.setAttribute('data-action', 'play');
-          const playIcon = playBtn.querySelector('.play-icon') as HTMLElement;
-          const pauseIcon = playBtn.querySelector('.pause-icon') as HTMLElement;
+          const playIcon = playBtn.querySelector('.music-item__play-icon') as HTMLElement;
+          const pauseIcon = playBtn.querySelector('.music-item__pause-icon') as HTMLElement;
+          if (playIcon) playIcon.style.display = '';
+          if (pauseIcon) pauseIcon.style.display = 'none';
+        }
+
+        // Reset inline play button
+        if (inlinePlayBtn) {
+          inlinePlayBtn.setAttribute('data-active', 'false');
+          inlinePlayBtn.setAttribute('data-action', 'play');
+          const playIcon = inlinePlayBtn.querySelector('.music-item__play-icon') as HTMLElement;
+          const pauseIcon = inlinePlayBtn.querySelector('.music-item__pause-icon') as HTMLElement;
           if (playIcon) playIcon.style.display = '';
           if (pauseIcon) pauseIcon.style.display = 'none';
         }
@@ -162,13 +151,13 @@ try {
       currentlyPlaying = null;
     };
 
-    // Handle play button clicks (both mixcloud icon and thumbnail play button)
+    // Handle play button clicks (both thumbnail and inline play button)
     mixtapeItems.forEach((item) => {
-      const mixcloudIconBtn = item.querySelector(
-        '.music-mixcloud-icon-btn',
-      ) as HTMLElement;
       const playBtn = item.querySelector(
-        '.music-play-btn, .ticker-play-btn',
+        '.music-item__play-btn',
+      ) as HTMLElement;
+      const inlinePlayBtn = item.querySelector(
+        '.music-item__play-btn-inline',
       ) as HTMLElement;
       const mixcloudId = item.getAttribute('data-mixcloud-id');
 
@@ -197,8 +186,8 @@ try {
           button.setAttribute('data-action', 'pause');
           
           // Update play/pause icons
-          const playIcon = button.querySelector('.play-icon') as HTMLElement;
-          const pauseIcon = button.querySelector('.pause-icon') as HTMLElement;
+          const playIcon = button.querySelector('.music-item__play-icon') as HTMLElement;
+          const pauseIcon = button.querySelector('.music-item__pause-icon') as HTMLElement;
           if (playIcon) playIcon.style.display = 'none';
           if (pauseIcon) pauseIcon.style.display = '';
 
@@ -206,20 +195,12 @@ try {
         }
       };
 
-      // Handle mixcloud icon button
-      if (mixcloudIconBtn) {
-        mixcloudIconBtn.addEventListener('click', () => handlePlayClick(mixcloudIconBtn));
-      }
-
       // Handle play button on thumbnail
       if (playBtn) {
         playBtn.addEventListener('click', () => handlePlayClick(playBtn));
       }
 
       // Handle inline play button
-      const inlinePlayBtn = item.querySelector(
-        '.music-play-btn-inline',
-      ) as HTMLElement;
       if (inlinePlayBtn) {
         inlinePlayBtn.addEventListener('click', () => handlePlayClick(inlinePlayBtn));
       }
@@ -227,7 +208,7 @@ try {
 
     // Close button handler
     const closeButton = document.querySelector(
-      '.mixtapes-embed-close',
+      '.mixcloud-player__close',
     ) as HTMLElement;
     if (closeButton) {
       closeButton.addEventListener('click', () => {
@@ -278,13 +259,6 @@ try {
     min-height: 0;
   }
 
-  .music-item {
-    display: grid;
-    grid-template-columns: 56px 1fr;
-    gap: var(--space-s);
-    align-items: center;
-  }
-
   .music__source {
     display: inline-flex;
     margin-top: var(--space-s);
@@ -303,55 +277,6 @@ try {
     opacity: 0.7;
     font-style: italic;
     color: var(--text-light);
-  }
-
-  /* Embed container */
-  .mixtapes-embed-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    height: 100%;
-    background: var(--section-music-bg);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 20;
-  }
-
-  .mixtapes-embed-iframe {
-    width: calc(100% - 2rem);
-    padding-right: 1.5rem;
-    height: 60px;
-    background: var(--section-music-bg);
-    border: none;
-  }
-
-  .mixtapes-embed-close {
-    position: absolute;
-    top: var(--space-s);
-    right: var(--space-s);
-    background: var(--text-light);
-    color: var(--section-music-bg);
-    border: none;
-    width: 2rem;
-    height: 2rem;
-    border-radius: 50%;
-    font-size: 1.5rem;
-    line-height: 1;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: opacity 0.2s ease;
-    z-index: 10;
-  }
-
-  .mixtapes-embed-close:hover {
-    opacity: 0.8;
   }
 
   /* Skeleton styles */

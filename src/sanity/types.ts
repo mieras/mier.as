@@ -116,6 +116,7 @@ export interface SanityProject {
     image?: SanityImage;
     video?: SanityFile;
   }>;
+  content?: SanityBlock[];
   seo?: SanitySEO;
 }
 

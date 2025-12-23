@@ -17,8 +17,8 @@ try {
   
   const { items } = await apiRes.json();
   
-  // Filter for lastfm items only
-  recentTracks = items.filter((item: any) => item.source === 'lastfm');
+  // Filter for lastfm items only and limit to 5
+  recentTracks = items.filter((item: any) => item.source === 'lastfm').slice(0, 5);
   isLoading = false;
 } catch (error) {
   console.error('Error fetching music data:', error);
@@ -32,7 +32,7 @@ try {
     <!-- Skeleton loading state -->
     <ul class="music__list">
       {[1, 2, 3, 4, 5].map(() => (
-        <li class="music-item skeleton-item">
+        <li class="skeleton-item">
           <div class="skeleton-thumbnail"></div>
           <div class="skeleton-content">
             <div class="skeleton-line"></div>
@@ -57,7 +57,6 @@ try {
               line1={artist}
               line2={song}
               timestamp={timestamp}
-              variant="list"
             />
           </li>
         );
@@ -90,13 +89,6 @@ try {
     overflow-y: auto;
     flex: 1;
     min-height: 0;
-  }
-
-  .music-item {
-    display: grid;
-    grid-template-columns: 56px 1fr;
-    gap: var(--space-s);
-    align-items: center;
   }
 
   .music__source {

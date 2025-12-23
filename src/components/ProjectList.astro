@@ -32,7 +32,7 @@ const projectCards = projects.map((project: any) => {
     imgalt: project.thumbnail?.alt || project.title || '',
     vidsrc: project.thumbnail?.video || '',
     services: project.services || [],
-    link: `/project/${project.slug}/`,
+    link: `/work/${project.slug}`,
     aspectRatio: project.thumbnail?.aspectRatio || '16:9',
     // Sanity specific props - these are the source of truth
     _type: project._type,

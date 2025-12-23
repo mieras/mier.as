@@ -16,8 +16,8 @@ try {
 
   const { items } = await apiRes.json();
 
-  // Filter for discogs items only
-  latestRecords = items.filter((item: any) => item.source === 'discogs');
+  // Filter for discogs items only and limit to 5
+  latestRecords = items.filter((item: any) => item.source === 'discogs').slice(0, 5);
   isLoading = false;
 } catch (error) {
   console.error('Error fetching music data:', error);
@@ -30,7 +30,7 @@ try {
     <!-- Skeleton loading state -->
     <ul class="music__list">
       {[1, 2, 3, 4, 5].map(() => (
-        <li class="music-item skeleton-item">
+        <li class="skeleton-item">
           <div class="skeleton-thumbnail"></div>
           <div class="skeleton-content">
             <div class="skeleton-line"></div>
@@ -57,7 +57,6 @@ try {
               line1={artist}
               line2={albumYear}
               timestamp={timestamp}
-              variant="list"
             />
           </li>
         );
@@ -88,13 +87,6 @@ try {
     overflow-y: auto;
     flex: 1;
     min-height: 0;
-  }
-
-  .music-item {
-    display: grid;
-    grid-template-columns: 56px 1fr;
-    gap: var(--space-s);
-    align-items: center;
   }
 
   .music__source {
@@ -143,120 +135,6 @@ try {
   .skeleton-line {
     height: 14px;
     background: var(--text-light-secondary);
-    border-radius: 2px;
-    animation: skeleton-pulse 1.5s ease-in-out infinite;
-  }
-
-  .skeleton-line-short {
-    width: 60%;
-  }
-
-  @keyframes skeleton-pulse {
-    0%, 100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.5;
-    }
-  }
-
-
-  .latest-records-swiper .swiper-pagination {
-    position: relative;
-    /* margin-top: var(--space-s); */
-    text-align: center;
-  }
-
-  .latest-records-swiper .swiper-pagination-bullet {
-    background: var(--text);
-    opacity: 0.3;
-  }
-
-  .latest-records-swiper .swiper-pagination-bullet-active {
-    opacity: 1;
-  }
-
-  .no-records {
-    font-size: var(--fs--1);
-    opacity: 0.7;
-    font-style: italic;
-  }
-
-  /* Navigation arrows */
-  .latest-records-swiper .swiper-button-next,
-  .latest-records-swiper .swiper-button-prev {
-    color: #ffffff;
-    width: 2rem;
-    height: 2rem;
-    margin-top: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    opacity: 1;
-    transition: opacity 0.2s ease;
-    border-radius: 50%;
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5rem;
-  }
-
-  .latest-records-swiper .swiper-button-next:hover,
-  .latest-records-swiper .swiper-button-prev:hover {
-    opacity: 0.9;
-  }
-
-  .latest-records-swiper .swiper-button-prev {
-    left: var(--space-s);
-  }
-
-  .latest-records-swiper .swiper-button-next {
-    right: var(--space-s);
-  }
-
-  .latest-records-swiper .swiper-button-next::after,
-  .latest-records-swiper .swiper-button-prev::after {
-    display: none;
-  }
-
-  .latest-records-swiper .swiper-button-next svg,
-  .latest-records-swiper .swiper-button-prev svg {
-    width: 1rem;
-    height: 1rem;
-  }
-
-  /* Skeleton styles */
-  .skeleton-item {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: var(--space-s);
-    align-items: center;
-    padding: var(--space-s) var(--space-m);
-    background: var(--bg);
-    border-right: 1px solid var(--border);
-    height: 100%;
-  }
-
-  .skeleton-thumbnail {
-    width: 48px;
-    height: 48px;
-    background: var(--border);
-    border-radius: var(--radius-small);
-    animation: skeleton-pulse 1.5s ease-in-out infinite;
-  }
-
-  .skeleton-content {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3xs);
-    flex: 1;
-  }
-
-  .skeleton-line {
-    height: 14px;
-    background: var(--border);
     border-radius: 2px;
     animation: skeleton-pulse 1.5s ease-in-out infinite;
   }

@@ -63,6 +63,9 @@ if (import.meta.env.DEV) {
     import(
       'https://esm.sh/three@0.175.0/examples/jsm/postprocessing/UnrealBloomPass.js'
     ),
+    import(
+      'https://esm.sh/three@0.175.0/examples/jsm/postprocessing/ShaderPass.js'
+    ),
   ])
     .then(
       ([
@@ -70,6 +73,7 @@ if (import.meta.env.DEV) {
         EffectComposerModule,
         RenderPassModule,
         UnrealBloomPassModule,
+        ShaderPassModule,
       ]) => {
         // Handle different export formats from ESM.sh
         const THREE_NS = THREE.default || THREE;
@@ -78,6 +82,7 @@ if (import.meta.env.DEV) {
         const { RenderPass } = RenderPassModule.default || RenderPassModule;
         const { UnrealBloomPass } =
           UnrealBloomPassModule.default || UnrealBloomPassModule;
+        const { ShaderPass } = ShaderPassModule.default || ShaderPassModule;
 
         // Wait a bit for the container to be in the DOM
         setTimeout(() => {
@@ -301,14 +306,139 @@ if (import.meta.env.DEV) {
           const renderPass = new RenderPass(scene, camera);
           composer.addPass(renderPass);
 
-          // Add bloom effect - stronger for more "glow"
+          // Add bloom effect - using example values
           const bloomPass = new UnrealBloomPass(
             new THREE_NS.Vector2(width, height),
-            1.0, // strength - strong bloom for visible glow
-            0.8, // radius - larger bloom radius
-            0.3, // threshold - lower threshold for more areas to bloom
+            0.1, // bloomStrength - base strength from example
+            0.4, // bloomRadius - from example
+            0.2, // bloomThreshold - from example
           );
           composer.addPass(bloomPass);
+
+          // Grain effect parameters - using example values
+          const grainParams = {
+            grainStrength: 0.02, // Grain intensity from example
+            grainSpeed: 2.0, // Animation speed from example
+            grainMean: 0.0, // Gaussian mean from example
+            grainVariance: 0.5, // Gaussian variance from example
+            grainBlendMode: 1, // Screen (1) from example
+            grainSize: 3.5, // Legacy parameter from example
+          };
+
+          // Create grain shader
+          const grainShader = {
+            uniforms: {
+              tDiffuse: { value: null },
+              uTime: { value: 0.0 },
+              uResolution: { value: new THREE_NS.Vector2(width, height) },
+              uGrainStrength: { value: grainParams.grainStrength },
+              uGrainSpeed: { value: grainParams.grainSpeed },
+              uGrainMean: { value: grainParams.grainMean },
+              uGrainVariance: { value: grainParams.grainVariance },
+              uGrainBlendMode: { value: grainParams.grainBlendMode },
+              uGrainSize: { value: grainParams.grainSize },
+            },
+            vertexShader: `
+              varying vec2 vUv;
+              void main() {
+                vUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+              }
+            `,
+            fragmentShader: `
+              uniform sampler2D tDiffuse;
+              uniform float uTime;
+              uniform vec2 uResolution;
+              uniform float uGrainStrength;
+              uniform float uGrainSpeed;
+              uniform float uGrainMean;
+              uniform float uGrainVariance;
+              uniform int uGrainBlendMode;
+              uniform float uGrainSize;
+              varying vec2 vUv;
+
+              // Hash function for random noise
+              float hash(vec2 p) {
+                p = fract(p * vec2(123.34, 456.21));
+                p += dot(p, p + 45.32);
+                return fract(p.x * p.y);
+              }
+
+              // Gaussian distribution
+              float gaussian(float z, float u, float o) {
+                return (1.0 / (o * sqrt(2.0 * 3.1415))) * exp(-(((z - u) * (z - u)) / (2.0 * (o * o))));
+              }
+
+              // Channel mixing utility
+              vec3 channel_mix(vec3 a, vec3 b, vec3 w) {
+                return vec3(mix(a.r, b.r, w.r), mix(a.g, b.g, w.g), mix(a.b, b.b, w.b));
+              }
+
+              // Blending modes
+              vec3 screen(vec3 a, vec3 b, float w) {
+                return mix(a, vec3(1.0) - (vec3(1.0) - a) * (vec3(1.0) - b), w);
+              }
+
+              vec3 overlay(vec3 a, vec3 b, float w) {
+                return mix(a, channel_mix(
+                  2.0 * a * b,
+                  vec3(1.0) - 2.0 * (vec3(1.0) - a) * (vec3(1.0) - b),
+                  step(vec3(0.5), a)
+                ), w);
+              }
+
+              vec3 soft_light(vec3 a, vec3 b, float w) {
+                return mix(a, pow(a, pow(vec3(2.0), 2.0 * (vec3(0.5) - b))), w);
+              }
+
+              // Apply grain
+              vec3 applyGrain(vec3 color, float noiseValue, float intensity) {
+                vec3 grain = vec3(noiseValue) * (1.0 - color);
+
+                if (uGrainBlendMode == 0) {
+                  // Addition
+                  return color + grain * intensity;
+                } else if (uGrainBlendMode == 1) {
+                  // Screen
+                  return screen(color, grain, intensity);
+                } else if (uGrainBlendMode == 2) {
+                  // Overlay
+                  return overlay(color, grain, intensity);
+                } else if (uGrainBlendMode == 3) {
+                  // Soft Light
+                  return soft_light(color, grain, intensity);
+                } else if (uGrainBlendMode == 4) {
+                  // Lighten-Only
+                  return max(color, grain * intensity);
+                }
+
+                return color;
+              }
+
+              void main() {
+                vec2 uv = gl_FragCoord.xy / uResolution.xy;
+                vec4 texel = texture2D(tDiffuse, vUv);
+                vec3 color = texel.rgb;
+
+                // Generate animated noise
+                float t = uTime * uGrainSpeed;
+                float seed = dot(gl_FragCoord.xy, vec2(12.9898, 78.233));
+                float noise = fract(sin(seed) * 43758.5453 + t);
+
+                // Apply gaussian distribution for more natural look
+                noise = gaussian(noise, uGrainMean, uGrainVariance * uGrainVariance);
+
+                // Apply grain using selected blend mode
+                color = applyGrain(color, noise, uGrainStrength);
+
+                gl_FragColor = vec4(color, texel.a);
+              }
+            `,
+          };
+
+          // Create grain pass
+          const grainPass = new ShaderPass(grainShader);
+          composer.addPass(grainPass);
 
           // Mouse tracking for interactive bloom
           const mouse = new THREE_NS.Vector2(0, 0);
@@ -331,11 +461,16 @@ if (import.meta.env.DEV) {
 
           // Animation loop
           let animationId;
+          let startTime = performance.now();
           const animate = () => {
             animationId = requestAnimationFrame(animate);
 
             // Only render if we have a mesh in the scene
             if (scene.children.length > 0 || meshAdded) {
+              // Update grain time uniform
+              const currentTime = (performance.now() - startTime) * 0.001;
+              grainPass.uniforms.uTime.value = currentTime;
+
               // Smooth mouse movement
               smoothedMouse.lerp(mouse, 0.15);
 
@@ -351,24 +486,42 @@ if (import.meta.env.DEV) {
               }
 
               // Interactive bloom based on mouse position
-              // Create a "hotspot" effect where bloom is stronger near mouse
+              // Create an "edge glow" effect where bloom is stronger at screen edges
               const mouseDistance = Math.sqrt(
                 smoothedMouse.x * smoothedMouse.x +
                   smoothedMouse.y * smoothedMouse.y,
               );
-              const mouseInfluence = Math.max(0, 1.0 - mouseDistance * 1.2); // Stronger influence near cursor
-              const baseStrength = 1.0;
-              const maxStrength = 2.0; // Much stronger bloom near mouse
+              // Stronger effect at edges (high distance), weaker in center
+              const mouseInfluence = Math.min(1.0, mouseDistance * 1.2); // Stronger influence at edges
+
+              // Base values from example, enhanced at edges
+              const baseBloomStrength = 0.2; // From example
+              const maxBloomStrength = 0.6; // Much stronger at edges
               bloomPass.strength =
-                baseStrength + mouseInfluence * (maxStrength - baseStrength);
+                baseBloomStrength +
+                mouseInfluence * (maxBloomStrength - baseBloomStrength);
 
-              // Also adjust radius and emissive intensity for more dramatic effect
-              bloomPass.radius = 0.8 + mouseInfluence * 0.4;
+              // max radius - base from example, larger at edges
+              const baseBloomRadius = 0.4; // From example
+              const maxBloomRadius = 0.6; // Larger at edges
+              bloomPass.radius =
+                baseBloomRadius +
+                mouseInfluence * (maxBloomRadius - baseBloomRadius);
 
-              // Increase material emissive intensity near mouse for more glow
+              // Increase material emissive intensity at edges for more glow
               if (material && material.emissiveIntensity !== undefined) {
-                material.emissiveIntensity = 0.3 + mouseInfluence * 0.5;
+                const baseEmissive = 0.2;
+                const maxEmissive = 0.8;
+                material.emissiveIntensity =
+                  baseEmissive + mouseInfluence * (maxEmissive - baseEmissive);
               }
+
+              // Also adjust grain strength at edges for more dramatic effect
+              const baseGrainStrength = 0.035; // From example
+              const maxGrainStrength = 0.065; // Stronger grain at edges
+              grainPass.uniforms.uGrainStrength.value =
+                baseGrainStrength +
+                mouseInfluence * (maxGrainStrength - baseGrainStrength);
 
               composer.render();
             }
@@ -384,6 +537,9 @@ if (import.meta.env.DEV) {
               camera.updateProjectionMatrix();
               renderer.setSize(newWidth, newHeight);
               composer.setSize(newWidth, newHeight);
+
+              // Update grain shader resolution
+              grainPass.uniforms.uResolution.value.set(newWidth, newHeight);
 
               // Recalculate object-fit: cover for image texture
               if (texture && !videoElement && texture.image) {

@@ -9,6 +9,7 @@ type Props = {
   defaultImage?: string;
   projectSlug?: string;
   projectType?: 'project' | 'photography';
+  initialProjectSlug?: string | null;
 };
 
 const {
@@ -17,6 +18,7 @@ const {
   defaultImage,
   projectSlug,
   projectType = 'project',
+  initialProjectSlug = null,
 } = Astro.props;
 ---
 
@@ -24,8 +26,10 @@ const {
   class="work__right"
   aria-label="Preview panel"
   data-mode={mode}
-  data-project-slug={projectSlug || ''}
+  data-project-slug={projectSlug || initialProjectSlug || ''}
   data-project-type={projectType}
+  data-default-image={defaultImage || ''}
+  data-initial-project-slug={initialProjectSlug || ''}
 >
   <WorkPreview imageUrl={previewImage} defaultImage={defaultImage} />
   <div
@@ -139,7 +143,7 @@ const {
     position: absolute;
     bottom: var(--space-m);
     right: var(--space-m);
-    z-index: 10;
+    z-index: 20;
     display: flex;
     gap: var(--space-xs);
     align-items: center;
@@ -314,9 +318,9 @@ const {
 
   .info-panel__toggle {
     position: absolute;
-    top: var(--space-m);
+    bottom: var(--space-m);
     right: var(--space-m);
-    z-index: 40;
+    z-index: 50;
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(30px);
     border: none;
@@ -361,11 +365,11 @@ const {
   }
 
   .work__right[data-mode='detail'] .work__preview {
-    display: none;
+    position: relative;
   }
 
   .work__right[data-mode='detail'] .work__detail-container {
-    display: block;
+    display: none;
   }
 
   @media (max-width: 899px) {
@@ -382,134 +386,227 @@ const {
 </style>
 
 <script>
+  // @ts-nocheck
+  // Store Swiper instance for cleanup
+  let currentSwiper = null;
+
   // Function to load project media
-  function loadProjectMedia(
-    mode: string,
-    slug: string | undefined,
-    projectType: string,
-  ) {
-    if (!slug) return;
+  /**
+   * @param {string} mode
+   * @param {string|undefined} slug
+   * @param {string} projectType
+   * @returns {void}
+   */
+  function loadProjectMedia(mode, slug, projectType) {
+    if (import.meta.env.DEV) {
+      console.log('🔄 loadProjectMedia called:', { mode, slug, projectType });
+    }
 
-    const panel = document.querySelector('.work__right') as HTMLElement;
-    const detailContainer = panel?.querySelector(
-      '[data-detail-container]',
-    ) as HTMLElement;
+    if (!slug) {
+      if (import.meta.env.DEV) {
+        console.warn('⚠️ loadProjectMedia: No slug provided');
+      }
+      return;
+    }
 
-    if (!panel || !detailContainer) return;
+    const panel = document.querySelector('.work__right');
+    const previewContainer = panel?.querySelector('.work__preview');
+
+    if (!panel || !previewContainer) {
+      if (import.meta.env.DEV) {
+        console.warn(
+          '⚠️ loadProjectMedia: Panel or preview container not found',
+          {
+            hasPanel: !!panel,
+            hasPreviewContainer: !!previewContainer,
+          },
+        );
+      }
+      return;
+    }
 
     if (mode === 'detail' && slug) {
+      // Cleanup existing Swiper instance
+      if (currentSwiper) {
+        try {
+          /** @type {any} */
+          const swiper = currentSwiper;
+          swiper.destroy(true, true);
+          currentSwiper = null;
+        } catch (e) {
+          console.warn('Error destroying Swiper:', e);
+        }
+      }
+
       const apiUrl =
         projectType === 'photography'
           ? `/api/photography/${slug}.json`
-          : `/api/work/${slug}.json`;
+          : `/api/project.json?slug=${encodeURIComponent(slug)}`;
+
+      if (import.meta.env.DEV) {
+        console.log('📡 Fetching project data from:', apiUrl);
+      }
 
       // Fetch project/photography detail data
+      if (import.meta.env.DEV) {
+        console.log('📡 Starting fetch to:', apiUrl);
+      }
+
       fetch(apiUrl)
         .then((res) => {
-          if (!res.ok)
-            throw new Error(`Failed to load ${projectType}: ${res.status}`);
+          if (import.meta.env.DEV) {
+            console.log('📥 Fetch response:', {
+              status: res.status,
+              statusText: res.statusText,
+              ok: res.ok,
+              url: res.url,
+            });
+          }
+
+          if (!res.ok) {
+            throw new Error(
+              `Failed to load ${projectType}: ${res.status} ${res.statusText}`,
+            );
+          }
           return res.json();
         })
         .then((data) => {
-          if (data && detailContainer) {
-            // Build carousel HTML
-            const projectMedia = data.projectMedia || [];
-            const slidesHtml = projectMedia
-              .map((slide: any) => {
-                if (slide._type === 'videoSlide' && slide.video?.url) {
-                  return `
-                    <div class="swiper-slide" role="listitem" data-slide-key="${slide._key || ''}">
-                      <div class="project-carousel__video-wrapper">
-                        <video
-                          class="project-carousel__video"
-                          src="${slide.video.url}"
-                          playsinline
-                          loop
-                          muted
-                          autoplay
-                          preload="metadata"
-                        />
-                      </div>
-                    </div>
-                  `;
-                } else if (slide._type === 'imageSlide' && slide.image?.url) {
-                  return `
-                    <div class="swiper-slide" role="listitem" data-slide-key="${slide._key || ''}">
-                      <div class="project-carousel__image-wrapper">
-                        <img
-                          src="${slide.image.url}"
-                          alt="${slide.image.alt || ''}"
-                          class="project-carousel__image"
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      </div>
-                    </div>
-                  `;
-                }
-                return '';
-              })
-              .filter(Boolean)
-              .join('');
+          if (import.meta.env.DEV) {
+            console.log('✅ Project data loaded:', {
+              title: data?.title,
+              _id: data?._id,
+              mediaCount: data?.projectMedia?.length || 0,
+              hasProjectMedia: !!data?.projectMedia,
+              projectMedia: data?.projectMedia,
+              fullData: data,
+            });
+          }
 
-            const carouselHtml =
-              projectMedia.length > 0
-                ? `
-                <div class="project-carousel" data-project-id="${data._id || ''}">
-                  <div class="project-carousel__swiper swiper">
-                    <div class="swiper-wrapper" role="list">
-                      ${slidesHtml}
-                    </div>
-                    ${
-                      projectMedia.length > 1
-                        ? `
-                      <div class="project-carousel__controls">
-                        <button
-                          class="project-carousel__button project-carousel__button--prev"
-                          aria-label="Previous slide"
-                          type="button"
-                        >
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M5 12h14m0 0-7-7m7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                          </svg>
-                        </button>
-                        <button
-                          class="project-carousel__button project-carousel__button--next"
-                          aria-label="Next slide"
-                          type="button"
-                        >
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M5 12h14m0 0-7-7m7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                          </svg>
-                        </button>
-                      </div>
-                    `
-                        : ''
-                    }
-                  </div>
+          if (!data) {
+            throw new Error('No data returned from API');
+          }
+
+          renderProjectData(data, previewContainer, projectType);
+        })
+        .catch((error) => {
+          console.error('❌ Failed to load project:', error);
+          if (previewContainer) {
+            previewContainer.innerHTML = `
+              <div class="work__detail-error">
+                <p>Failed to load project details.</p>
+                ${import.meta.env.DEV ? `<p style="font-size: 0.75rem; opacity: 0.7; margin-top: 0.5rem;">Error: ${error?.message || 'Unknown error'}</p>` : ''}
+              </div>
+            `;
+          }
+        });
+    }
+  }
+
+  /**
+   * Render project data into the preview container
+   * @param {object} data - Project data
+   * @param {HTMLElement} previewContainer - Container to render into
+   * @param {string} projectType - Type of project ('project' or 'photography')
+   */
+  function renderProjectData(data, previewContainer, projectType = 'project') {
+    if (data && previewContainer) {
+      // Build carousel HTML
+      const projectMedia = data.projectMedia || [];
+      const slidesHtml = projectMedia
+        .map((slide: any) => {
+          if (slide._type === 'videoSlide' && slide.video?.url) {
+            return `
+              <div class="swiper-slide" role="listitem" data-slide-key="${slide._key || ''}">
+                <div class="project-carousel__video-wrapper">
+                  <video
+                    class="project-carousel__video"
+                    src="${slide.video.url}"
+                    playsinline
+                    loop
+                    muted
+                    autoplay
+                    preload="metadata"
+                  />
+                </div>
+              </div>
+            `;
+          } else if (slide._type === 'imageSlide' && slide.image?.url) {
+            return `
+              <div class="swiper-slide" role="listitem" data-slide-key="${slide._key || ''}">
+                <div class="project-carousel__image-wrapper">
+                  <img
+                    src="${slide.image.url}"
+                    alt="${slide.image.alt || ''}"
+                    class="project-carousel__image"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+              </div>
+            `;
+          }
+          return '';
+        })
+        .filter(Boolean)
+        .join('');
+
+      const carouselHtml =
+        projectMedia.length > 0
+          ? `
+          <div class="project-carousel" data-project-id="${data._id || ''}">
+            <div class="project-carousel__swiper swiper">
+              <div class="swiper-wrapper" role="list">
+                ${slidesHtml}
+              </div>
+              ${
+                projectMedia.length > 1
+                  ? `
+                <div class="project-carousel__controls">
+                  <button
+                    class="project-carousel__button project-carousel__button--prev"
+                    aria-label="Previous slide"
+                    type="button"
+                  >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M5 12h14m0 0-7-7m7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                  <button
+                    class="project-carousel__button project-carousel__button--next"
+                    aria-label="Next slide"
+                    type="button"
+                  >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M5 12h14m0 0-7-7m7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
                 </div>
               `
-                : `
-                <div class="project-carousel__empty">
-                  <p>No media available</p>
-                </div>
-              `;
+                  : ''
+              }
+            </div>
+          </div>
+        `
+          : `
+          <div class="project-carousel__empty">
+            <p>No media available</p>
+          </div>
+        `;
 
-            // Build info panel HTML
-            const heroTitle = data.hero?.title || data.title || '';
-            const heroSubtitle = data.hero?.subtitle || '';
-            const heroIntro = data.hero?.intro || '';
-            const year = data.year;
-            const client =
-              projectType === 'project' ? data.client?.title : null;
-            const role = projectType === 'project' ? data.role : null;
-            const location =
-              projectType === 'photography' && data.city && data.country
-                ? `${data.city}, ${data.country}`
-                : null;
-            const camera = projectType === 'photography' ? data.camera : null;
+      // Build info panel HTML
+      const heroTitle = data.hero?.title || data.title || '';
+      const heroSubtitle = data.hero?.subtitle || '';
+      const heroIntro = data.hero?.intro || '';
+      const year = data.year;
+      const client = projectType === 'project' ? data.client?.title : null;
+      const role = projectType === 'project' ? data.role : null;
+      const location =
+        projectType === 'photography' && data.city && data.country
+          ? `${data.city}, ${data.country}`
+          : null;
+      const camera = projectType === 'photography' ? data.camera : null;
 
-            const infoPanelHtml = `
+      const infoPanelHtml = `
                 <div class="info-panel" data-info-panel>
                   <div class="info-panel__overlay" data-info-overlay></div>
                   <div class="info-panel__content" data-info-content>
@@ -538,140 +635,289 @@ const {
                     <path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </button>
-              `;
+      `;
 
-            detailContainer.innerHTML = `
-                <div class="work__detail" data-detail role="region" aria-label="${projectType === 'project' ? 'Project' : 'Photography'} detail: ${data.title || ''}" aria-live="polite">
-                  ${carouselHtml}
-                  ${infoPanelHtml}
-                </div>
-              `;
+      // Replace preview content with carousel
+      previewContainer.innerHTML = `
+        ${carouselHtml}
+        ${infoPanelHtml}
+      `;
 
-            // Initialize carousel
-            if (projectMedia.length > 0) {
-              import('swiper').then(({ default: Swiper }) => {
-                import('swiper/modules').then(({ Navigation }) => {
-                  const swiperEl = detailContainer.querySelector(
-                    '.project-carousel__swiper',
-                  ) as HTMLElement;
-                  const prevButton = detailContainer.querySelector(
-                    '.project-carousel__button--prev',
-                  ) as HTMLElement;
-                  const nextButton = detailContainer.querySelector(
-                    '.project-carousel__button--next',
-                  ) as HTMLElement;
-
-                  if (swiperEl && projectMedia.length > 1) {
-                    new Swiper(swiperEl, {
-                      modules: [Navigation],
-                      navigation: {
-                        nextEl: nextButton,
-                        prevEl: prevButton,
-                      },
-                      loop: false,
-                      speed: 600,
-                      keyboard: {
-                        enabled: true,
-                      },
-                    });
-                  }
-                });
-              });
-            }
-
-            // Initialize info panel
-            const infoPanel = detailContainer.querySelector(
-              '[data-info-panel]',
-            ) as HTMLElement;
-            const infoOverlay = detailContainer.querySelector(
-              '[data-info-overlay]',
-            ) as HTMLElement;
-            const infoContent = detailContainer.querySelector(
-              '[data-info-content]',
-            ) as HTMLElement;
-            const infoToggle = detailContainer.querySelector(
-              '[data-info-toggle]',
-            ) as HTMLElement;
-            const infoClose = detailContainer.querySelector(
-              '[data-info-close]',
-            ) as HTMLElement;
+      // Initialize carousel
+      if (projectMedia.length > 0) {
+        import('swiper').then(({ default: Swiper }) => {
+          import('swiper/modules').then(({ Navigation }) => {
+            const swiperEl = previewContainer.querySelector(
+              '.project-carousel__swiper',
+            );
+            const prevButton = previewContainer.querySelector(
+              '.project-carousel__button--prev',
+            );
+            const nextButton = previewContainer.querySelector(
+              '.project-carousel__button--next',
+            );
 
             if (
-              infoPanel &&
-              infoOverlay &&
-              infoContent &&
-              infoToggle &&
-              infoClose
+              swiperEl &&
+              projectMedia.length > 1 &&
+              swiperEl instanceof HTMLElement
             ) {
-              function openInfoPanel() {
-                infoPanel.classList.add('is-open');
-                document.body.style.overflow = 'hidden';
+              currentSwiper = /** @type {any} */ (
+                new Swiper(swiperEl, {
+                  modules: [Navigation],
+                  navigation: {
+                    nextEl:
+                      prevButton instanceof HTMLElement ? prevButton : null,
+                    prevEl:
+                      nextButton instanceof HTMLElement ? nextButton : null,
+                  },
+                  loop: false,
+                  speed: 600,
+                  keyboard: {
+                    enabled: true,
+                  },
+                })
+              );
+              if (import.meta.env.DEV) {
+                console.log('✅ Swiper initialized');
               }
-
-              function closeInfoPanel() {
-                infoPanel.classList.remove('is-open');
-                document.body.style.overflow = '';
-              }
-
-              infoToggle.addEventListener('click', openInfoPanel);
-              infoClose.addEventListener('click', closeInfoPanel);
-              infoOverlay.addEventListener('click', closeInfoPanel);
-
-              document.addEventListener('keydown', (e) => {
-                if (
-                  e.key === 'Escape' &&
-                  infoPanel.classList.contains('is-open')
-                ) {
-                  closeInfoPanel();
-                }
-              });
             }
-          }
-        })
-        .catch((err) => {
-          console.error(`Failed to load ${projectType} detail:`, err);
-          if (detailContainer) {
-            detailContainer.innerHTML = `
-                <div class="work__detail-error">
-                  <p>Failed to load ${projectType} details.</p>
-                </div>
-              `;
-          }
+          });
         });
+      }
+
+      // Initialize info panel
+      const infoPanel = previewContainer.querySelector('[data-info-panel]');
+      const infoOverlay = previewContainer.querySelector('[data-info-overlay]');
+      const infoContent = previewContainer.querySelector('[data-info-content]');
+      const infoToggle = previewContainer.querySelector('[data-info-toggle]');
+      const infoClose = previewContainer.querySelector('[data-info-close]');
+
+      if (infoPanel && infoOverlay && infoContent && infoToggle && infoClose) {
+        /** @type {HTMLElement} */
+        const panel = infoPanel;
+
+        function openInfoPanel() {
+          panel.classList.add('is-open');
+          document.body.style.overflow = 'hidden';
+        }
+
+        function closeInfoPanel() {
+          panel.classList.remove('is-open');
+          document.body.style.overflow = '';
+        }
+
+        if (infoToggle) {
+          infoToggle.addEventListener('click', openInfoPanel);
+        }
+        if (infoClose) {
+          infoClose.addEventListener('click', closeInfoPanel);
+        }
+        if (infoOverlay) {
+          infoOverlay.addEventListener('click', closeInfoPanel);
+        }
+
+        document.addEventListener(
+          'keydown',
+          (/** @type {KeyboardEvent} */ e) => {
+            if (e.key === 'Escape' && panel.classList.contains('is-open')) {
+              closeInfoPanel();
+            }
+          },
+        );
+      }
     } else {
-      // Clear detail content
-      if (detailContainer) {
-        detailContainer.innerHTML = '';
+      // Clear detail content and restore preview
+      if (previewContainer) {
+        const panel = document.querySelector('.work__right');
+        const defaultImage = panel?.getAttribute('data-default-image') || '';
+
+        // Cleanup Swiper
+        if (currentSwiper) {
+          try {
+            currentSwiper.destroy(true, true);
+            currentSwiper = null;
+          } catch (e) {
+            console.warn('Error destroying Swiper:', e);
+          }
+        }
+
+        // Restore default preview image
+        previewContainer.innerHTML = `
+          <img
+            class="work__preview-img"
+            src="${defaultImage}"
+            alt=""
+            loading="lazy"
+            decoding="async"
+          />
+        `;
       }
     }
   }
 
-  // Handle panel mode switching
-  const workSection = document.querySelector('#work');
-  if (workSection) {
-    workSection.addEventListener('work-panel-mode-change', (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const { mode, slug, type } = customEvent.detail;
-      const projectType = type || 'project';
-      loadProjectMedia(mode, slug, projectType);
+  // Function to bind event listeners
+  function bindEventListeners() {
+    const workSection = document.querySelector('#work');
+    if (workSection) {
+      // Remove existing listeners if any (to prevent duplicates)
+      workSection.removeEventListener(
+        'work-panel-mode-change',
+        handleModeChange,
+      );
+      workSection.removeEventListener(
+        'work-panel-project-loaded',
+        handleProjectLoaded,
+      );
+      workSection.removeEventListener(
+        'work-panel-project-error',
+        handleProjectError,
+      );
+
+      // Add event listeners
+      workSection.addEventListener('work-panel-mode-change', handleModeChange);
+      workSection.addEventListener(
+        'work-panel-project-loaded',
+        handleProjectLoaded,
+      );
+      workSection.addEventListener(
+        'work-panel-project-error',
+        handleProjectError,
+      );
+
+      if (import.meta.env.DEV) {
+        console.log('✅ Event listeners bound');
+      }
+    } else {
+      if (import.meta.env.DEV) {
+        console.warn('⚠️ Work section not found for event binding');
+      }
+    }
+  }
+
+  // Handle project loaded event from workController
+  /**
+   * @param {Event} e
+   */
+  function handleProjectLoaded(e) {
+    const customEvent = /** @type {CustomEvent} */ (e);
+    const { projectData, slug } = customEvent.detail;
+
+    if (import.meta.env.DEV) {
+      console.log('✅ Project data received from workController:', {
+        title: projectData?.title,
+        slug,
+        hasProjectMedia: !!projectData?.projectMedia,
+        mediaCount: projectData?.projectMedia?.length || 0,
+      });
+    }
+
+    // Use the loaded project data directly instead of fetching again
+    if (projectData) {
+      loadProjectMedia('detail', slug, 'project', projectData);
+    }
+  }
+
+  // Handle project error event from workController
+  /**
+   * @param {Event} e
+   */
+  function handleProjectError(e) {
+    const customEvent = /** @type {CustomEvent} */ (e);
+    const { error, slug } = customEvent.detail;
+
+    console.error('❌ Project load error:', error);
+
+    const panel = document.querySelector('.work__right');
+    const previewContainer = panel?.querySelector('.work__preview');
+
+    if (previewContainer) {
+      previewContainer.innerHTML = `
+        <div class="work__detail-error">
+          <p>Failed to load project details.</p>
+          ${import.meta.env.DEV ? `<p style="font-size: 0.75rem; opacity: 0.7; margin-top: 0.5rem;">Error: ${error?.message || 'Unknown error'}</p>` : ''}
+        </div>
+      `;
+    }
+  }
+
+  // Event handler function
+  /**
+   * @param {Event} e
+   */
+  function handleModeChange(e) {
+    const customEvent = /** @type {CustomEvent} */ (e);
+    const { mode, slug, type } = customEvent.detail;
+    const projectType = type || 'project';
+
+    if (import.meta.env.DEV) {
+      console.log('🎯 work-panel-mode-change event:', { mode, slug, type });
+    }
+
+    loadProjectMedia(mode, slug, projectType);
+  }
+
+  // Check for initial project slug from SSR
+  function checkInitialProject() {
+    const panel = document.querySelector('.work__right');
+    const initialSlug = panel?.getAttribute('data-initial-project-slug');
+
+    if (initialSlug) {
+      if (import.meta.env.DEV) {
+        console.log('🎯 Initial project slug detected from SSR:', initialSlug);
+      }
+      // Wait a bit for workController to initialize and load the project
+      setTimeout(() => {
+        // The workController will handle loading via API and dispatch event
+        // We just need to make sure the mode is set correctly
+        const workSection = document.querySelector('#work');
+        if (workSection) {
+          workSection.dispatchEvent(
+            new CustomEvent('work-panel-mode-change', {
+              detail: { mode: 'detail', slug: initialSlug, type: 'project' },
+              bubbles: true,
+            }),
+          );
+        }
+      }, 500);
+    }
+  }
+
+  // Bind event listeners on initial load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      bindEventListeners();
+      checkInitialProject();
     });
+  } else {
+    bindEventListeners();
+    checkInitialProject();
   }
 
   // Also listen for astro:page-load to handle View Transitions
   document.addEventListener('astro:page-load', () => {
-    // Check if we're on a work/photography detail page
-    const path = window.location.pathname;
-    const workMatch = path.match(/^\/work\/([^/]+)$/);
-    const photoMatch = path.match(/^\/photography\/([^/]+)$/);
+    // Re-bind event listeners after view transition
+    bindEventListeners();
 
-    if (workMatch || photoMatch) {
-      const slug = workMatch?.[1] || photoMatch?.[1];
-      const projectType = workMatch ? 'project' : 'photography';
+    // Check for pending project from sessionStorage (after navigation from detail page)
+    const pendingSlug = sessionStorage.getItem('pendingProjectSlug');
+    const pendingType = sessionStorage.getItem('pendingProjectType');
+
+    if (pendingSlug && pendingType) {
+      if (import.meta.env.DEV) {
+        console.log('🎯 astro:page-load - Opening pending project:', {
+          slug: pendingSlug,
+          type: pendingType,
+        });
+      }
 
       // Wait a bit for workController to initialize
       setTimeout(() => {
-        loadProjectMedia('detail', slug, projectType);
-      }, 100);
+        loadProjectMedia('detail', pendingSlug, pendingType);
+        // Clear sessionStorage after loading
+        sessionStorage.removeItem('pendingProjectSlug');
+        sessionStorage.removeItem('pendingProjectType');
+      }, 300);
     }
   });
 </script>

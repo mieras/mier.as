@@ -1,0 +1,263 @@
+---
+interface Props {
+  title: string;
+  variant?: 'light' | 'dark';
+  ariaLabel?: string;
+}
+
+const { title, variant = 'dark', ariaLabel } = Astro.props;
+
+// Genereer meerdere kopieën van de title voor de seamless loop
+const titles = Array.from({ length: 12 }, () => title);
+
+// Unieke identifier voor deze instantie
+const instanceId = `scroll-marquee-${Math.random().toString(36).substr(2, 9)}`;
+---
+
+<div
+  class={`scrolling-text scrolling-text--${variant}`}
+  data-instance-id={instanceId}
+  aria-label={ariaLabel || `Section title: ${title}`}
+>
+  <div class="rail">
+    {titles.map((text, index) => <h4 data-item-index={index}>{text}</h4>)}
+  </div>
+</div>
+
+<style>
+  .scrolling-text {
+    overflow: hidden;
+    width: 100%;
+    display: flex;
+    align-items: center;
+  }
+
+  .scrolling-text--light {
+    background-color: var(--section-music-bg);
+  }
+
+  .scrolling-text--dark {
+    background-color: var(--section-work-bg);
+  }
+
+  .rail {
+    display: flex;
+  }
+
+  .rail h4 {
+    white-space: nowrap;
+    font-size: clamp(3rem, 8vw, 6.25rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1em;
+    margin: 0 1.875rem 0 0;
+  }
+
+  .scrolling-text--light .rail h4 {
+    color: var(--text-light);
+  }
+
+  .scrolling-text--dark .rail h4 {
+    color: var(--work-ticker-text);
+  }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+  // @ts-ignore - Observer import case sensitivity issue
+  import { Observer } from 'gsap/observer';
+
+  gsap.registerPlugin(Observer);
+
+  interface HorizontalLoopConfig {
+    repeat?: number;
+    paused?: boolean;
+    speed?: number;
+    snap?: number | false;
+    paddingRight?: number | string;
+    reversed?: boolean;
+  }
+
+  // horizontalLoop helper function
+  function horizontalLoop(
+    items: gsap.DOMTarget,
+    config?: HorizontalLoopConfig,
+  ): gsap.core.Timeline & {
+    next: (vars?: gsap.TweenVars) => gsap.core.Tween;
+    previous: (vars?: gsap.TweenVars) => gsap.core.Tween;
+    current: () => number;
+    toIndex: (index: number, vars?: gsap.TweenVars) => gsap.core.Tween;
+    times: number[];
+  } {
+    const itemsArray = gsap.utils.toArray(items) as Element[];
+    const cfg: HorizontalLoopConfig = config || {};
+    const times: number[] = [];
+    const widths: number[] = [];
+    const xPercents: number[] = [];
+    let curIndex = 0;
+
+    const tl = gsap.timeline({
+      repeat: cfg.repeat,
+      paused: cfg.paused,
+      defaults: { ease: 'none' },
+      onReverseComplete: () => {
+        tl.totalTime(tl.rawTime() + tl.duration() * 100);
+      },
+    });
+
+    const length = itemsArray.length;
+    const startX = (itemsArray[0] as HTMLElement).offsetLeft;
+    const pixelsPerSecond = (cfg.speed || 1) * 100;
+    const snap =
+      cfg.snap === false ? (v: number) => v : gsap.utils.snap(cfg.snap || 1);
+
+    gsap.set(itemsArray, {
+      xPercent: (i: number, el: Element) => {
+        const htmlEl = el as HTMLElement;
+        const width = parseFloat(
+          String(gsap.getProperty(htmlEl, 'width', 'px')),
+        ) as number;
+        widths[i] = width;
+        const x = parseFloat(
+          String(gsap.getProperty(htmlEl, 'x', 'px')),
+        ) as number;
+        const xPercent = (gsap.getProperty(htmlEl, 'xPercent') as number) || 0;
+        xPercents[i] = snap((x / width) * 100 + xPercent);
+        return xPercents[i];
+      },
+    });
+    gsap.set(itemsArray, { x: 0 });
+
+    const lastItem = itemsArray[length - 1] as HTMLElement;
+    const lastScaleX = (gsap.getProperty(lastItem, 'scaleX') as number) || 1;
+    const paddingRight = parseFloat(String(cfg.paddingRight || 0));
+    const totalWidth =
+      lastItem.offsetLeft +
+      (xPercents[length - 1] / 100) * widths[length - 1] -
+      startX +
+      lastItem.offsetWidth * lastScaleX +
+      paddingRight;
+
+    for (let i = 0; i < length; i++) {
+      const item = itemsArray[i] as HTMLElement;
+      const curX = (xPercents[i] / 100) * widths[i];
+      const distanceToStart = item.offsetLeft + curX - startX;
+      const itemScaleX = (gsap.getProperty(item, 'scaleX') as number) || 1;
+      const distanceToLoop = distanceToStart + widths[i] * itemScaleX;
+
+      tl.to(
+        item,
+        {
+          xPercent: snap(((curX - distanceToLoop) / widths[i]) * 100),
+          duration: distanceToLoop / pixelsPerSecond,
+        },
+        0,
+      )
+        .fromTo(
+          item,
+          {
+            xPercent: snap(
+              ((curX - distanceToLoop + totalWidth) / widths[i]) * 100,
+            ),
+          },
+          {
+            xPercent: xPercents[i],
+            duration:
+              (curX - distanceToLoop + totalWidth - curX) / pixelsPerSecond,
+            immediateRender: false,
+          },
+          distanceToLoop / pixelsPerSecond,
+        )
+        .add('label' + i, distanceToStart / pixelsPerSecond);
+      times[i] = distanceToStart / pixelsPerSecond;
+    }
+
+    function toIndex(index: number, vars?: gsap.TweenVars): gsap.core.Tween {
+      const tweenVars = vars || {};
+      if (Math.abs(index - curIndex) > length / 2) {
+        index += index > curIndex ? -length : length;
+      }
+      const newIndex = gsap.utils.wrap(0, length, index);
+      let time = times[newIndex];
+      if (time > tl.time() !== index > curIndex) {
+        tweenVars.modifiers = {
+          time: gsap.utils.wrap(0, tl.duration()),
+        };
+        time += tl.duration() * (index > curIndex ? 1 : -1);
+      }
+      curIndex = newIndex;
+      tweenVars.overwrite = true;
+      return tl.tweenTo(time, tweenVars);
+    }
+
+    (tl as any).next = (vars?: gsap.TweenVars) => toIndex(curIndex + 1, vars);
+    (tl as any).previous = (vars?: gsap.TweenVars) =>
+      toIndex(curIndex - 1, vars);
+    (tl as any).current = () => curIndex;
+    (tl as any).toIndex = (index: number, vars?: gsap.TweenVars) =>
+      toIndex(index, vars);
+    (tl as any).times = times;
+
+    tl.progress(1, true).progress(0, true);
+    if (cfg.reversed) {
+      if (tl.vars && tl.vars.onReverseComplete) {
+        (tl.vars.onReverseComplete as () => void)();
+      }
+      tl.reverse();
+    }
+    return tl as any;
+  }
+
+  // Initialize on page load
+  function initScrollMarquee(): void {
+    const scrollingTextElements = document.querySelectorAll('.scrolling-text');
+
+    scrollingTextElements.forEach((scrollingText) => {
+      const instanceId = scrollingText.getAttribute('data-instance-id');
+      if (!instanceId) return;
+
+      const rail = scrollingText.querySelector('.rail');
+      if (!rail) return;
+
+      const nodeList = scrollingText.querySelectorAll('.rail h4');
+      const scrollingTextItems: Element[] = Array.from(nodeList);
+      if (scrollingTextItems.length === 0) return;
+
+      const tl = horizontalLoop(scrollingTextItems, {
+        repeat: -1,
+        paddingRight: 30,
+      });
+
+      Observer.create({
+        onChangeY(self: { deltaY: number }) {
+          let factor = 2.5;
+          if (self.deltaY < 0) {
+            factor *= -1;
+          }
+          gsap
+            .timeline({
+              defaults: {
+                ease: 'none',
+              },
+            })
+            .to(tl, {
+              timeScale: factor * 2.5,
+              duration: 0.2,
+              overwrite: true,
+            })
+            .to(tl, { timeScale: factor / 2.5, duration: 1 }, '+=0.3');
+        },
+      });
+    });
+  }
+
+  // Initialize when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initScrollMarquee);
+  } else {
+    initScrollMarquee();
+  }
+
+  // Re-initialize on Astro page navigation
+  document.addEventListener('astro:page-load', initScrollMarquee);
+</script>
