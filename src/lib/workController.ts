@@ -406,15 +406,13 @@ export class WorkController {
         } else {
           await this.openProject(slug, row as HTMLElement);
         }
-      } else {
-        if (import.meta.env.DEV) {
-          console.warn('⚠️ Project row not found for slug:', slug, {
-            availableRows: Array.from(this.rows).map((r) => ({
-              slug: r.getAttribute('data-project-slug'),
-              type: r.getAttribute('data-type'),
-            })),
-          });
-        }
+      } else if (import.meta.env.DEV) {
+        console.warn('⚠️ Project row not found for slug:', slug, {
+          availableRows: Array.from(this.rows).map((r) => ({
+            slug: r.getAttribute('data-project-slug'),
+            type: r.getAttribute('data-type'),
+          })),
+        });
       }
     } else {
       const row = Array.from(this.rows).find(
@@ -430,10 +428,8 @@ export class WorkController {
         } else {
           this.openPhotography(slug, row as HTMLElement);
         }
-      } else {
-        if (import.meta.env.DEV) {
-          console.warn('⚠️ Photography row not found for id:', slug);
-        }
+      } else if (import.meta.env.DEV) {
+        console.warn('⚠️ Photography row not found for id:', slug);
       }
     }
   }
