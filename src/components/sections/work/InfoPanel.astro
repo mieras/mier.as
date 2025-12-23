@@ -72,51 +72,51 @@ const camera = type === 'photography' ? photography?.camera : null;
     </button>
 
     <div class="info-panel__body">
-      {heroTitle && <h1 class="info-panel__title">{heroTitle}</h1>}
-      {heroSubtitle && <h2 class="info-panel__subtitle">{heroSubtitle}</h2>}
-      {heroIntro && <p class="info-panel__intro">{heroIntro}</p>}
+      <h1 class="info-panel__title" data-info-title hidden={!heroTitle}>
+        {heroTitle}
+      </h1>
+      <h2 class="info-panel__subtitle" data-info-subtitle hidden={!heroSubtitle}>
+        {heroSubtitle}
+      </h2>
+      <p class="info-panel__intro" data-info-intro hidden={!heroIntro}>
+        {heroIntro}
+      </p>
 
       <dl class="info-panel__meta">
-        {
-          client && (
-            <>
-              <dt>Client</dt>
-              <dd>{client}</dd>
-            </>
-          )
-        }
-        {
-          role && (
-            <>
-              <dt>Role</dt>
-              <dd>{role}</dd>
-            </>
-          )
-        }
-        {
-          year && (
-            <>
-              <dt>Year</dt>
-              <dd>{year}</dd>
-            </>
-          )
-        }
-        {
-          location && (
-            <>
-              <dt>Location</dt>
-              <dd>{location}</dd>
-            </>
-          )
-        }
-        {
-          camera && (
-            <>
-              <dt>Camera</dt>
-              <dd>{camera}</dd>
-            </>
-          )
-        }
+        <dt data-info-label="client" hidden={!client}>
+          Client
+        </dt>
+        <dd data-info-value="client" hidden={!client}>
+          {client}
+        </dd>
+
+        <dt data-info-label="role" hidden={!role}>
+          Role
+        </dt>
+        <dd data-info-value="role" hidden={!role}>
+          {role}
+        </dd>
+
+        <dt data-info-label="year" hidden={!year}>
+          Year
+        </dt>
+        <dd data-info-value="year" hidden={!year}>
+          {year}
+        </dd>
+
+        <dt data-info-label="location" hidden={!location}>
+          Location
+        </dt>
+        <dd data-info-value="location" hidden={!location}>
+          {location}
+        </dd>
+
+        <dt data-info-label="camera" hidden={!camera}>
+          Camera
+        </dt>
+        <dd data-info-value="camera" hidden={!camera}>
+          {camera}
+        </dd>
       </dl>
     </div>
   </div>
@@ -150,79 +150,9 @@ const camera = type === 'photography' ? photography?.camera : null;
   </svg>
 </button>
 
-<script>
-  function initInfoPanel() {
-    // Find panel within work preview container (for dynamically loaded panels)
-    const workPreview = document.querySelector('.work__preview');
-    const scope = workPreview || document;
-
-    const panel = scope.querySelector('[data-info-panel]') as HTMLElement;
-    const overlay = scope.querySelector('[data-info-overlay]') as HTMLElement;
-    const content = scope.querySelector('[data-info-content]') as HTMLElement;
-    const toggle = scope.querySelector('[data-info-toggle]') as HTMLElement;
-    const close = scope.querySelector('[data-info-close]') as HTMLElement;
-
-    if (!panel || !overlay || !content || !toggle || !close) return;
-
-    // Remove existing listeners to prevent duplicates by cloning nodes
-    const newToggle = toggle.cloneNode(true) as HTMLElement;
-    toggle.parentNode?.replaceChild(newToggle, toggle);
-    const newClose = close.cloneNode(true) as HTMLElement;
-    close.parentNode?.replaceChild(newClose, close);
-
-    function openPanel() {
-      panel.classList.add('is-open');
-      document.body.style.overflow = 'hidden';
-      // Hide info toggle, show close button
-      if (newToggle) {
-        newToggle.style.display = 'none';
-      }
-      if (newClose) {
-        newClose.style.display = 'flex';
-      }
-    }
-
-    function closePanel() {
-      panel.classList.remove('is-open');
-      document.body.style.overflow = '';
-      // Show info toggle, hide close button
-      if (newToggle) {
-        newToggle.style.display = 'flex';
-      }
-      if (newClose) {
-        newClose.style.display = 'none';
-      }
-    }
-
-    // Initialize: hide close button, show toggle
-    if (newClose) {
-      newClose.style.display = 'none';
-    }
-    if (newToggle) {
-      newToggle.style.display = 'flex';
-    }
-
-    newToggle.addEventListener('click', openPanel);
-    newClose.addEventListener('click', closePanel);
-    overlay.addEventListener('click', closePanel);
-
-    // Close on Escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && panel.classList.contains('is-open')) {
-        closePanel();
-      }
-    });
-  }
-
-  document.addEventListener('astro:page-load', initInfoPanel);
-  if (document.readyState !== 'loading') {
-    initInfoPanel();
-  }
-</script>
-
 <style>
   .info-panel {
-    position: fixed;
+    position: absolute;
     inset: 0;
     z-index: 50;
     pointer-events: none;

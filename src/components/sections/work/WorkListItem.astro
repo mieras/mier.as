@@ -60,7 +60,10 @@ const photoDescription = camera || title;
 
 const dataId =
   type === 'photography'
-    ? { 'data-photo-id': item._id }
+    ? {
+        'data-photo-id': item._id,
+        'data-preview': imageUrl || '',
+      }
     : {
         'data-work-id': item._id,
         'data-work-slug': project?.slug || '',
