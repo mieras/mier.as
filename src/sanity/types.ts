@@ -86,6 +86,8 @@ export interface SanityProject {
   };
   subtitle?: string;
   intro?: string;
+  year?: number;
+  role?: string;
   hero?: {
     title?: string;
     subtitle?: string;

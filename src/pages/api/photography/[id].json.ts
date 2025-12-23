@@ -1,10 +1,11 @@
 import { loadQuery } from '../../../sanity/lib/load-query';
 import { PHOTOGRAPHY_BY_ID_QUERY } from '../../../sanity/queries';
 import { urlForImage } from '../../../sanity/lib/image';
+import type { SanityPhotography } from '../../../sanity/types';
 
 export async function GET({ params }: { params: { id: string } }) {
   try {
-    const { data: photography } = await loadQuery({
+    const { data: photography } = await loadQuery<SanityPhotography>({
       query: PHOTOGRAPHY_BY_ID_QUERY,
       params: { id: params.id },
     });

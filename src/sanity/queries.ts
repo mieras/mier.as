@@ -367,6 +367,8 @@ export const PROJECT_BY_SLUG_QUERY = `*[_type == "work" && slug.current == $slug
   "slug": slug.current,
   subtitle,
   intro,
+  year,
+  role,
   hero {
     title,
     subtitle,

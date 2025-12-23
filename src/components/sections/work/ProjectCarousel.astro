@@ -4,6 +4,7 @@ import { urlForImage } from '../../../sanity/lib/image';
 
 type ProjectMediaSlide = {
   _key: string;
+  _type: 'imageSlide' | 'videoSlide';
   image?: any;
   video?: {
     asset?: {

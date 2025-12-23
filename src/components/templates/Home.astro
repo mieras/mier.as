@@ -25,10 +25,11 @@ type Project = {
 };
 
 type Props = {
+  data?: any;
   initialProjectSlug?: string | null;
 };
 
-const { initialProjectSlug = null } = Astro.props as Props;
+const { data, initialProjectSlug = null } = Astro.props as Props;
 
 // Haal alle data op
 const homeData = await getHomeData();
