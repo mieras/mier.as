@@ -61,10 +61,10 @@ const tabs = [
   class="work"
   id="work"
   aria-label="Work"
-  data-initial-project-slug={initialProjectSlug || ''}
+  data-initial-work-slug={initialProjectSlug || ''}
   data-default-design-image={defaultDesignImage}
   data-default-photo-image={defaultPhotoImage}
-  data-projects={JSON.stringify(projects)}
+  data-works={JSON.stringify(projects)}
 >
   <div class="work__marquee">
     <WorkMarquee />
@@ -139,8 +139,8 @@ const tabs = [
   }
 
   .work__tabs {
-    padding: 0 var(--space-xs);
-    margin: var(--space-xs) 0;
+    /* padding: 0 var(--space-xs); */
+    /* margin: var(--space-xs) 0; */
   }
 
   .tab-content {
@@ -154,8 +154,33 @@ const tabs = [
     display: flex;
   }
 
+  /* Tablet: adjust layout */
+  @media (max-width: 1024px) and (min-width: 768px) {
+    .work {
+      height: auto;
+      min-height: 60vh;
+    }
+
+    .work__grid {
+      grid-template-columns: 100%;
+      gap: var(--space-s);
+      max-width: 100%;
+    }
+
+    .work__left {
+      min-height: 40vh;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .work__right {
+      width: 100%;
+      max-width: 100%;
+    }
+  }
+
   /* Mobile: stack everything */
-  @media (max-width: 899px) {
+  @media (max-width: 767px) {
     .work {
       height: auto;
       min-height: 50vh;
@@ -163,10 +188,15 @@ const tabs = [
 
     .work__grid {
       grid-template-columns: 1fr;
+      gap: var(--space-xs);
     }
 
     .work__marquee {
       position: relative;
+    }
+
+    .work__left {
+      min-height: 30vh;
     }
   }
 </style>
@@ -175,11 +205,28 @@ const tabs = [
   import { initWorkController } from '../../lib/workController';
 
   // Initialize work controller
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initWorkController);
-  } else {
-    initWorkController();
+  // Use astro:page-load for view transitions compatibility
+  function setupWorkController() {
+    // Cleanup existing instance if present
+    const existingController = (window as any).__workController;
+    if (
+      existingController &&
+      typeof existingController.destroy === 'function'
+    ) {
+      existingController.destroy();
+    }
+
+    const controller = initWorkController();
+    if (controller) {
+      (window as any).__workController = controller;
+    }
   }
 
-  document.addEventListener('astro:page-load', initWorkController);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupWorkController);
+  } else {
+    setupWorkController();
+  }
+
+  document.addEventListener('astro:page-load', setupWorkController);
 </script>

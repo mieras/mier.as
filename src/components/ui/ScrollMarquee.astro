@@ -2,34 +2,48 @@
 interface Props {
   title: string;
   variant?: 'light' | 'dark';
+  direction?: 'left' | 'right';
   ariaLabel?: string;
+  duration?: number;
 }
 
-const { title, variant = 'dark', ariaLabel } = Astro.props;
-
-// Genereer meerdere kopieën van de title voor de seamless loop
-const titles = Array.from({ length: 12 }, () => title);
+const {
+  title,
+  variant = 'dark',
+  direction = 'left',
+  ariaLabel,
+  duration = 10,
+} = Astro.props;
 
 // Unieke identifier voor deze instantie
 const instanceId = `scroll-marquee-${Math.random().toString(36).substr(2, 9)}`;
+const reverse = direction === 'right';
 ---
 
 <div
-  class={`scrolling-text scrolling-text--${variant}`}
+  class={`wrapper-rolling-text scrolling-text scrolling-text--${variant}`}
   data-instance-id={instanceId}
+  data-direction={direction}
+  data-duration={duration}
   aria-label={ariaLabel || `Section title: ${title}`}
 >
-  <div class="rail">
-    {titles.map((text, index) => <h4 data-item-index={index}>{text}</h4>)}
+  <div class={`rolling-text text rolling-text--${variant}`}>
+    <span>{title}</span>
   </div>
 </div>
 
 <style>
-  .scrolling-text {
+  .wrapper-rolling-text {
     overflow: hidden;
     width: 100%;
-    display: flex;
-    align-items: center;
+    position: relative;
+    min-height: 1em;
+  }
+
+  /* For right direction, add padding-left to show clones positioned to the left */
+  .wrapper-rolling-text[data-direction='right'] {
+    padding-left: 50vw;
+    margin-left: -50vw;
   }
 
   .scrolling-text--light {
@@ -40,215 +54,222 @@ const instanceId = `scroll-marquee-${Math.random().toString(36).substr(2, 9)}`;
     background-color: var(--section-work-bg);
   }
 
-  .rail {
-    display: flex;
-  }
-
-  .rail h4 {
+  .rolling-text {
     white-space: nowrap;
+    display: inline-block;
     font-size: clamp(3rem, 8vw, 6.25rem);
     font-weight: 900;
     letter-spacing: -0.02em;
     line-height: 1em;
-    margin: 0 1.875rem 0 0;
+    position: relative;
+    will-change: transform;
   }
 
-  .scrolling-text--light .rail h4 {
+  .rolling-text--light {
     color: var(--text-light);
   }
 
-  .scrolling-text--dark .rail h4 {
+  .rolling-text--dark {
     color: var(--work-ticker-text);
+  }
+
+  .rolling-text span {
+    display: inline-block;
+    margin-right: 1.875rem;
   }
 </style>
 
 <script>
   import { gsap } from 'gsap';
-  // @ts-ignore - Observer import case sensitivity issue
-  import { Observer } from 'gsap/observer';
+  // @ts-ignore - Case sensitivity issue with GSAP types
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-  gsap.registerPlugin(Observer);
+  gsap.registerPlugin(ScrollTrigger);
 
-  interface HorizontalLoopConfig {
-    repeat?: number;
-    paused?: boolean;
-    speed?: number;
-    snap?: number | false;
-    paddingRight?: number | string;
-    reversed?: boolean;
+  interface RollConfig {
+    duration?: number;
+    ease?: string;
   }
 
-  // horizontalLoop helper function
-  function horizontalLoop(
-    items: gsap.DOMTarget,
-    config?: HorizontalLoopConfig,
-  ): gsap.core.Timeline & {
-    next: (vars?: gsap.TweenVars) => gsap.core.Tween;
-    previous: (vars?: gsap.TweenVars) => gsap.core.Tween;
-    current: () => number;
-    toIndex: (index: number, vars?: gsap.TweenVars) => gsap.core.Tween;
-    times: number[];
-  } {
-    const itemsArray = gsap.utils.toArray(items) as Element[];
-    const cfg: HorizontalLoopConfig = config || {};
-    const times: number[] = [];
-    const widths: number[] = [];
-    const xPercents: number[] = [];
-    let curIndex = 0;
+  // Helper function that clones the targets, places them next to the original,
+  // then animates the xPercent in a loop to make it appear to roll across the screen in a seamless loop.
+  function roll(
+    targets: gsap.DOMTarget,
+    vars?: RollConfig,
+    reverse?: boolean,
+  ): gsap.core.Timeline {
+    const config: RollConfig = vars || {};
+    config.ease = config.ease || 'none';
 
     const tl = gsap.timeline({
-      repeat: cfg.repeat,
-      paused: cfg.paused,
-      defaults: { ease: 'none' },
-      onReverseComplete: () => {
-        tl.totalTime(tl.rawTime() + tl.duration() * 100);
+      repeat: -1,
+      onReverseComplete() {
+        // Otherwise when the playhead gets back to the beginning, it'd stop.
+        // So push the playhead forward 10 iterations (it could be any number)
+        this.totalTime(this.rawTime() + this.duration() * 10);
       },
     });
 
-    const length = itemsArray.length;
-    const startX = (itemsArray[0] as HTMLElement).offsetLeft;
-    const pixelsPerSecond = (cfg.speed || 1) * 100;
-    const snap =
-      cfg.snap === false ? (v: number) => v : gsap.utils.snap(cfg.snap || 1);
+    const elements = gsap.utils.toArray(targets) as HTMLElement[];
+    const clones: HTMLElement[] = [];
 
-    gsap.set(itemsArray, {
-      xPercent: (i: number, el: Element) => {
-        const htmlEl = el as HTMLElement;
-        const width = parseFloat(
-          String(gsap.getProperty(htmlEl, 'width', 'px')),
-        ) as number;
-        widths[i] = width;
-        const x = parseFloat(
-          String(gsap.getProperty(htmlEl, 'x', 'px')),
-        ) as number;
-        const xPercent = (gsap.getProperty(htmlEl, 'xPercent') as number) || 0;
-        xPercents[i] = snap((x / width) * 100 + xPercent);
-        return xPercents[i];
-      },
+    // Create 12 clones for each element
+    elements.forEach((el) => {
+      for (let i = 0; i < 12; i++) {
+        const clone = el.cloneNode(true) as HTMLElement;
+        clone.setAttribute('data-clone', 'true');
+        el.parentNode?.appendChild(clone);
+        clones.push(clone);
+      }
     });
-    gsap.set(itemsArray, { x: 0 });
 
-    const lastItem = itemsArray[length - 1] as HTMLElement;
-    const lastScaleX = (gsap.getProperty(lastItem, 'scaleX') as number) || 1;
-    const paddingRight = parseFloat(String(cfg.paddingRight || 0));
-    const totalWidth =
-      lastItem.offsetLeft +
-      (xPercents[length - 1] / 100) * widths[length - 1] -
-      startX +
-      lastItem.offsetWidth * lastScaleX +
-      paddingRight;
+    // Position clones next to original elements
+    const positionClones = () => {
+      let cloneIndex = 0;
+      elements.forEach((el) => {
+        const elTop = el.offsetTop;
+        const elLeft = el.offsetLeft;
+        const elWidth = el.offsetWidth;
+        let currentLeft = elLeft;
 
-    for (let i = 0; i < length; i++) {
-      const item = itemsArray[i] as HTMLElement;
-      const curX = (xPercents[i] / 100) * widths[i];
-      const distanceToStart = item.offsetLeft + curX - startX;
-      const itemScaleX = (gsap.getProperty(item, 'scaleX') as number) || 1;
-      const distanceToLoop = distanceToStart + widths[i] * itemScaleX;
+        for (let i = 0; i < 12; i++) {
+          const clone = clones[cloneIndex];
+          if (clone) {
+            // Position each clone next to the previous one
+            // For reverse: place to the left, for normal: place to the right
+            if (reverse) {
+              currentLeft = currentLeft - elWidth;
+            } else {
+              currentLeft = currentLeft + elWidth;
+            }
+            gsap.set(clone, {
+              position: 'absolute',
+              overwrite: false,
+              top: elTop,
+              left: currentLeft,
+            });
+            cloneIndex++;
+          }
+        }
+      });
+    };
 
-      tl.to(
-        item,
-        {
-          xPercent: snap(((curX - distanceToLoop) / widths[i]) * 100),
-          duration: distanceToLoop / pixelsPerSecond,
-        },
-        0,
-      )
-        .fromTo(
-          item,
-          {
-            xPercent: snap(
-              ((curX - distanceToLoop + totalWidth) / widths[i]) * 100,
-            ),
-          },
-          {
-            xPercent: xPercents[i],
-            duration:
-              (curX - distanceToLoop + totalWidth - curX) / pixelsPerSecond,
-            immediateRender: false,
-          },
-          distanceToLoop / pixelsPerSecond,
-        )
-        .add('label' + i, distanceToStart / pixelsPerSecond);
-      times[i] = distanceToStart / pixelsPerSecond;
-    }
+    positionClones();
 
-    function toIndex(index: number, vars?: gsap.TweenVars): gsap.core.Tween {
-      const tweenVars = vars || {};
-      if (Math.abs(index - curIndex) > length / 2) {
-        index += index > curIndex ? -length : length;
+    // Animate original and all clones
+    let cloneIndex = 0;
+    elements.forEach((el) => {
+      const elementClones: HTMLElement[] = [el];
+      for (let i = 0; i < 12; i++) {
+        if (clones[cloneIndex]) {
+          elementClones.push(clones[cloneIndex]);
+          cloneIndex++;
+        }
       }
-      const newIndex = gsap.utils.wrap(0, length, index);
-      let time = times[newIndex];
-      if (time > tl.time() !== index > curIndex) {
-        tweenVars.modifiers = {
-          time: gsap.utils.wrap(0, tl.duration()),
-        };
-        time += tl.duration() * (index > curIndex ? 1 : -1);
-      }
-      curIndex = newIndex;
-      tweenVars.overwrite = true;
-      return tl.tweenTo(time, tweenVars);
-    }
+      // Use xPercent for both directions (like original example)
+      // This keeps the same speed for both left and right directions
+      tl.to(elementClones, { xPercent: reverse ? 100 : -100, ...config }, 0);
+    });
 
-    (tl as any).next = (vars?: gsap.TweenVars) => toIndex(curIndex + 1, vars);
-    (tl as any).previous = (vars?: gsap.TweenVars) =>
-      toIndex(curIndex - 1, vars);
-    (tl as any).current = () => curIndex;
-    (tl as any).toIndex = (index: number, vars?: gsap.TweenVars) =>
-      toIndex(index, vars);
-    (tl as any).times = times;
-
-    tl.progress(1, true).progress(0, true);
-    if (cfg.reversed) {
-      if (tl.vars && tl.vars.onReverseComplete) {
-        (tl.vars.onReverseComplete as () => void)();
+    // Handle resize with debounce
+    let resizeTimeout: number | null = null;
+    const handleResize = () => {
+      if (resizeTimeout) {
+        clearTimeout(resizeTimeout);
       }
-      tl.reverse();
-    }
-    return tl as any;
+      resizeTimeout = window.setTimeout(() => {
+        const time = tl.totalTime(); // record the current time
+        tl.totalTime(0); // rewind and clear out the timeline
+        positionClones(); // reposition
+        tl.totalTime(time); // jump back to the proper time
+      }, 150);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Store cleanup function
+    (tl as any).__cleanup = () => {
+      window.removeEventListener('resize', handleResize);
+      if (resizeTimeout) {
+        clearTimeout(resizeTimeout);
+      }
+    };
+
+    return tl;
   }
 
   // Initialize on page load
   function initScrollMarquee(): void {
-    const scrollingTextElements = document.querySelectorAll('.scrolling-text');
+    const scrollingTextElements = document.querySelectorAll(
+      '.wrapper-rolling-text',
+    );
 
-    scrollingTextElements.forEach((scrollingText) => {
-      const instanceId = scrollingText.getAttribute('data-instance-id');
-      if (!instanceId) return;
+    if (scrollingTextElements.length === 0) return;
 
-      const rail = scrollingText.querySelector('.rail');
-      if (!rail) return;
-
-      const nodeList = scrollingText.querySelectorAll('.rail h4');
-      const scrollingTextItems: Element[] = Array.from(nodeList);
-      if (scrollingTextItems.length === 0) return;
-
-      const tl = horizontalLoop(scrollingTextItems, {
-        repeat: -1,
-        paddingRight: 30,
+    // Clean up existing instances
+    if ((window as any).scrollMarqueeRolls) {
+      (window as any).scrollMarqueeRolls.forEach((tl: gsap.core.Timeline) => {
+        // Call cleanup if available
+        if ((tl as any).__cleanup) {
+          (tl as any).__cleanup();
+        }
+        tl.kill();
       });
+    }
+    if ((window as any).scrollMarqueeTrigger) {
+      (window as any).scrollMarqueeTrigger.kill();
+    }
 
-      Observer.create({
-        onChangeY(self: { deltaY: number }) {
-          let factor = 2.5;
-          if (self.deltaY < 0) {
-            factor *= -1;
-          }
-          gsap
-            .timeline({
-              defaults: {
-                ease: 'none',
-              },
-            })
-            .to(tl, {
-              timeScale: factor * 2.5,
-              duration: 0.2,
+    // Remove existing clones
+    scrollingTextElements.forEach((wrapper) => {
+      const existingClones = wrapper.querySelectorAll('[data-clone="true"]');
+      existingClones.forEach((clone) => {
+        clone.remove();
+      });
+      // Reset initialized flag
+      (wrapper as HTMLElement).dataset.initialized = 'false';
+    });
+
+    let direction = 1; // 1 = forward, -1 = backward scroll
+    const rolls: gsap.core.Timeline[] = [];
+
+    scrollingTextElements.forEach((wrapper) => {
+      // Check if already initialized
+      if ((wrapper as HTMLElement).dataset.initialized === 'true') {
+        return;
+      }
+
+      const rollingText = wrapper.querySelector('.rolling-text');
+      if (!rollingText) return;
+
+      const directionAttr = wrapper.getAttribute('data-direction');
+      const reverse = directionAttr === 'right';
+      const duration = parseFloat(
+        wrapper.getAttribute('data-duration') || '10',
+      );
+
+      const tl = roll(rollingText, { duration }, reverse);
+      rolls.push(tl);
+
+      // Mark as initialized
+      (wrapper as HTMLElement).dataset.initialized = 'true';
+    });
+
+    // Create ScrollTrigger to sync direction with scroll
+    if (rolls.length > 0) {
+      (window as any).scrollMarqueeRolls = rolls;
+      (window as any).scrollMarqueeTrigger = ScrollTrigger.create({
+        onUpdate(self) {
+          if (self.direction !== direction) {
+            direction *= -1;
+            gsap.to(rolls, {
+              timeScale: direction,
               overwrite: true,
-            })
-            .to(tl, { timeScale: factor / 2.5, duration: 1 }, '+=0.3');
+            });
+          }
         },
       });
-    });
+    }
   }
 
   // Initialize when DOM is ready
@@ -260,4 +281,16 @@ const instanceId = `scroll-marquee-${Math.random().toString(36).substr(2, 9)}`;
 
   // Re-initialize on Astro page navigation
   document.addEventListener('astro:page-load', initScrollMarquee);
+
+  // Handle window resize globally to reinitialize if needed
+  let globalResizeTimeout: number | null = null;
+  window.addEventListener('resize', () => {
+    if (globalResizeTimeout) {
+      clearTimeout(globalResizeTimeout);
+    }
+    globalResizeTimeout = window.setTimeout(() => {
+      // Reinitialize to handle major layout changes
+      initScrollMarquee();
+    }, 300);
+  });
 </script>

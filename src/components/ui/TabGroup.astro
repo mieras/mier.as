@@ -21,14 +21,36 @@ const {
 const activeTab = defaultTab || tabs[0]?.id || '';
 ---
 
-<div class={`tab-group ${sectionClass} tab-group-${variant}`}>
-  {
-    variant === 'music' ? (
-      <div class="tab-group-tabs-wrapper-music">
+<div class="tab-group-wrapper">
+  <div class={`tab-group ${sectionClass} tab-group-${variant}`}>
+    {
+      variant === 'music' ? (
+        <div class="tab-group-tabs-wrapper-music">
+          <div
+            class={`tab-group-tabs ${sticky ? 'tab-group-tabs-sticky' : ''} tab-group-tabs-${variant}`}
+            role="tablist"
+            aria-label="Tabs"
+            style={`--active-tab-index: ${tabs.findIndex((t) => t.id === activeTab)}; --tab-count: ${tabs.length};`}
+          >
+            <div class="tab-active-indicator" aria-hidden="true" />
+            {tabs.map((tab) => (
+              <button
+                class={`tab-button ${tab.id === activeTab ? 'tab-active' : ''}`}
+                data-tab={tab.id}
+                role="tab"
+                aria-selected={tab.id === activeTab ? 'true' : 'false'}
+                aria-label={tab.ariaLabel || `Show ${tab.label}`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
         <div
           class={`tab-group-tabs ${sticky ? 'tab-group-tabs-sticky' : ''} tab-group-tabs-${variant}`}
           role="tablist"
-          aria-label="Tabs"
+          aria-label={variant === 'work' ? 'Work categories' : 'Tabs'}
           style={`--active-tab-index: ${tabs.findIndex((t) => t.id === activeTab)}; --tab-count: ${tabs.length};`}
         >
           <div class="tab-active-indicator" aria-hidden="true" />
@@ -44,30 +66,10 @@ const activeTab = defaultTab || tabs[0]?.id || '';
             </button>
           ))}
         </div>
-      </div>
-    ) : (
-      <div
-        class={`tab-group-tabs ${sticky ? 'tab-group-tabs-sticky' : ''} tab-group-tabs-${variant}`}
-        role="tablist"
-        aria-label={variant === 'work' ? 'Work categories' : 'Tabs'}
-        style={`--active-tab-index: ${tabs.findIndex((t) => t.id === activeTab)}; --tab-count: ${tabs.length};`}
-      >
-        <div class="tab-active-indicator" aria-hidden="true" />
-        {tabs.map((tab) => (
-          <button
-            class={`tab-button ${tab.id === activeTab ? 'tab-active' : ''}`}
-            data-tab={tab.id}
-            role="tab"
-            aria-selected={tab.id === activeTab ? 'true' : 'false'}
-            aria-label={tab.ariaLabel || `Show ${tab.label}`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-    )
-  }
-  <slot />
+      )
+    }
+    <slot />
+  </div>
 </div>
 
 <script>

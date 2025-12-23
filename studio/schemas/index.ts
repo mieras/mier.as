@@ -19,13 +19,12 @@ import clientsBlock from './blocks/clientsBlock';
 // Documents
 import page from './documents/page';
 import work from './documents/work';
-import client from './documents/client';
-import service from './documents/service';
-import teamMember from './documents/teamMember';
-import career from './documents/career';
+import client from './documents/_client';
+import service from './documents/_service';
+import teamMember from './documents/_teamMember';
+// import career from './documents/_career'; // Not used as reference
 import siteSettings from './documents/siteSettings';
 import photography from './documents/photography';
-import mixtape from './documents/mixtape';
 
 export const schemaTypes = [
   // Objects
@@ -49,11 +48,10 @@ export const schemaTypes = [
   // Documents
   page,
   work,
-  client,
-  service,
-  teamMember,
-  career,
-  siteSettings,
+  client, // Used as reference in work document
+  service, // Used as reference in work and servicesBlock
+  teamMember, // Used as reference in teamBlock
+  // career, // Not used as reference
   photography,
-  mixtape,
+  siteSettings, // Always last
 ];

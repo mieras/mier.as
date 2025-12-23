@@ -39,9 +39,10 @@ const heroIntro = data?.hero?.intro || '';
 const year = data?.year;
 const client = type === 'project' ? project?.client?.title : null;
 const role = type === 'project' ? project?.role : null;
-const location = type === 'photography' && photography
-  ? [photography.city, photography.country].filter(Boolean).join(', ')
-  : null;
+const location =
+  type === 'photography' && photography
+    ? [photography.city, photography.country].filter(Boolean).join(', ')
+    : null;
 const camera = type === 'photography' ? photography?.camera : null;
 ---
 
@@ -66,47 +67,56 @@ const camera = type === 'photography' ? photography?.camera : null;
           stroke="currentColor"
           stroke-width="2"
           stroke-linecap="round"
-          stroke-linejoin="round"
-        />
+          stroke-linejoin="round"></path>
       </svg>
     </button>
 
     <div class="info-panel__body">
-      {heroTitle && <h1 class="info-panel__title">{heroTitle}</h1>}
-      {heroSubtitle && <h2 class="info-panel__subtitle">{heroSubtitle}</h2>}
-      {heroIntro && <p class="info-panel__intro">{heroIntro}</p>}
+      <h1 class="info-panel__title" data-info-title hidden={!heroTitle}>
+        {heroTitle}
+      </h1>
+      <h2 class="info-panel__subtitle" data-info-subtitle hidden={!heroSubtitle}>
+        {heroSubtitle}
+      </h2>
+      <p class="info-panel__intro" data-info-intro hidden={!heroIntro}>
+        {heroIntro}
+      </p>
 
       <dl class="info-panel__meta">
-        {client && (
-          <>
-            <dt>Client</dt>
-            <dd>{client}</dd>
-          </>
-        )}
-        {role && (
-          <>
-            <dt>Role</dt>
-            <dd>{role}</dd>
-          </>
-        )}
-        {year && (
-          <>
-            <dt>Year</dt>
-            <dd>{year}</dd>
-          </>
-        )}
-        {location && (
-          <>
-            <dt>Location</dt>
-            <dd>{location}</dd>
-          </>
-        )}
-        {camera && (
-          <>
-            <dt>Camera</dt>
-            <dd>{camera}</dd>
-          </>
-        )}
+        <dt data-info-label="client" hidden={!client}>
+          Client
+        </dt>
+        <dd data-info-value="client" hidden={!client}>
+          {client}
+        </dd>
+
+        <dt data-info-label="role" hidden={!role}>
+          Role
+        </dt>
+        <dd data-info-value="role" hidden={!role}>
+          {role}
+        </dd>
+
+        <dt data-info-label="year" hidden={!year}>
+          Year
+        </dt>
+        <dd data-info-value="year" hidden={!year}>
+          {year}
+        </dd>
+
+        <dt data-info-label="location" hidden={!location}>
+          Location
+        </dt>
+        <dd data-info-value="location" hidden={!location}>
+          {location}
+        </dd>
+
+        <dt data-info-label="camera" hidden={!camera}>
+          Camera
+        </dt>
+        <dd data-info-value="camera" hidden={!camera}>
+          {camera}
+        </dd>
       </dl>
     </div>
   </div>
@@ -130,65 +140,27 @@ const camera = type === 'photography' ? photography?.camera : null;
       stroke="currentColor"
       stroke-width="2"
       stroke-linecap="round"
-      stroke-linejoin="round"
-    />
+      stroke-linejoin="round"></path>
     <path
       d="M12 16v-4M12 8h.01"
       stroke="currentColor"
       stroke-width="2"
       stroke-linecap="round"
-      stroke-linejoin="round"
-    />
+      stroke-linejoin="round"></path>
   </svg>
 </button>
 
-<script>
-  function initInfoPanel() {
-    const panel = document.querySelector('[data-info-panel]') as HTMLElement;
-    const overlay = document.querySelector('[data-info-overlay]') as HTMLElement;
-    const content = document.querySelector('[data-info-content]') as HTMLElement;
-    const toggle = document.querySelector('[data-info-toggle]') as HTMLElement;
-    const close = document.querySelector('[data-info-close]') as HTMLElement;
-
-    if (!panel || !overlay || !content || !toggle || !close) return;
-
-    function openPanel() {
-      panel.classList.add('is-open');
-      document.body.style.overflow = 'hidden';
-    }
-
-    function closePanel() {
-      panel.classList.remove('is-open');
-      document.body.style.overflow = '';
-    }
-
-    toggle.addEventListener('click', openPanel);
-    close.addEventListener('click', closePanel);
-    overlay.addEventListener('click', closePanel);
-
-    // Close on Escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && panel.classList.contains('is-open')) {
-        closePanel();
-      }
-    });
-  }
-
-  document.addEventListener('astro:page-load', initInfoPanel);
-  if (document.readyState !== 'loading') {
-    initInfoPanel();
-  }
-</script>
-
 <style>
   .info-panel {
-    position: fixed;
+    position: absolute;
     inset: 0;
     z-index: 50;
     pointer-events: none;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
+    transition:
+      opacity 0.3s ease,
+      visibility 0.3s ease;
   }
 
   .info-panel.is-open {
@@ -230,18 +202,40 @@ const camera = type === 'photography' ? photography?.camera : null;
 
   .info-panel__close {
     position: absolute;
-    top: var(--space-m);
-    right: var(--space-m);
-    background: none;
+    bottom: var(--space-m);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(30px);
     border: none;
-    padding: var(--space-xs);
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
     cursor: pointer;
-    color: currentColor;
+    color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: opacity 0.2s ease;
-    z-index: 10;
+    transition:
+      opacity 0.2s ease,
+      visibility 0.2s ease,
+      background-color 0.2s,
+      color 0.2s;
+    z-index: 60;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .info-panel.is-open .info-panel__close {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .info-panel__close:hover {
+    background: rgba(255, 255, 255, 0.2);
   }
 
   .info-panel__close:hover {
@@ -301,8 +295,9 @@ const camera = type === 'photography' ? photography?.camera : null;
 
   .info-panel__toggle {
     position: absolute;
-    top: var(--space-m);
-    right: var(--space-m);
+    bottom: var(--space-m);
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 40;
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(30px);
@@ -315,8 +310,18 @@ const camera = type === 'photography' ? photography?.camera : null;
     justify-content: center;
     cursor: pointer;
     color: #fff;
-    transition: background-color 0.2s, color 0.2s;
+    transition:
+      background-color 0.2s,
+      color 0.2s,
+      opacity 0.2s,
+      visibility 0.2s;
     padding: 0;
+  }
+
+  .info-panel.is-open .info-panel__toggle {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
   }
 
   .info-panel__toggle:hover {
@@ -345,4 +350,3 @@ const camera = type === 'photography' ? photography?.camera : null;
     }
   }
 </style>
-
