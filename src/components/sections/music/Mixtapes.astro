@@ -82,7 +82,7 @@ try {
                   line2={genresText}
                   timestamp={timestamp}
                   variant="ticker-thumbnail"
-                  showPlayButton={false}
+                  showPlayButton={true}
                   mixcloudId={mixcloudId}
                 />
               </div>
@@ -196,28 +196,44 @@ try {
         const mixcloudIconBtn = item.querySelector(
           '.music-mixcloud-icon-btn',
         ) as HTMLElement;
+        const playBtn = item.querySelector(
+          '.music-play-btn, .ticker-play-btn',
+        ) as HTMLElement;
 
         // Reset mixcloud icon button
         if (mixcloudIconBtn) {
           mixcloudIconBtn.setAttribute('data-active', 'false');
           mixcloudIconBtn.setAttribute('data-action', 'play');
         }
+
+        // Reset play button on thumbnail
+        if (playBtn) {
+          playBtn.setAttribute('data-active', 'false');
+          playBtn.setAttribute('data-action', 'play');
+          const playIcon = playBtn.querySelector('.play-icon') as HTMLElement;
+          const pauseIcon = playBtn.querySelector('.pause-icon') as HTMLElement;
+          if (playIcon) playIcon.style.display = '';
+          if (pauseIcon) pauseIcon.style.display = 'none';
+        }
       });
       currentlyPlaying = null;
     };
 
-    // Handle mixcloud icon button clicks
+    // Handle play button clicks (both mixcloud icon and thumbnail play button)
     mixtapeItems.forEach((item) => {
       const mixcloudIconBtn = item.querySelector(
         '.music-mixcloud-icon-btn',
       ) as HTMLElement;
+      const playBtn = item.querySelector(
+        '.music-play-btn, .ticker-play-btn',
+      ) as HTMLElement;
       const mixcloudId = item.getAttribute('data-mixcloud-id');
 
-      if (!mixcloudId || !mixcloudIconBtn) return;
+      if (!mixcloudId) return;
 
-      const handlePlayClick = () => {
-        const isActive = mixcloudIconBtn.getAttribute('data-active') === 'true';
-        const action = mixcloudIconBtn.getAttribute('data-action');
+      const handlePlayClick = (button: HTMLElement) => {
+        const isActive = button.getAttribute('data-active') === 'true';
+        const action = button.getAttribute('data-action');
 
         if (isActive && action === 'pause') {
           // Pause - close embed
@@ -234,13 +250,28 @@ try {
           handleEmbedOpen(mixcloudId);
 
           // Update button state
-          mixcloudIconBtn.setAttribute('data-active', 'true');
-          mixcloudIconBtn.setAttribute('data-action', 'pause');
+          button.setAttribute('data-active', 'true');
+          button.setAttribute('data-action', 'pause');
+          
+          // Update play/pause icons
+          const playIcon = button.querySelector('.play-icon') as HTMLElement;
+          const pauseIcon = button.querySelector('.pause-icon') as HTMLElement;
+          if (playIcon) playIcon.style.display = 'none';
+          if (pauseIcon) pauseIcon.style.display = '';
+
           currentlyPlaying = item as HTMLElement;
         }
       };
 
-      mixcloudIconBtn.addEventListener('click', handlePlayClick);
+      // Handle mixcloud icon button
+      if (mixcloudIconBtn) {
+        mixcloudIconBtn.addEventListener('click', () => handlePlayClick(mixcloudIconBtn));
+      }
+
+      // Handle play button on thumbnail
+      if (playBtn) {
+        playBtn.addEventListener('click', () => handlePlayClick(playBtn));
+      }
     });
 
     // Close button handler
@@ -379,32 +410,46 @@ try {
   /* Navigation arrows */
   .mixtapes-swiper .swiper-button-next,
   .mixtapes-swiper .swiper-button-prev {
-    color: var(--text);
-    width: 44px;
-    height: 44px;
+    color: #ffffff;
+    width: 2rem;
+    height: 2rem;
     margin-top: 0;
     top: 50%;
     transform: translateY(-50%);
-    opacity: 0.7;
+    opacity: 1;
     transition: opacity 0.2s ease;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
   }
 
   .mixtapes-swiper .swiper-button-next:hover,
   .mixtapes-swiper .swiper-button-prev:hover {
-    opacity: 1;
+    opacity: 0.9;
   }
 
   .mixtapes-swiper .swiper-button-prev {
-    left: 0;
+    left: var(--space-s);
   }
 
   .mixtapes-swiper .swiper-button-next {
-    right: 0;
+    right: var(--space-s);
   }
 
   .mixtapes-swiper .swiper-button-next::after,
   .mixtapes-swiper .swiper-button-prev::after {
     display: none;
+  }
+
+  .mixtapes-swiper .swiper-button-next svg,
+  .mixtapes-swiper .swiper-button-prev svg {
+    width: 1rem;
+    height: 1rem;
   }
 
   /* Skeleton styles */

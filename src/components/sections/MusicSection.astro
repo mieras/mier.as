@@ -8,8 +8,8 @@ import TabGroup from '../ui/TabGroup.astro';
 <TabGroup
   tabs={[
     { id: 'now-listening', label: 'Now listening' },
+    { id: 'collections', label: 'Collection' },
     { id: 'mixtapes', label: 'Mixtapes' },
-    { id: 'collections', label: 'Collections' },
   ]}
   defaultTab="now-listening"
   sectionClass="music-section"
@@ -20,14 +20,14 @@ import TabGroup from '../ui/TabGroup.astro';
     <RecentlyPlayed />
   </div>
 
-  <!-- Mixtapes Tab -->
-  <div class="tab-content" data-tab-content="mixtapes">
-    <Mixtapes />
-  </div>
-
   <!-- Collections Tab -->
   <div class="tab-content" data-tab-content="collections">
     <LatestRecords />
+  </div>
+
+  <!-- Mixtapes Tab -->
+  <div class="tab-content" data-tab-content="mixtapes">
+    <Mixtapes />
   </div>
 </TabGroup>
 

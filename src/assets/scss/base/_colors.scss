@@ -22,8 +22,8 @@
   }
 
   /* Design tokens voor Figma design - Light Mode */
-  --color-accent-yellow: #FEEE7B;
-  --color-accent-yellow-oklch: oklch(93.91% 0.137 101.48);
+  --color-accent-yellow: #D5FE1A;
+  --color-accent-yellow-oklch: oklch(0.9367 0.2376 120.93);
   --color-black: #000;
   --color-black-oklch: oklch(0 0 0);
   --color-gray-secondary: #999999;
@@ -46,8 +46,8 @@
   --section-media-bg-oklch: oklch(1 0 0);
   --section-music-bg: #000;
   --section-music-bg-oklch: oklch(0 0 0);
-  --section-footer-bg: #FEEE7B;
-  --section-footer-bg-oklch: oklch(93.91% 0.137 101.48);
+  --section-footer-bg: #D5FE1A;
+  --section-footer-bg-oklch: oklch(0.9367 0.2376 120.93);
 
   /* Light text tokens (altijd wit, voor donkere achtergronden) */
   --text-light: #ffffff;
@@ -73,8 +73,8 @@
   --work-ticker-text-oklch: oklch(0.2 0.01 300);
   --work-tabs-bg: #ffffff;
   --work-tabs-bg-oklch: oklch(1 0 0);
-  --work-tabs-active-bg: #FEEE7B;
-  --work-tabs-active-bg-oklch: oklch(93.91% 0.137 101.48);
+  --work-tabs-active-bg: #D5FE1A;
+  --work-tabs-active-bg-oklch: oklch(0.9367 0.2376 120.93);
   --work-tabs-active-text: #060205;
   --work-tabs-active-text-oklch: oklch(0.15 0.01 300);
   --work-tabs-inactive-text: #060205;
@@ -140,8 +140,8 @@
   --work-ticker-text-oklch: oklch(0.95 0.01 95);
   --work-tabs-bg: #0d0d0d;
   --work-tabs-bg-oklch: oklch(0.15 0 0);
-  --work-tabs-active-bg: #feee7b;
-  --work-tabs-active-bg-oklch: oklch(91.45% 0.13868 95.474);
+  --work-tabs-active-bg: #D5FE1A;
+  --work-tabs-active-bg-oklch: oklch(0.9391 0.1371 101.48);
   --work-tabs-inactive-text: #f1f0ec;
   --work-tabs-inactive-text-oklch: oklch(0.95 0.01 95);
   --work-items-active-bg: #0d0d0d;
@@ -204,3 +204,5 @@
   --cc-footer-color: var(--cc-secondary-color);
   --cc-footer-border-color: #212529;
 }
+
+

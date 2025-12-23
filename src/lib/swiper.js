@@ -91,6 +91,34 @@
           updateIndicators();
         });
         
+        // Set initial indicator - gebruik realIndex voor loop compatibility
+        const updateIndicators = () => {
+          const realIndex = backgroundSwiper.realIndex !== undefined ? backgroundSwiper.realIndex : backgroundSwiper.activeIndex;
+          // Voor loop mode: aantal echte slides (zonder duplicates)
+          const slideCount = backgroundSwiper.params.loop ? 
+            (backgroundSwiper.slides.length - (backgroundSwiper.loopedSlides || 0) * 2) : 
+            backgroundSwiper.slides.length;
+          
+          let numCurrentSlide = realIndex + 1;
+          let currentSlide = numberWithZero(numCurrentSlide);
+
+          let numTotalSlides = slideCount > 0 ? slideCount : backgroundSwiper.slides.length;
+          let totalSlides = numberWithZero(numTotalSlides);
+
+          if (elCurrentIndicator) elCurrentIndicator.textContent = currentSlide;
+          if (elTotalIndicator) elTotalIndicator.textContent = totalSlides;
+        };
+        
+        // Initial update
+        setTimeout(() => {
+          updateIndicators();
+        }, 100);
+
+        // Update bij slide change - gebruik realIndex
+        backgroundSwiper.on("slideChange", function (e) {
+          updateIndicators();
+        });
+        
     }
 
     });

@@ -66,28 +66,6 @@ const hasThumbnail = variant === 'ticker-thumbnail' || variant === 'list';
       )}
       <div class="music-info">
         <span class="music-line1">
-          {mixcloudId && (
-            <button
-              class="music-mixcloud-icon-btn"
-              aria-label={`Play ${line1}`}
-              data-mixcloud-id={mixcloudId}
-              data-action="play"
-              data-active="false"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M14.6663 7.33329V8.66663H13.9997V9.33329H13.333V9.99996H11.9997V10.6666H10.6663V11.3333H9.99967V12H8.66634V12.6666H7.33301V13.3333H6.66634V14H5.33301V14.6666H3.99967V15.3333H1.99967V14.6666H1.33301V1.33329H1.99967V0.666626H3.99967V1.33329H5.33301V1.99996H6.66634V2.66663H7.33301V3.33329H8.66634V3.99996H9.99967V4.66663H10.6663V5.33329H11.9997V5.99996H13.333V6.66663H13.9997V7.33329H14.6663Z"
-                  fill="currentColor"
-                />
-              </svg>
-            </button>
-          )}
           {line1}
         </span>
         {line2 && <span class="music-line2">{line2}</span>}
@@ -209,7 +187,7 @@ const hasThumbnail = variant === 'ticker-thumbnail' || variant === 'list';
   /* Ticker variants */
   .ticker-item {
     flex-shrink: 0;
-    padding-right: var(--space-l);
+    padding: var(--space-s) var(--space-m);
     display: flex;
     align-items: center;
     gap: var(--space-2xs);
@@ -219,8 +197,8 @@ const hasThumbnail = variant === 'ticker-thumbnail' || variant === 'list';
 
   .ticker-thumb-container {
     position: relative;
-    width: 2rem;
-    height: 2rem;
+    width: calc(2rem + var(--space-s));
+    height: calc(2rem + var(--space-s));
     flex-shrink: 0;
     border-radius: var(--space-3xs);
     overflow: hidden;
@@ -280,9 +258,9 @@ const hasThumbnail = variant === 'ticker-thumbnail' || variant === 'list';
   }
 
   .ticker-item .music-line1 {
-    font-size: var(--fs--1);
+    font-size: var(--fs--3);
     font-weight: 600;
-    line-height: 1.2;
+    line-height: 1;
     display: flex;
     align-items: center;
     gap: var(--space-3xs);
@@ -453,24 +431,24 @@ const hasThumbnail = variant === 'ticker-thumbnail' || variant === 'list';
   }
 
   .music-item .music-line1 {
-    font-size: var(--fs-0);
+    font-size: var(--fs--3);
     font-weight: 400;
     margin: 0;
-    line-height: 1.3;
+    line-height: 1;
     flex: 1;
     color: #ffffff;
   }
 
   .music-item .music-line2 {
-    font-size: var(--fs--1);
+    font-size: var(--fs--2);
     opacity: 0.7;
     font-weight: 300;
-    line-height: 1.4;
+    line-height: 1;
     color: #ffffff;
   }
 
   .music-item .music-timestamp {
-    font-size: var(--fs--1);
+    font-size: var(--fs--2);
     opacity: 0.6;
     font-weight: 300;
     color: rgba(255, 255, 255, 0.6);
