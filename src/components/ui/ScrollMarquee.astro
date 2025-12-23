@@ -64,8 +64,9 @@ const instanceId = `scroll-marquee-${Math.random().toString(36).substr(2, 9)}`;
 
 <script>
   import { gsap } from 'gsap';
-  // @ts-ignore - Observer import case sensitivity issue
-  import { Observer } from 'gsap/observer';
+  // Official GSAP import path for Observer plugin
+  // @ts-ignore - Case sensitivity issue with GSAP types (Observer.d.ts vs observer.d.ts)
+  import { Observer } from 'gsap/Observer';
 
   gsap.registerPlugin(Observer);
 
