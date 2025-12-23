@@ -425,16 +425,21 @@ export const PROJECT_BY_SLUG_QUERY = `*[_type == "work" && slug.current == $slug
   },
   projectMedia[] {
     _key,
-    image {
-      ...,
-      asset->,
-      crop,
-      hotspot
-    },
-    video {
-      ...,
-      asset->
-    }
+    _type,
+    ...(_type == "imageSlide" => {
+      image {
+        ...,
+        asset->,
+        crop,
+        hotspot
+      }
+    }),
+    ...(_type == "videoSlide" => {
+      video {
+        ...,
+        asset->
+      }
+    })
   },
   seo {
     _type,

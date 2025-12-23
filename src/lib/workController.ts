@@ -123,11 +123,14 @@ export class WorkController {
       this.handlePopState(e.state);
     });
 
-    // Check for deep link on init
-    this.handleDeepLink();
-
-    // Initialize with default tab
+    // Initialize with default tab first
     this.setTab('design');
+
+    // Then check for deep link (after tabs are set)
+    // This ensures the correct tab is active before checking deep links
+    setTimeout(() => {
+      this.handleDeepLink();
+    }, 0);
   }
 
   private clearActiveRow() {

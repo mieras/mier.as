@@ -92,28 +92,15 @@ export default defineType({
       of: [
         {
           type: 'object',
-          name: 'mediaSlide',
-          title: 'Media Slide',
+          name: 'imageSlide',
+          title: 'Image',
           fields: [
-            defineField({
-              name: 'mediaType',
-              type: 'string',
-              title: 'Media Type',
-              description: 'Choose whether this slide contains an image or video',
-              options: {
-                list: [
-                  { title: 'Image', value: 'image' },
-                  { title: 'Video (MP4)', value: 'video' },
-                ],
-              },
-              initialValue: 'image',
-              validation: (Rule) => Rule.required(),
-            }),
             defineField({
               name: 'image',
               type: 'image',
               title: 'Image',
               options: { hotspot: true },
+              validation: (Rule) => Rule.required(),
               fields: [
                 defineField({
                   name: 'alt',
@@ -121,8 +108,25 @@ export default defineType({
                   title: 'Alt Text',
                 }),
               ],
-              hidden: ({ parent }) => parent?.mediaType !== 'image',
             }),
+          ],
+          preview: {
+            select: {
+              image: 'image',
+            },
+            prepare({ image }) {
+              return {
+                title: 'Image Slide',
+                media: image,
+              };
+            },
+          },
+        },
+        {
+          type: 'object',
+          name: 'videoSlide',
+          title: 'Video (MP4)',
+          fields: [
             defineField({
               name: 'video',
               type: 'file',
@@ -131,36 +135,20 @@ export default defineType({
               options: {
                 accept: 'video/mp4',
               },
-              hidden: ({ parent }) => parent?.mediaType !== 'video',
+              validation: (Rule) => Rule.required(),
             }),
           ],
           preview: {
             select: {
-              mediaType: 'mediaType',
-              image: 'image',
               video: 'video',
             },
-            prepare({ mediaType, image, video }) {
+            prepare({ video }) {
               return {
-                title: mediaType === 'video' ? 'Video Slide' : 'Image Slide',
-                media: image || video,
+                title: 'Video Slide',
+                media: video,
               };
             },
           },
-          validation: (Rule) =>
-            Rule.custom((value) => {
-              if (!value) return true;
-              if (!value.mediaType) {
-                return 'Media type is required';
-              }
-              if (value.mediaType === 'image' && !value.image) {
-                return 'Image is required when media type is image';
-              }
-              if (value.mediaType === 'video' && !value.video) {
-                return 'Video is required when media type is video';
-              }
-              return true;
-            }),
         },
       ],
       group: 'content',

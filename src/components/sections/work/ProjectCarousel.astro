@@ -26,7 +26,7 @@ const slides = projectMedia.map((slide) => {
   let imageAlt = '';
   let videoUrl = '';
 
-  if (slide.image?.asset) {
+  if (slide._type === 'imageSlide' && slide.image?.asset) {
     try {
       imageUrl = urlForImage(slide.image)?.width(1920).height(1080).url() || '';
       imageAlt = slide.image.alt || '';
@@ -35,14 +35,13 @@ const slides = projectMedia.map((slide) => {
         console.warn('⚠️ Failed to generate image URL:', error);
       }
     }
-  }
-
-  if (slide.video?.asset?.url) {
+  } else if (slide._type === 'videoSlide' && slide.video?.asset?.url) {
     videoUrl = slide.video.asset.url;
   }
 
   return {
     _key: slide._key,
+    _type: slide._type,
     imageUrl,
     imageAlt,
     videoUrl,

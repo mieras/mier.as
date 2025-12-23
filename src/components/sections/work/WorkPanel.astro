@@ -382,43 +382,42 @@ const {
 </style>
 
 <script>
-  // Handle panel mode switching
-  const workSection = document.querySelector('#work');
-  if (workSection) {
-    workSection.addEventListener('work-panel-mode-change', ((
-      e: CustomEvent,
-    ) => {
-      const { mode, slug } = e.detail;
-      const panel = document.querySelector('.work__right') as HTMLElement;
-      const detailContainer = panel?.querySelector(
-        '[data-detail-container]',
-      ) as HTMLElement;
+  // Function to load project media
+  function loadProjectMedia(
+    mode: string,
+    slug: string | undefined,
+    projectType: string,
+  ) {
+    if (!slug) return;
 
-      if (!panel || !detailContainer) return;
+    const panel = document.querySelector('.work__right') as HTMLElement;
+    const detailContainer = panel?.querySelector(
+      '[data-detail-container]',
+    ) as HTMLElement;
 
-      if (mode === 'detail' && slug) {
-        const projectType =
-          panel.getAttribute('data-project-type') || 'project';
-        const apiUrl =
-          projectType === 'photography'
-            ? `/api/photography/${slug}.json`
-            : `/api/work/${slug}.json`;
+    if (!panel || !detailContainer) return;
 
-        // Fetch project/photography detail data
-        fetch(apiUrl)
-          .then((res) => {
-            if (!res.ok)
-              throw new Error(`Failed to load ${projectType}: ${res.status}`);
-            return res.json();
-          })
-          .then((data) => {
-            if (data && detailContainer) {
-              // Build carousel HTML
-              const projectMedia = data.projectMedia || [];
-              const slidesHtml = projectMedia
-                .map((slide: any) => {
-                  if (slide.video?.url) {
-                    return `
+    if (mode === 'detail' && slug) {
+      const apiUrl =
+        projectType === 'photography'
+          ? `/api/photography/${slug}.json`
+          : `/api/work/${slug}.json`;
+
+      // Fetch project/photography detail data
+      fetch(apiUrl)
+        .then((res) => {
+          if (!res.ok)
+            throw new Error(`Failed to load ${projectType}: ${res.status}`);
+          return res.json();
+        })
+        .then((data) => {
+          if (data && detailContainer) {
+            // Build carousel HTML
+            const projectMedia = data.projectMedia || [];
+            const slidesHtml = projectMedia
+              .map((slide: any) => {
+                if (slide._type === 'videoSlide' && slide.video?.url) {
+                  return `
                     <div class="swiper-slide" role="listitem" data-slide-key="${slide._key || ''}">
                       <div class="project-carousel__video-wrapper">
                         <video
@@ -433,8 +432,8 @@ const {
                       </div>
                     </div>
                   `;
-                  } else if (slide.image?.url) {
-                    return `
+                } else if (slide._type === 'imageSlide' && slide.image?.url) {
+                  return `
                     <div class="swiper-slide" role="listitem" data-slide-key="${slide._key || ''}">
                       <div class="project-carousel__image-wrapper">
                         <img
@@ -447,15 +446,15 @@ const {
                       </div>
                     </div>
                   `;
-                  }
-                  return '';
-                })
-                .filter(Boolean)
-                .join('');
+                }
+                return '';
+              })
+              .filter(Boolean)
+              .join('');
 
-              const carouselHtml =
-                projectMedia.length > 0
-                  ? `
+            const carouselHtml =
+              projectMedia.length > 0
+                ? `
                 <div class="project-carousel" data-project-id="${data._id || ''}">
                   <div class="project-carousel__swiper swiper">
                     <div class="swiper-wrapper" role="list">
@@ -490,27 +489,27 @@ const {
                   </div>
                 </div>
               `
-                  : `
+                : `
                 <div class="project-carousel__empty">
                   <p>No media available</p>
                 </div>
               `;
 
-              // Build info panel HTML
-              const heroTitle = data.hero?.title || data.title || '';
-              const heroSubtitle = data.hero?.subtitle || '';
-              const heroIntro = data.hero?.intro || '';
-              const year = data.year;
-              const client =
-                projectType === 'project' ? data.client?.title : null;
-              const role = projectType === 'project' ? data.role : null;
-              const location =
-                projectType === 'photography' && data.city && data.country
-                  ? `${data.city}, ${data.country}`
-                  : null;
-              const camera = projectType === 'photography' ? data.camera : null;
+            // Build info panel HTML
+            const heroTitle = data.hero?.title || data.title || '';
+            const heroSubtitle = data.hero?.subtitle || '';
+            const heroIntro = data.hero?.intro || '';
+            const year = data.year;
+            const client =
+              projectType === 'project' ? data.client?.title : null;
+            const role = projectType === 'project' ? data.role : null;
+            const location =
+              projectType === 'photography' && data.city && data.country
+                ? `${data.city}, ${data.country}`
+                : null;
+            const camera = projectType === 'photography' ? data.camera : null;
 
-              const infoPanelHtml = `
+            const infoPanelHtml = `
                 <div class="info-panel" data-info-panel>
                   <div class="info-panel__overlay" data-info-overlay></div>
                   <div class="info-panel__content" data-info-content>
@@ -541,110 +540,138 @@ const {
                 </button>
               `;
 
-              detailContainer.innerHTML = `
+            detailContainer.innerHTML = `
                 <div class="work__detail" data-detail role="region" aria-label="${projectType === 'project' ? 'Project' : 'Photography'} detail: ${data.title || ''}" aria-live="polite">
                   ${carouselHtml}
                   ${infoPanelHtml}
                 </div>
               `;
 
-              // Initialize carousel
-              if (projectMedia.length > 0) {
-                import('swiper').then(({ default: Swiper }) => {
-                  import('swiper/modules').then(({ Navigation }) => {
-                    const swiperEl = detailContainer.querySelector(
-                      '.project-carousel__swiper',
-                    ) as HTMLElement;
-                    const prevButton = detailContainer.querySelector(
-                      '.project-carousel__button--prev',
-                    ) as HTMLElement;
-                    const nextButton = detailContainer.querySelector(
-                      '.project-carousel__button--next',
-                    ) as HTMLElement;
+            // Initialize carousel
+            if (projectMedia.length > 0) {
+              import('swiper').then(({ default: Swiper }) => {
+                import('swiper/modules').then(({ Navigation }) => {
+                  const swiperEl = detailContainer.querySelector(
+                    '.project-carousel__swiper',
+                  ) as HTMLElement;
+                  const prevButton = detailContainer.querySelector(
+                    '.project-carousel__button--prev',
+                  ) as HTMLElement;
+                  const nextButton = detailContainer.querySelector(
+                    '.project-carousel__button--next',
+                  ) as HTMLElement;
 
-                    if (swiperEl && projectMedia.length > 1) {
-                      new Swiper(swiperEl, {
-                        modules: [Navigation],
-                        navigation: {
-                          nextEl: nextButton,
-                          prevEl: prevButton,
-                        },
-                        loop: false,
-                        speed: 600,
-                        keyboard: {
-                          enabled: true,
-                        },
-                      });
-                    }
-                  });
-                });
-              }
-
-              // Initialize info panel
-              const infoPanel = detailContainer.querySelector(
-                '[data-info-panel]',
-              ) as HTMLElement;
-              const infoOverlay = detailContainer.querySelector(
-                '[data-info-overlay]',
-              ) as HTMLElement;
-              const infoContent = detailContainer.querySelector(
-                '[data-info-content]',
-              ) as HTMLElement;
-              const infoToggle = detailContainer.querySelector(
-                '[data-info-toggle]',
-              ) as HTMLElement;
-              const infoClose = detailContainer.querySelector(
-                '[data-info-close]',
-              ) as HTMLElement;
-
-              if (
-                infoPanel &&
-                infoOverlay &&
-                infoContent &&
-                infoToggle &&
-                infoClose
-              ) {
-                function openInfoPanel() {
-                  infoPanel.classList.add('is-open');
-                  document.body.style.overflow = 'hidden';
-                }
-
-                function closeInfoPanel() {
-                  infoPanel.classList.remove('is-open');
-                  document.body.style.overflow = '';
-                }
-
-                infoToggle.addEventListener('click', openInfoPanel);
-                infoClose.addEventListener('click', closeInfoPanel);
-                infoOverlay.addEventListener('click', closeInfoPanel);
-
-                document.addEventListener('keydown', (e) => {
-                  if (
-                    e.key === 'Escape' &&
-                    infoPanel.classList.contains('is-open')
-                  ) {
-                    closeInfoPanel();
+                  if (swiperEl && projectMedia.length > 1) {
+                    new Swiper(swiperEl, {
+                      modules: [Navigation],
+                      navigation: {
+                        nextEl: nextButton,
+                        prevEl: prevButton,
+                      },
+                      loop: false,
+                      speed: 600,
+                      keyboard: {
+                        enabled: true,
+                      },
+                    });
                   }
                 });
-              }
+              });
             }
-          })
-          .catch((err) => {
-            console.error(`Failed to load ${projectType} detail:`, err);
-            if (detailContainer) {
-              detailContainer.innerHTML = `
+
+            // Initialize info panel
+            const infoPanel = detailContainer.querySelector(
+              '[data-info-panel]',
+            ) as HTMLElement;
+            const infoOverlay = detailContainer.querySelector(
+              '[data-info-overlay]',
+            ) as HTMLElement;
+            const infoContent = detailContainer.querySelector(
+              '[data-info-content]',
+            ) as HTMLElement;
+            const infoToggle = detailContainer.querySelector(
+              '[data-info-toggle]',
+            ) as HTMLElement;
+            const infoClose = detailContainer.querySelector(
+              '[data-info-close]',
+            ) as HTMLElement;
+
+            if (
+              infoPanel &&
+              infoOverlay &&
+              infoContent &&
+              infoToggle &&
+              infoClose
+            ) {
+              function openInfoPanel() {
+                infoPanel.classList.add('is-open');
+                document.body.style.overflow = 'hidden';
+              }
+
+              function closeInfoPanel() {
+                infoPanel.classList.remove('is-open');
+                document.body.style.overflow = '';
+              }
+
+              infoToggle.addEventListener('click', openInfoPanel);
+              infoClose.addEventListener('click', closeInfoPanel);
+              infoOverlay.addEventListener('click', closeInfoPanel);
+
+              document.addEventListener('keydown', (e) => {
+                if (
+                  e.key === 'Escape' &&
+                  infoPanel.classList.contains('is-open')
+                ) {
+                  closeInfoPanel();
+                }
+              });
+            }
+          }
+        })
+        .catch((err) => {
+          console.error(`Failed to load ${projectType} detail:`, err);
+          if (detailContainer) {
+            detailContainer.innerHTML = `
                 <div class="work__detail-error">
                   <p>Failed to load ${projectType} details.</p>
                 </div>
               `;
-            }
-          });
-      } else {
-        // Clear detail content
-        if (detailContainer) {
-          detailContainer.innerHTML = '';
-        }
+          }
+        });
+    } else {
+      // Clear detail content
+      if (detailContainer) {
+        detailContainer.innerHTML = '';
       }
-    }) as EventListener);
+    }
   }
+
+  // Handle panel mode switching
+  const workSection = document.querySelector('#work');
+  if (workSection) {
+    workSection.addEventListener('work-panel-mode-change', (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const { mode, slug, type } = customEvent.detail;
+      const projectType = type || 'project';
+      loadProjectMedia(mode, slug, projectType);
+    });
+  }
+
+  // Also listen for astro:page-load to handle View Transitions
+  document.addEventListener('astro:page-load', () => {
+    // Check if we're on a work/photography detail page
+    const path = window.location.pathname;
+    const workMatch = path.match(/^\/work\/([^/]+)$/);
+    const photoMatch = path.match(/^\/photography\/([^/]+)$/);
+
+    if (workMatch || photoMatch) {
+      const slug = workMatch?.[1] || photoMatch?.[1];
+      const projectType = workMatch ? 'project' : 'photography';
+
+      // Wait a bit for workController to initialize
+      setTimeout(() => {
+        loadProjectMedia('detail', slug, projectType);
+      }, 100);
+    }
+  });
 </script>

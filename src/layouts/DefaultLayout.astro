@@ -4,6 +4,7 @@ import '../assets/scss/globals.scss';
 import '@fontsource-variable/geist/index.css';
 import '@fontsource-variable/geist-mono/index.css';
 import '@fontsource/tiktok-sans/index.css';
+import { ViewTransitions } from 'astro:transitions';
 import SiteMeta from '../components/SiteMeta.astro';
 import SiteNavigation from '../components/SiteNavigation.astro';
 import CookieConsent from '../components/CookieConsent.astro';
@@ -42,6 +43,7 @@ const primaryMenu = menus.nodes[0];
 
 <html lang="en" dir="ltr">
   <head>
+    <ViewTransitions />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />

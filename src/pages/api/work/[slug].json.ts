@@ -30,8 +30,8 @@ export async function GET({ params }: { params: { slug: string } }) {
               _key: slide._key,
             };
 
-            // Process image
-            if (slide.image?.asset) {
+            // Process based on _type
+            if (slide._type === 'imageSlide' && slide.image?.asset) {
               processedSlide.image = {
                 ...slide.image,
                 url:
@@ -39,10 +39,7 @@ export async function GET({ params }: { params: { slug: string } }) {
                   null,
                 alt: slide.image.alt || '',
               };
-            }
-
-            // Process video
-            if (slide.video?.asset) {
+            } else if (slide._type === 'videoSlide' && slide.video?.asset) {
               // Get video URL from Sanity asset
               const videoAsset = slide.video.asset;
               let videoUrl = null;

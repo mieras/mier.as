@@ -81,14 +81,15 @@ export default defineType({
       of: [
         {
           type: 'object',
-          name: 'mediaSlide',
-          title: 'Media Slide',
+          name: 'imageSlide',
+          title: 'Image',
           fields: [
             defineField({
               name: 'image',
               type: 'image',
               title: 'Image',
               options: { hotspot: true },
+              validation: (Rule) => Rule.required(),
               fields: [
                 defineField({
                   name: 'alt',
@@ -97,6 +98,24 @@ export default defineType({
                 }),
               ],
             }),
+          ],
+          preview: {
+            select: {
+              image: 'image',
+            },
+            prepare({ image }) {
+              return {
+                title: 'Image Slide',
+                media: image,
+              };
+            },
+          },
+        },
+        {
+          type: 'object',
+          name: 'videoSlide',
+          title: 'Video (MP4)',
+          fields: [
             defineField({
               name: 'video',
               type: 'file',
@@ -105,33 +124,20 @@ export default defineType({
               options: {
                 accept: 'video/mp4',
               },
+              validation: (Rule) => Rule.required(),
             }),
           ],
           preview: {
             select: {
-              image: 'image',
               video: 'video',
             },
-            prepare({ image, video }) {
+            prepare({ video }) {
               return {
-                title: video ? 'Video Slide' : 'Image Slide',
-                media: image || video,
+                title: 'Video Slide',
+                media: video,
               };
             },
           },
-          validation: (Rule) =>
-            Rule.custom((value) => {
-              if (!value) return true;
-              const hasImage = !!value.image;
-              const hasVideo = !!value.video;
-              if (!hasImage && !hasVideo) {
-                return 'Either image or video is required';
-              }
-              if (hasImage && hasVideo) {
-                return 'Only one media type per slide (image OR video)';
-              }
-              return true;
-            }),
         },
       ],
     }),

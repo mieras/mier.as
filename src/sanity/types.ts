@@ -112,6 +112,7 @@ export interface SanityProject {
   relatedProjects?: SanityProject[];
   projectMedia?: Array<{
     _key: string;
+    _type: 'imageSlide' | 'videoSlide';
     image?: SanityImage;
     video?: SanityFile;
   }>;
@@ -390,6 +391,7 @@ export interface SanityPhotography {
   thumbnail?: SanityImage;
   projectMedia?: Array<{
     _key: string;
+    _type: 'imageSlide' | 'videoSlide';
     image?: SanityImage;
     video?: SanityFile;
   }>;
