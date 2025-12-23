@@ -50,7 +50,8 @@ if (import.meta.env.DEV) {
 >
 </div>
 
-<script client:load>
+<script>
+  // @ts-nocheck
   // Import Three.js and postprocessing from ESM.sh
   Promise.all([
     import('https://esm.sh/three@0.175.0'),
