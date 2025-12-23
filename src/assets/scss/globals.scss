@@ -1,16 +1,15 @@
 // | -------------------------------------------------------------
 // | Globals
 // | -------------------------------------------------------------
+// | Import volgorde is belangrijk: reset → root → colors → tokens → utopia → font → typography → grid → layout → default
 
 @use 'base/reset';
 @use 'base/root';
+@use 'base/colors';
+@use 'base/tokens';
+@use 'base/utopia';
 @use 'base/font';
-@use 'base/list';
-@use 'base/container';
-@use 'base/breakpoint';
-@use 'base/button';
-// @use 'base/color'; // Verwijderd - kleuren worden nu in default.css gedefinieerd
-@use 'base/outline';
-@use 'base/space-content';
-@use 'base/utopia-spacing';
-@use 'base/utopia-type';
+@use 'base/typography';
+@use 'base/grid';
+@use 'base/layout';
+@use 'base/default';

@@ -4,6 +4,7 @@ import { urlForImage } from '../../../sanity/lib/image';
 type Project = {
   _id: string;
   title: string;
+  slug?: string;
   year?: number;
   subtitle?: string;
   intro?: string;
@@ -116,7 +117,7 @@ const dataId =
   }
 
   .work-item:hover {
-    background: transparent;
+    background: var(--work-items-hover-bg);
   }
 
   .work-item.is-active {

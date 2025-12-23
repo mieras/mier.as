@@ -1,0 +1,79 @@
+---
+import { urlForImage } from '../../../sanity/lib/image';
+import BlockRenderer from '../../BlockRenderer.astro';
+
+type Project = {
+  _id: string;
+  title: string;
+  slug?: string;
+  content?: any[];
+  hero?: {
+    coverMedia?: any;
+  };
+};
+
+type Props = {
+  project?: Project;
+};
+
+const { project } = Astro.props;
+
+const coverImageUrl = project?.hero?.coverMedia?.asset
+  ? urlForImage(project.hero.coverMedia)?.width(1920).height(1080).url()
+  : null;
+---
+
+<div
+  class="work__detail"
+  data-detail
+  role="region"
+  aria-label={`Project detail: ${project?.title || ''}`}
+  aria-live="polite"
+>
+  {
+    coverImageUrl && (
+      <div class="work__detail-hero">
+        <img
+          src={coverImageUrl}
+          alt={project?.title || 'Project hero image'}
+          loading="lazy"
+          decoding="async"
+        />
+      </div>
+    )
+  }
+
+  {
+    project?.content && project.content.length > 0 && (
+      <div class="work__detail-content">
+        <BlockRenderer prefix="ProjectContent" blocks={project.content} />
+      </div>
+    )
+  }
+</div>
+
+<style>
+  .work__detail {
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    background: var(--section-work-bg);
+  }
+
+  .work__detail-hero {
+    width: 100%;
+    height: auto;
+    overflow: hidden;
+  }
+
+  .work__detail-hero img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    display: block;
+  }
+
+  .work__detail-content {
+    padding: var(--space-m);
+  }
+</style>

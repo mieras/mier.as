@@ -1,0 +1,660 @@
+---
+import { urlForImage } from '../../sanity/lib/image';
+
+type HeroMedia = {
+  mediaType: 'image' | 'video';
+  image?: any;
+  videoUrl?: string;
+};
+
+type Props = {
+  heroMedia?: HeroMedia;
+};
+
+const { heroMedia } = Astro.props;
+
+// Debug logging
+if (import.meta.env.DEV) {
+  console.log('🎨 HeroMediaThree props:', {
+    hasHeroMedia: !!heroMedia,
+    mediaType: heroMedia?.mediaType,
+    hasImage: !!heroMedia?.image,
+    imageAsset: !!heroMedia?.image?.asset,
+    videoUrl: heroMedia?.videoUrl,
+  });
+}
+
+// Get image URL if media type is image
+const imageUrl =
+  heroMedia?.mediaType === 'image' && heroMedia?.image?.asset
+    ? urlForImage(heroMedia.image)?.width(1920).height(1080).url()
+    : null;
+
+// Get video URL if media type is video
+const videoUrl = heroMedia?.mediaType === 'video' ? heroMedia?.videoUrl : null;
+
+if (import.meta.env.DEV) {
+  console.log('🖼️ HeroMediaThree URLs:', {
+    imageUrl,
+    videoUrl,
+    hasImageUrl: !!imageUrl,
+    hasVideoUrl: !!videoUrl,
+  });
+}
+---
+
+<div
+  class="hero-media-three"
+  data-image-url={imageUrl || ''}
+  data-video-url={videoUrl || ''}
+>
+</div>
+
+<script>
+  // @ts-nocheck
+  // Import Three.js and postprocessing from ESM.sh
+  Promise.all([
+    import('https://esm.sh/three@0.175.0'),
+    import(
+      'https://esm.sh/three@0.175.0/examples/jsm/postprocessing/EffectComposer.js'
+    ),
+    import(
+      'https://esm.sh/three@0.175.0/examples/jsm/postprocessing/RenderPass.js'
+    ),
+    import(
+      'https://esm.sh/three@0.175.0/examples/jsm/postprocessing/UnrealBloomPass.js'
+    ),
+    import(
+      'https://esm.sh/three@0.175.0/examples/jsm/postprocessing/ShaderPass.js'
+    ),
+  ])
+    .then(
+      ([
+        THREE,
+        EffectComposerModule,
+        RenderPassModule,
+        UnrealBloomPassModule,
+        ShaderPassModule,
+      ]) => {
+        // Handle different export formats from ESM.sh
+        const THREE_NS = THREE.default || THREE;
+        const { EffectComposer } =
+          EffectComposerModule.default || EffectComposerModule;
+        const { RenderPass } = RenderPassModule.default || RenderPassModule;
+        const { UnrealBloomPass } =
+          UnrealBloomPassModule.default || UnrealBloomPassModule;
+        const { ShaderPass } = ShaderPassModule.default || ShaderPassModule;
+
+        // Wait a bit for the container to be in the DOM
+        setTimeout(() => {
+          // Get container element
+          const container = document.querySelector('.hero-media-three');
+          if (!container) {
+            console.warn('HeroMediaThree: Container element not found');
+            return;
+          }
+
+          let imageUrl = container.dataset.imageUrl || '';
+          const videoUrl = container.dataset.videoUrl || '';
+
+          // For testing: use local image in development if CORS issues occur
+          // You can also manually set this to test with local images
+          const USE_LOCAL_TEST_IMAGE = true; // Set to true to force local test image
+
+          if (USE_LOCAL_TEST_IMAGE && !videoUrl) {
+            imageUrl = '/images/91747c72c0c22f55ccde5a2c87ecc8134fb52bf8.png';
+            console.log(
+              '🧪 HeroMediaThree: Using local test image for development',
+            );
+          }
+
+          console.log('🎨 HeroMediaThree script loaded:', {
+            hasContainer: !!container,
+            imageUrl,
+            videoUrl,
+            hasImageUrl: !!imageUrl,
+            hasVideoUrl: !!videoUrl,
+          });
+
+          if (!imageUrl && !videoUrl) {
+            console.warn('HeroMediaThree: No image or video URL provided');
+            return;
+          }
+
+          // Scene setup
+          const scene = new THREE_NS.Scene();
+          const camera = new THREE_NS.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+          camera.position.z = 1;
+
+          // Add ambient light for MeshStandardMaterial
+          const ambientLight = new THREE_NS.AmbientLight(0xffffff, 1.0);
+          scene.add(ambientLight);
+
+          // Get container dimensions
+          const getContainerSize = () => {
+            const rect = container.getBoundingClientRect();
+            return {
+              width: rect.width || window.innerWidth,
+              height: rect.height || window.innerHeight,
+            };
+          };
+
+          const { width, height } = getContainerSize();
+
+          // Renderer setup
+          const renderer = new THREE_NS.WebGLRenderer({
+            antialias: true,
+            alpha: true,
+            powerPreference: 'high-performance',
+          });
+          renderer.setSize(width, height);
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+          container.appendChild(renderer.domElement);
+
+          // Create plane geometry for fullscreen quad
+          const geometry = new THREE_NS.PlaneGeometry(2, 2);
+          let material = null;
+          let texture = null;
+          let videoElement = null;
+          let meshAdded = false;
+
+          if (imageUrl) {
+            // Function to load texture from image URL
+            const loadTexture = (url, useCrossOrigin = true) => {
+              const img = document.createElement('img');
+              if (useCrossOrigin) {
+                img.crossOrigin = 'anonymous';
+              }
+
+              img.onload = () => {
+                // Create texture from loaded image
+                texture = new THREE_NS.Texture(img);
+                texture.minFilter = THREE_NS.LinearFilter;
+                texture.magFilter = THREE_NS.LinearFilter;
+                texture.needsUpdate = true;
+
+                // Calculate aspect ratios for object-fit: cover behavior
+                const imageAspect = img.width / img.height;
+                const containerAspect = width / height;
+
+                // Apply object-fit: cover - scale to cover entire area, crop if needed
+                if (imageAspect > containerAspect) {
+                  // Image is wider than container - fit to height, crop width
+                  texture.repeat.set(containerAspect / imageAspect, 1);
+                  texture.offset.set(
+                    (1 - containerAspect / imageAspect) / 2,
+                    0,
+                  );
+                } else {
+                  // Image is taller than container - fit to width, crop height
+                  texture.repeat.set(1, imageAspect / containerAspect);
+                  texture.offset.set(
+                    0,
+                    (1 - imageAspect / containerAspect) / 2,
+                  );
+                }
+
+                // Use MeshStandardMaterial with emissive for better bloom effect
+                material = new THREE_NS.MeshStandardMaterial({
+                  map: texture,
+                  emissive: 0xffffff,
+                  emissiveIntensity: 0.3, // Add emissive glow
+                  emissiveMap: texture, // Use same texture for emissive
+                });
+                const mesh = new THREE_NS.Mesh(geometry, material);
+                scene.add(mesh);
+                meshAdded = true;
+                console.log(
+                  '✅ HeroMediaThree: Image texture loaded and mesh added with object-fit: cover',
+                );
+              };
+
+              img.onerror = (error) => {
+                if (useCrossOrigin && url.startsWith('http')) {
+                  // Try without crossOrigin for remote images
+                  console.warn(
+                    'HeroMediaThree: CORS error, trying without crossOrigin',
+                  );
+                  loadTexture(url, false);
+                } else if (url.startsWith('http')) {
+                  // Remote image failed, try local test image
+                  console.warn(
+                    'HeroMediaThree: Remote image failed, using local test image',
+                  );
+                  loadTexture(
+                    '/images/91747c72c0c22f55ccde5a2c87ecc8134fb52bf8.png',
+                    false,
+                  );
+                } else {
+                  console.error(
+                    'HeroMediaThree: Error loading image texture',
+                    error,
+                  );
+                }
+              };
+
+              img.src = url;
+            };
+
+            // Start loading the image
+            loadTexture(imageUrl, true);
+          } else if (videoUrl) {
+            // Create video element and texture
+            videoElement = document.createElement('video');
+            videoElement.src = videoUrl;
+            videoElement.loop = true;
+            videoElement.muted = true;
+            videoElement.playsInline = true;
+            videoElement.autoplay = true;
+
+            videoElement.addEventListener('loadeddata', () => {
+              console.log('✅ HeroMediaThree: Video loaded');
+            });
+
+            videoElement.play().catch((err) => {
+              console.warn('HeroMediaThree: Video autoplay failed', err);
+            });
+
+            texture = new THREE_NS.VideoTexture(videoElement);
+            texture.minFilter = THREE_NS.LinearFilter;
+            texture.magFilter = THREE_NS.LinearFilter;
+
+            // Function to apply object-fit: cover for video
+            const applyVideoCover = () => {
+              if (videoElement.videoWidth && videoElement.videoHeight) {
+                const videoAspect =
+                  videoElement.videoWidth / videoElement.videoHeight;
+                const containerAspect = width / height;
+
+                if (videoAspect > containerAspect) {
+                  // Video is wider than container - fit to height, crop width
+                  texture.repeat.set(containerAspect / videoAspect, 1);
+                  texture.offset.set(
+                    (1 - containerAspect / videoAspect) / 2,
+                    0,
+                  );
+                } else {
+                  // Video is taller than container - fit to width, crop height
+                  texture.repeat.set(1, videoAspect / containerAspect);
+                  texture.offset.set(
+                    0,
+                    (1 - videoAspect / containerAspect) / 2,
+                  );
+                }
+              }
+            };
+
+            // Apply cover when video metadata is loaded
+            videoElement.addEventListener('loadedmetadata', applyVideoCover);
+
+            // Use MeshStandardMaterial with emissive for better bloom effect
+            material = new THREE_NS.MeshStandardMaterial({
+              map: texture,
+              emissive: 0xffffff,
+              emissiveIntensity: 0.3,
+              emissiveMap: texture,
+            });
+            const mesh = new THREE_NS.Mesh(geometry, material);
+            scene.add(mesh);
+            meshAdded = true;
+            console.log(
+              '✅ HeroMediaThree: Video texture created and mesh added',
+            );
+          }
+
+          // Post-processing setup
+          const composer = new EffectComposer(renderer);
+          const renderPass = new RenderPass(scene, camera);
+          composer.addPass(renderPass);
+
+          // Add bloom effect - using example values
+          const bloomPass = new UnrealBloomPass(
+            new THREE_NS.Vector2(width, height),
+            0.1, // bloomStrength - base strength from example
+            0.4, // bloomRadius - from example
+            0.2, // bloomThreshold - from example
+          );
+          composer.addPass(bloomPass);
+
+          // Grain effect parameters - using example values
+          const grainParams = {
+            grainStrength: 0.02, // Grain intensity from example
+            grainSpeed: 2.0, // Animation speed from example
+            grainMean: 0.0, // Gaussian mean from example
+            grainVariance: 0.5, // Gaussian variance from example
+            grainBlendMode: 1, // Screen (1) from example
+            grainSize: 3.5, // Legacy parameter from example
+          };
+
+          // Create grain shader
+          const grainShader = {
+            uniforms: {
+              tDiffuse: { value: null },
+              uTime: { value: 0.0 },
+              uResolution: { value: new THREE_NS.Vector2(width, height) },
+              uGrainStrength: { value: grainParams.grainStrength },
+              uGrainSpeed: { value: grainParams.grainSpeed },
+              uGrainMean: { value: grainParams.grainMean },
+              uGrainVariance: { value: grainParams.grainVariance },
+              uGrainBlendMode: { value: grainParams.grainBlendMode },
+              uGrainSize: { value: grainParams.grainSize },
+            },
+            vertexShader: `
+              varying vec2 vUv;
+              void main() {
+                vUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+              }
+            `,
+            fragmentShader: `
+              uniform sampler2D tDiffuse;
+              uniform float uTime;
+              uniform vec2 uResolution;
+              uniform float uGrainStrength;
+              uniform float uGrainSpeed;
+              uniform float uGrainMean;
+              uniform float uGrainVariance;
+              uniform int uGrainBlendMode;
+              uniform float uGrainSize;
+              varying vec2 vUv;
+
+              // Hash function for random noise
+              float hash(vec2 p) {
+                p = fract(p * vec2(123.34, 456.21));
+                p += dot(p, p + 45.32);
+                return fract(p.x * p.y);
+              }
+
+              // Gaussian distribution
+              float gaussian(float z, float u, float o) {
+                return (1.0 / (o * sqrt(2.0 * 3.1415))) * exp(-(((z - u) * (z - u)) / (2.0 * (o * o))));
+              }
+
+              // Channel mixing utility
+              vec3 channel_mix(vec3 a, vec3 b, vec3 w) {
+                return vec3(mix(a.r, b.r, w.r), mix(a.g, b.g, w.g), mix(a.b, b.b, w.b));
+              }
+
+              // Blending modes
+              vec3 screen(vec3 a, vec3 b, float w) {
+                return mix(a, vec3(1.0) - (vec3(1.0) - a) * (vec3(1.0) - b), w);
+              }
+
+              vec3 overlay(vec3 a, vec3 b, float w) {
+                return mix(a, channel_mix(
+                  2.0 * a * b,
+                  vec3(1.0) - 2.0 * (vec3(1.0) - a) * (vec3(1.0) - b),
+                  step(vec3(0.5), a)
+                ), w);
+              }
+
+              vec3 soft_light(vec3 a, vec3 b, float w) {
+                return mix(a, pow(a, pow(vec3(2.0), 2.0 * (vec3(0.5) - b))), w);
+              }
+
+              // Apply grain
+              vec3 applyGrain(vec3 color, float noiseValue, float intensity) {
+                vec3 grain = vec3(noiseValue) * (1.0 - color);
+
+                if (uGrainBlendMode == 0) {
+                  // Addition
+                  return color + grain * intensity;
+                } else if (uGrainBlendMode == 1) {
+                  // Screen
+                  return screen(color, grain, intensity);
+                } else if (uGrainBlendMode == 2) {
+                  // Overlay
+                  return overlay(color, grain, intensity);
+                } else if (uGrainBlendMode == 3) {
+                  // Soft Light
+                  return soft_light(color, grain, intensity);
+                } else if (uGrainBlendMode == 4) {
+                  // Lighten-Only
+                  return max(color, grain * intensity);
+                }
+
+                return color;
+              }
+
+              void main() {
+                vec2 uv = gl_FragCoord.xy / uResolution.xy;
+                vec4 texel = texture2D(tDiffuse, vUv);
+                vec3 color = texel.rgb;
+
+                // Generate animated noise
+                float t = uTime * uGrainSpeed;
+                float seed = dot(gl_FragCoord.xy, vec2(12.9898, 78.233));
+                float noise = fract(sin(seed) * 43758.5453 + t);
+
+                // Apply gaussian distribution for more natural look
+                noise = gaussian(noise, uGrainMean, uGrainVariance * uGrainVariance);
+
+                // Apply grain using selected blend mode
+                color = applyGrain(color, noise, uGrainStrength);
+
+                gl_FragColor = vec4(color, texel.a);
+              }
+            `,
+          };
+
+          // Create grain pass
+          const grainPass = new ShaderPass(grainShader);
+          composer.addPass(grainPass);
+
+          // Mouse tracking for interactive bloom
+          const mouse = new THREE_NS.Vector2(0, 0);
+          const smoothedMouse = new THREE_NS.Vector2(0, 0);
+
+          // Track mouse position relative to entire window/viewport
+          const handleMouseMove = (event) => {
+            // Normalize to viewport coordinates (-1 to 1)
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+          };
+
+          window.addEventListener('mousemove', handleMouseMove);
+
+          // Reset to center when mouse leaves window
+          const handleMouseLeave = () => {
+            mouse.set(0, 0);
+          };
+          window.addEventListener('mouseleave', handleMouseLeave);
+
+          // Animation loop
+          let animationId;
+          let startTime = performance.now();
+          const animate = () => {
+            animationId = requestAnimationFrame(animate);
+
+            // Only render if we have a mesh in the scene
+            if (scene.children.length > 0 || meshAdded) {
+              // Update grain time uniform
+              const currentTime = (performance.now() - startTime) * 0.001;
+              grainPass.uniforms.uTime.value = currentTime;
+
+              // Smooth mouse movement
+              smoothedMouse.lerp(mouse, 0.15);
+
+              // Update video texture if it exists
+              if (
+                texture &&
+                videoElement &&
+                texture instanceof THREE_NS.VideoTexture
+              ) {
+                if (videoElement.readyState >= videoElement.HAVE_CURRENT_DATA) {
+                  texture.needsUpdate = true;
+                }
+              }
+
+              // Interactive bloom based on mouse position
+              // Create an "edge glow" effect where bloom is stronger at screen edges
+              const mouseDistance = Math.sqrt(
+                smoothedMouse.x * smoothedMouse.x +
+                  smoothedMouse.y * smoothedMouse.y,
+              );
+              // Stronger effect at edges (high distance), weaker in center
+              const mouseInfluence = Math.min(1.0, mouseDistance * 1.2); // Stronger influence at edges
+
+              // Base values from example, enhanced at edges
+              const baseBloomStrength = 0.2; // From example
+              const maxBloomStrength = 0.6; // Much stronger at edges
+              bloomPass.strength =
+                baseBloomStrength +
+                mouseInfluence * (maxBloomStrength - baseBloomStrength);
+
+              // max radius - base from example, larger at edges
+              const baseBloomRadius = 0.4; // From example
+              const maxBloomRadius = 0.6; // Larger at edges
+              bloomPass.radius =
+                baseBloomRadius +
+                mouseInfluence * (maxBloomRadius - baseBloomRadius);
+
+              // Increase material emissive intensity at edges for more glow
+              if (material && material.emissiveIntensity !== undefined) {
+                const baseEmissive = 0.2;
+                const maxEmissive = 0.8;
+                material.emissiveIntensity =
+                  baseEmissive + mouseInfluence * (maxEmissive - baseEmissive);
+              }
+
+              // Also adjust grain strength at edges for more dramatic effect
+              const baseGrainStrength = 0.035; // From example
+              const maxGrainStrength = 0.065; // Stronger grain at edges
+              grainPass.uniforms.uGrainStrength.value =
+                baseGrainStrength +
+                mouseInfluence * (maxGrainStrength - baseGrainStrength);
+
+              composer.render();
+            }
+          };
+
+          // Handle resize
+          let resizeTimeout;
+          const handleResize = () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+              const { width: newWidth, height: newHeight } = getContainerSize();
+              camera.aspect = newWidth / newHeight;
+              camera.updateProjectionMatrix();
+              renderer.setSize(newWidth, newHeight);
+              composer.setSize(newWidth, newHeight);
+
+              // Update grain shader resolution
+              grainPass.uniforms.uResolution.value.set(newWidth, newHeight);
+
+              // Recalculate object-fit: cover for image texture
+              if (texture && !videoElement && texture.image) {
+                const img = texture.image;
+                if (img.width && img.height) {
+                  const imageAspect = img.width / img.height;
+                  const containerAspect = newWidth / newHeight;
+
+                  if (imageAspect > containerAspect) {
+                    texture.repeat.set(containerAspect / imageAspect, 1);
+                    texture.offset.set(
+                      (1 - containerAspect / imageAspect) / 2,
+                      0,
+                    );
+                  } else {
+                    texture.repeat.set(1, imageAspect / containerAspect);
+                    texture.offset.set(
+                      0,
+                      (1 - imageAspect / containerAspect) / 2,
+                    );
+                  }
+                }
+              }
+
+              // Recalculate object-fit: cover for video texture
+              if (
+                texture &&
+                videoElement &&
+                videoElement.videoWidth &&
+                videoElement.videoHeight
+              ) {
+                const videoAspect =
+                  videoElement.videoWidth / videoElement.videoHeight;
+                const containerAspect = newWidth / newHeight;
+
+                if (videoAspect > containerAspect) {
+                  texture.repeat.set(containerAspect / videoAspect, 1);
+                  texture.offset.set(
+                    (1 - containerAspect / videoAspect) / 2,
+                    0,
+                  );
+                } else {
+                  texture.repeat.set(1, videoAspect / containerAspect);
+                  texture.offset.set(
+                    0,
+                    (1 - videoAspect / containerAspect) / 2,
+                  );
+                }
+              }
+            }, 100);
+          };
+
+          window.addEventListener('resize', handleResize);
+
+          // Start animation
+          animate();
+
+          // Cleanup function
+          const cleanup = () => {
+            window.removeEventListener('resize', handleResize);
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseleave', handleMouseLeave);
+            cancelAnimationFrame(animationId);
+
+            if (texture) {
+              texture.dispose();
+            }
+
+            if (videoElement) {
+              videoElement.pause();
+              videoElement.src = '';
+              videoElement.load();
+            }
+
+            if (material) {
+              material.dispose();
+            }
+            geometry.dispose();
+            renderer.dispose();
+            composer.dispose();
+
+            if (container && renderer.domElement.parentNode === container) {
+              container.removeChild(renderer.domElement);
+            }
+          };
+
+          // Cleanup on page unload
+          window.addEventListener('beforeunload', cleanup);
+
+          // Cleanup on Astro view transitions
+          document.addEventListener('astro:before-swap', cleanup);
+        }, 100);
+      },
+    )
+    .catch((error) => {
+      console.error('HeroMediaThree: Error loading Three.js modules', error);
+    });
+</script>
+
+<style>
+  .hero-media-three {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .hero-media-three canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+  }
+</style>

@@ -1,0 +1,67 @@
+---
+import DefaultLayout from '../layouts/DefaultLayout.astro';
+import Home from '../components/templates/Home.astro';
+import { getHomeData, getSiteSettings, getProjectData } from '../lib/sanity';
+import { getSeoData } from '../lib/seo-helpers';
+
+export const prerender = false;
+
+type Props = {
+  initialProjectSlug?: string | null;
+};
+
+const { initialProjectSlug = null } = Astro.props as Props;
+
+// Haal homepage data op
+const homeData = await getHomeData();
+const siteSettings = await getSiteSettings();
+
+// Als er een project open is, haal project data op voor SEO
+let projectData = null;
+if (initialProjectSlug) {
+  try {
+    projectData = await getProjectData(initialProjectSlug);
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn('⚠️ Failed to load project data for SEO:', error);
+    }
+    // Continue with homepage SEO if project load fails
+  }
+}
+
+// Build URL voor deze pagina
+const pageUrl = Astro.site
+  ? `${Astro.site}`
+  : `https://accessible-astro.dev`;
+
+// Get SEO data - gebruik project data als die beschikbaar is
+const seoData = projectData
+  ? getSeoData(
+      projectData.seo,
+      siteSettings,
+      projectData.title,
+      projectData.intro || projectData.hero?.intro || 'Our amazing studio from Rotterdam',
+      pageUrl,
+    )
+  : getSeoData(
+      homeData.seo,
+      siteSettings,
+      homeData.title,
+      'Our amazing studio from Rotterdam',
+      pageUrl,
+    );
+
+// Check if this is homepage
+const isHomepage = true;
+---
+
+<DefaultLayout
+  title={seoData.title}
+  description={seoData.description}
+  seo={seoData}
+  url={pageUrl}
+  {isHomepage}
+>
+  <Home initialProjectSlug={initialProjectSlug} />
+</DefaultLayout>
+

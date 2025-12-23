@@ -35,17 +35,13 @@ export async function getAllUris() {
       uris.push(...data.pages.map((slug: string) => ({ params: { uri: slug } })));
     }
 
-    // Add projects with project/ prefix
-    if (data.projects) {
-      uris.push(...data.projects.map((slug: string) => ({ params: { uri: `project/${slug}` } })));
-    }
+    // Note: Projects are now handled via /work/[slug].astro route, not included in static paths
 
     if (import.meta.env.DEV) {
       console.log('🔗 Generated Sanity static paths:', {
         total: uris.length,
         homepage: !!data.homepage,
         pages: data.pages?.length || 0,
-        projects: data.projects?.length || 0,
         uris: uris.map(u => u.params.uri)
       });
     }

@@ -11,24 +11,62 @@ interface Props {
   variant?: 'default' | 'work' | 'music';
 }
 
-const { tabs, defaultTab, sectionClass = '', sticky = false, variant = 'default' } = Astro.props;
+const {
+  tabs,
+  defaultTab,
+  sectionClass = '',
+  sticky = false,
+  variant = 'default',
+} = Astro.props;
 const activeTab = defaultTab || tabs[0]?.id || '';
 ---
 
 <div class={`tab-group ${sectionClass} tab-group-${variant}`}>
-  <div class={`tab-group-tabs ${sticky ? 'tab-group-tabs-sticky' : ''} tab-group-tabs-${variant}`}>
-    {
-      tabs.map((tab) => (
-        <button
-          class={`tab-button ${tab.id === activeTab ? 'tab-active' : ''}`}
-          data-tab={tab.id}
-          aria-label={tab.ariaLabel || `Show ${tab.label}`}
+  {
+    variant === 'music' ? (
+      <div class="tab-group-tabs-wrapper-music">
+        <div
+          class={`tab-group-tabs ${sticky ? 'tab-group-tabs-sticky' : ''} tab-group-tabs-${variant}`}
+          role="tablist"
+          aria-label="Tabs"
+          style={`--active-tab-index: ${tabs.findIndex((t) => t.id === activeTab)}; --tab-count: ${tabs.length};`}
         >
-          {tab.label}
-        </button>
-      ))
-    }
-  </div>
+          <div class="tab-active-indicator" aria-hidden="true" />
+          {tabs.map((tab) => (
+            <button
+              class={`tab-button ${tab.id === activeTab ? 'tab-active' : ''}`}
+              data-tab={tab.id}
+              role="tab"
+              aria-selected={tab.id === activeTab ? 'true' : 'false'}
+              aria-label={tab.ariaLabel || `Show ${tab.label}`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    ) : (
+      <div
+        class={`tab-group-tabs ${sticky ? 'tab-group-tabs-sticky' : ''} tab-group-tabs-${variant}`}
+        role="tablist"
+        aria-label={variant === 'work' ? 'Work categories' : 'Tabs'}
+        style={`--active-tab-index: ${tabs.findIndex((t) => t.id === activeTab)}; --tab-count: ${tabs.length};`}
+      >
+        <div class="tab-active-indicator" aria-hidden="true" />
+        {tabs.map((tab) => (
+          <button
+            class={`tab-button ${tab.id === activeTab ? 'tab-active' : ''}`}
+            data-tab={tab.id}
+            role="tab"
+            aria-selected={tab.id === activeTab ? 'true' : 'false'}
+            aria-label={tab.ariaLabel || `Show ${tab.label}`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+    )
+  }
   <slot />
 </div>
 
@@ -39,16 +77,29 @@ const activeTab = defaultTab || tabs[0]?.id || '';
       '.tab-group-tabs .tab-button',
     );
     const tabContents = container.querySelectorAll('.tab-content');
+    const tabGroupTabs = container.querySelector(
+      '.tab-group-tabs',
+    ) as HTMLElement;
 
-    tabButtons.forEach((button) => {
+    tabButtons.forEach((button, index) => {
       button.addEventListener('click', () => {
         const targetTab = button.getAttribute('data-tab');
 
         // Update active button
         tabButtons.forEach((btn) => {
           btn.classList.remove('tab-active');
+          btn.setAttribute('aria-selected', 'false');
         });
         button.classList.add('tab-active');
+        button.setAttribute('aria-selected', 'true');
+
+        // Update active indicator positie (CSS-only animatie)
+        if (tabGroupTabs) {
+          tabGroupTabs.style.setProperty(
+            '--active-tab-index',
+            index.toString(),
+          );
+        }
 
         // Update active content
         tabContents.forEach((content) => {
@@ -89,7 +140,14 @@ const activeTab = defaultTab || tabs[0]?.id || '';
     /* grid-template-rows: auto 1fr; */
     height: 100%;
     /* min-height: 0; */
-    background-color: var(--bg);
+    /* background-color: var(--bg); */
+    width: 100%;
+  }
+
+  /* Work variant: gebruik work achtergrond */
+  .tab-group.projects-section {
+    background-color: transparent;
+    padding: 0 var(--space-xs);
   }
 
   .tab-group-tabs {
@@ -100,28 +158,70 @@ const activeTab = defaultTab || tabs[0]?.id || '';
     z-index: 5;
     background-color: var(--bg);
     width: 100%;
+    position: relative;
+  }
+
+  /* Active indicator - slide animatie (zoals CodePen voorbeeld) */
+  .tab-active-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    width: calc(100% / var(--tab-count, 1));
+    /* Horizontale slide animatie - CSS only */
+    transform: translateX(calc(var(--active-tab-index, 0) * 100%));
+    transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+    pointer-events: none;
   }
 
   /* Work tabs variant: witte achtergrond, gele active state, rounded pills */
   .tab-group-tabs-work {
+    --pad: 0.35rem;
     background-color: var(--work-tabs-bg);
     border-bottom: none;
     border-radius: 999px;
-    padding: 0;
+    padding: var(--pad);
     overflow: hidden;
-    margin: var(--space-s) var(--default-padding);
-    width: calc(100% - (var(--default-padding) * 2));
+    margin: 0;
+    width: 100%;
+  }
+
+  /* Active indicator voor work variant */
+  .tab-group-tabs-work .tab-active-indicator {
+    position: absolute;
+    inset: var(--pad);
+    width: calc((100% - (var(--pad) * 2)) / var(--tab-count, 1));
+    background-color: var(--work-tabs-active-bg);
+    border-radius: 999px;
+    transform: translateX(calc(var(--active-tab-index, 0) * 100%));
+    transition: transform 200ms ease;
+  }
+
+  /* Music tabs wrapper: padding voor de tabs container */
+  .tab-group-tabs-wrapper-music {
+    padding-inline: var(--space-s);
+    width: 100%;
   }
 
   /* Music tabs variant: donkere container */
   .tab-group-tabs-music {
-    background-color: var(--section-music-bg);
+    background-color: var(--color-dark-container);
     border-bottom: none;
     border-radius: 999px;
-    padding: 0;
     overflow: hidden;
-    margin: var(--space-s) var(--default-padding);
-    width: calc(100% - (var(--default-padding) * 2));
+    margin: 0;
+    width: 100%;
+  }
+
+  /* Active indicator voor music variant */
+  .tab-group-tabs-music .tab-active-indicator {
+    background-color: var(--color-accent-yellow);
+    border-radius: 999px;
+    height: calc(100% - 10px);
+    top: 5px;
+    width: calc(100% / var(--tab-count, 1));
+    transform: translateX(calc(var(--active-tab-index, 0) * 100%));
   }
 
   .tab-group-tabs-sticky {
@@ -144,46 +244,66 @@ const activeTab = defaultTab || tabs[0]?.id || '';
     align-items: center;
     justify-content: center;
     color: var(--text);
+    position: relative;
+    z-index: 2;
   }
 
   /* Work tabs styling */
   .tab-group-tabs-work .tab-button {
     font-family: var(--font-family-heading);
     font-size: var(--fs-0);
-    font-weight: 900;
-    text-transform: uppercase;
-    padding: var(--space-s) var(--space-xs);
+    font-weight: 600;
+    text-align: center;
+    padding: var(--space-xs) var(--space-m);
     color: var(--work-tabs-inactive-text);
     border-radius: 999px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    z-index: 2;
   }
 
   .tab-group-tabs-work .tab-button.tab-active {
-    background-color: var(--work-tabs-active-bg);
+    background-color: transparent;
     color: var(--work-tabs-active-text);
     border-radius: 999px;
   }
 
   /* Music tabs styling */
-  .tab-group-tabs-music .tab-button {
+  .tab-button {
     font-size: var(--fs--2);
     font-weight: 500;
     padding: var(--space-xs) var(--space-m);
     color: #f1f0ec;
-    opacity: 0.8;
   }
 
   .tab-group-tabs-music .tab-button.tab-active {
-    background-color: var(--color-accent-yellow);
-    color: #060205;
+    background-color: transparent;
+    color: var(--color-black);
     border-radius: 999px;
     opacity: 1;
   }
 
+  /* Music variant: content van rand tot rand */
+  .tab-group-music .tab-content {
+    padding: 0;
+    margin: 0;
+    width: 100%;
+  }
+
   /* Default tabs styling */
   .tab-button.tab-active {
-    background-color: var(--text);
+    background-color: transparent;
     color: var(--bg);
     border-bottom-color: var(--border);
+  }
+
+  /* Active indicator voor default variant */
+  .tab-group-tabs:not(.tab-group-tabs-work):not(.tab-group-tabs-music)
+    .tab-active-indicator {
+    background-color: var(--text);
+    height: calc(100% + 1px);
+    top: 0;
   }
 
   .tab-button:hover:not(.tab-active) {

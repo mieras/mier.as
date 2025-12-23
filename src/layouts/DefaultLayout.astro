@@ -1,10 +1,10 @@
 ---
 import '../assets/global.css';
 import '../assets/scss/globals.scss';
-import '../assets/default.css';
 import '@fontsource-variable/geist/index.css';
 import '@fontsource-variable/geist-mono/index.css';
 import '@fontsource/tiktok-sans/index.css';
+import { ViewTransitions } from 'astro:transitions';
 import SiteMeta from '../components/SiteMeta.astro';
 import SiteNavigation from '../components/SiteNavigation.astro';
 import CookieConsent from '../components/CookieConsent.astro';
@@ -43,6 +43,7 @@ const primaryMenu = menus.nodes[0];
 
 <html lang="en" dir="ltr">
   <head>
+    <ViewTransitions />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
@@ -103,9 +104,14 @@ const primaryMenu = menus.nodes[0];
 
   <body>
     <div class={`wrapper ${isHomepage ? 'wrapper-homepage' : ''}`}>
-      {!isHomepage && (
-        <SiteNavigation menu={primaryMenu} generalSettings={generalSettings} />
-      )}
+      {
+        !isHomepage && (
+          <SiteNavigation
+            menu={primaryMenu}
+            generalSettings={generalSettings}
+          />
+        )
+      }
 
       <slot />
 
@@ -137,20 +143,18 @@ const primaryMenu = menus.nodes[0];
   }
 
   /* Desktop: height constraint voor viewport - alleen voor niet-homepage */
-  @media (min-width: 800px) {
+  @media (min-width: 900px) {
     .wrapper:not(.wrapper-homepage) {
       display: grid;
-      grid-template-rows: auto 1fr auto;
-      height: 100vh;
-      overflow: hidden;
+      grid-template-rows: auto 1fr;
+      padding-left: 120px; /* Ruimte voor footer links */
     }
 
     /* Homepage wrapper: geen grid, laat .page zijn eigen grid doen */
     .wrapper-homepage {
-      height: 100vh;
-      overflow: hidden;
       display: flex;
       flex-direction: column;
+      padding-left: 2rem; /* Ruimte voor footer links */
     }
   }
 </style>

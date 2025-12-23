@@ -86,6 +86,8 @@ export interface SanityProject {
   };
   subtitle?: string;
   intro?: string;
+  year?: number;
+  role?: string;
   hero?: {
     title?: string;
     subtitle?: string;
@@ -97,6 +99,8 @@ export interface SanityProject {
     image?: SanityImage;
     size?: 'small' | 'default' | 'large';
     aspectRatio?: string;
+    video?: SanityFile;
+    videoUrl?: string;
   };
   client?: {
     _type: 'reference';
@@ -108,6 +112,12 @@ export interface SanityProject {
   }>;
   credits?: string;
   relatedProjects?: SanityProject[];
+  projectMedia?: Array<{
+    _key: string;
+    _type: 'imageSlide' | 'videoSlide';
+    image?: SanityImage;
+    video?: SanityFile;
+  }>;
   content?: SanityBlock[];
   seo?: SanitySEO;
 }
@@ -365,6 +375,29 @@ export interface SanitySEO {
     noIndex?: boolean;
     noFollow?: boolean;
   };
+}
+
+// Photography types
+export interface SanityPhotography {
+  _type: 'photography';
+  _id: string;
+  title: string;
+  year?: number;
+  city?: string;
+  country?: string;
+  camera?: string;
+  hero?: {
+    title?: string;
+    subtitle?: string;
+    intro?: string;
+  };
+  thumbnail?: SanityImage;
+  projectMedia?: Array<{
+    _key: string;
+    _type: 'imageSlide' | 'videoSlide';
+    image?: SanityImage;
+    video?: SanityFile;
+  }>;
 }
 
 // Columns Block types

@@ -1,7 +1,8 @@
 ---
-import { PortableText } from 'astro-portabletext';
 import { urlForImage } from '../../sanity/lib/image';
 import SiteNavigation from '../SiteNavigation.astro';
+import { PortableText } from 'astro-portabletext';
+import HeroMediaThree from './HeroMediaThree.astro';
 
 type HeroMedia = {
   mediaType: 'image' | 'video';
@@ -9,15 +10,38 @@ type HeroMedia = {
   videoUrl?: string;
 };
 
-type Props = {
-  heroMedia?: HeroMedia;
-  introCols?: Array<{
-    _key: string;
-    content: any[];
-  }>;
+type IntroCol = {
+  _key: string;
+  content: any[];
 };
 
-const { heroMedia, introCols } = Astro.props;
+type Props = {
+  heroMedia?: HeroMedia;
+  introCols?: IntroCol[];
+  useThreeJs?: boolean;
+};
+
+const { heroMedia, introCols, useThreeJs = false } = Astro.props;
+
+// Debug logging
+if (import.meta.env.DEV) {
+  console.log('🎨 HeroSection props:', {
+    hasHeroMedia: !!heroMedia,
+    mediaType: heroMedia?.mediaType,
+    hasImage: !!heroMedia?.image,
+    imageAsset: !!heroMedia?.image?.asset,
+    introColsCount: introCols?.length || 0,
+  });
+}
+
+// Get image URL if media type is image
+const imageUrl =
+  heroMedia?.mediaType === 'image' && heroMedia?.image?.asset
+    ? urlForImage(heroMedia.image)?.width(1920).height(1080).url()
+    : null;
+
+// Get intro text from first introCol (if available)
+const introContent = introCols?.[0]?.content;
 
 // PortableText components
 const components = {
@@ -28,124 +52,165 @@ const components = {
   listItem: {},
 };
 
-// Get bio content - eerste kolom is About, tweede is Contact
-const aboutContent = introCols?.[0]?.content;
-const contactContent = introCols?.[1]?.content;
-
-// Debug logging
-if (import.meta.env.DEV) {
-  console.log('🎨 HeroSection props:', {
-    hasHeroMedia: !!heroMedia,
-    mediaType: heroMedia?.mediaType,
-    hasImage: !!heroMedia?.image,
-    imageAsset: !!heroMedia?.image?.asset,
-  });
-}
-
-// Get image URL if media type is image
-const imageUrl =
-  heroMedia?.mediaType === 'image' && heroMedia?.image?.asset
-    ? urlForImage(heroMedia.image)?.width(1920).height(1080).url()
-    : null;
-
 if (import.meta.env.DEV) {
   console.log('🖼️ HeroSection image URL:', imageUrl);
 }
 ---
 
-<section class="hero-section">
+<section class="hero-section" aria-labelledby="hero-title">
   <div class="hero-navigation">
     <SiteNavigation />
   </div>
-  <div class="hero-media">
+  <div class="hero__media">
     {
-      heroMedia?.mediaType === 'image' && imageUrl ? (
-        <img
-          src={imageUrl}
-          alt="Hero image"
-          loading="eager"
-          class="hero-image"
-        />
-      ) : heroMedia?.mediaType === 'image' && heroMedia?.image ? (
-        <div class="hero-image-placeholder">
-          <p>Image loading...</p>
-          {import.meta.env.DEV && (
-            <pre>{JSON.stringify(heroMedia.image, null, 2)}</pre>
+      useThreeJs && heroMedia ? (
+        <HeroMediaThree heroMedia={heroMedia} />
+      ) : (
+        <>
+          {heroMedia?.mediaType === 'image' && imageUrl ? (
+            <img
+              src={imageUrl}
+              alt="Maarten Mieras"
+              loading="eager"
+              class="hero__image"
+            />
+          ) : heroMedia?.mediaType === 'image' && heroMedia?.image ? (
+            <div class="hero-image-placeholder">
+              <p>Image loading...</p>
+              {import.meta.env.DEV && (
+                <pre>{JSON.stringify(heroMedia.image, null, 2)}</pre>
+              )}
+            </div>
+          ) : null}
+          {heroMedia?.mediaType === 'video' && heroMedia?.videoUrl && (
+            <video
+              src={heroMedia.videoUrl}
+              autoplay
+              loop
+              muted
+              playsinline
+              class="hero__video"
+            />
           )}
-        </div>
-      ) : null
-    }
-    {
-      heroMedia?.mediaType === 'video' && heroMedia?.videoUrl && (
-        <video
-          src={heroMedia.videoUrl}
-          autoplay
-          loop
-          muted
-          playsinline
-          class="hero-video"
-        />
-      )
-    }
-    {
-      !heroMedia && import.meta.env.DEV && (
-        <div class="hero-image-placeholder">
-          <p>No hero media configured</p>
-        </div>
+          {!heroMedia && import.meta.env.DEV && (
+            <div class="hero-image-placeholder">
+              <p>No hero media configured</p>
+            </div>
+          )}
+        </>
       )
     }
   </div>
 
-  {
-    (aboutContent || contactContent) && (
-      <div class="hero-bio">
-        {aboutContent && (
-          <div class="bio-column">
-            <p class="bio-label">About</p>
-            <div class="bio-content">
-              <PortableText value={aboutContent} components={components} />
-            </div>
-          </div>
-        )}
-        {contactContent && (
-          <div class="bio-column">
-            <p class="bio-label">Contact</p>
-            <div class="bio-content">
-              <PortableText value={contactContent} components={components} />
-            </div>
-          </div>
-        )}
-      </div>
-    )
-  }
+  <div class="hero__content">
+    <h1 id="hero-title" class="hero__title">Maarten Mieras</h1>
+    {
+      introContent && (
+        <p class="hero__text">
+          <PortableText value={introContent} components={components} />
+        </p>
+      )
+    }
+    <a class="hero__cta" href="#work" aria-label="Scroll to work section">
+      View work
+    </a>
+  </div>
 </section>
 
 <style>
   .hero-section {
+    --col-min: 24rem;
+    --media-min-h: 14rem;
     position: relative;
     display: grid;
-    grid-template-rows: 1fr auto;
-    min-height: 0;
-    height: 100%;
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(min(100%, var(--col-min)), 1fr)
+    );
+    min-height: 90dvh;
     background: var(--section-hero-bg);
   }
 
-  .hero-media {
+  .hero-navigation {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+  }
+
+  .hero__media {
+    min-block-size: var(--media-min-h);
     position: relative;
-    width: 100%;
-    height: 100%;
     overflow: hidden;
-    grid-row: 1;
-    min-height: 0;
-    background: var(--section-hero-bg);
   }
 
-  .hero-image,
-  .hero-video {
+  .hero__image,
+  .hero__video {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
+  }
+
+  .hero__content {
+    background: var(--section-hero-bg);
+    color: var(--text-light);
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    padding: var(--space-m-l);
+    text-align: center;
+    gap: var(--space-xs);
+  }
+
+  .hero__title {
+    font-size: var(--fs--2);
+    font-weight: 400;
+    opacity: 0.4;
+    margin: 0;
+    font-family: var(--font-family-heading);
+  }
+
+  .hero__text {
+    font-size: var(--fs-4);
+    font-weight: 600;
+    line-height: 112.5%;
+    letter-spacing: -0.05ch;
+    text-wrap: balance;
+    max-width: 32ch;
+    margin: 0;
+  }
+
+  .hero__text :global(strong),
+  .hero__text :global(em) {
+    text-decoration: underline;
+  }
+
+  .hero__cta {
+    background: var(--work-tabs-active-bg);
+    color: var(--color-black);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-xs) var(--space-m);
+    font-size: var(--fs-0);
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 999px;
+    border: 1px solid currentColor;
+    width: fit-content;
+    margin-top: var(--space-s);
+    transition: opacity 0.2s ease;
+  }
+
+  .hero__cta:hover {
+    opacity: 0.9;
+  }
+
+  .hero__cta:focus-visible {
+    outline: 2px solid var(--work-tabs-active-bg);
+    outline-offset: 2px;
   }
 
   .hero-image-placeholder {
@@ -155,7 +220,7 @@ if (import.meta.env.DEV) {
     align-items: center;
     justify-content: center;
     background: var(--section-hero-bg);
-    color: #ffffff;
+    color: var(--text-light);
     padding: var(--space-m);
   }
 
@@ -166,64 +231,19 @@ if (import.meta.env.DEV) {
     max-height: 100%;
   }
 
-  .hero-navigation {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 10;
-    mix-blend-mode: exclusion;
-  }
-
-  .hero-bio {
-    grid-row: 2;
-    padding: var(--space-s) var(--default-padding);
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-s);
-    background: var(--color-black);
-    color: #ffffff;
-  }
-
-  .bio-column {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-xs);
-  }
-
-  .bio-label {
-    font-size: var(--fs--3);
-    font-weight: 700;
-    line-height: 1;
-    text-transform: uppercase;
-    letter-spacing: 0.0463px;
-    opacity: 0.3;
-    color: #ffffff;
-    margin: 0;
-  }
-
-  .bio-content {
-    font-size: var(--fs--2);
-    line-height: 1.6;
-    color: var(--color-gray-secondary);
-  }
-
-  .bio-content :global(p) {
-    font-size: var(--fs--2);
-    line-height: 1.6;
-    margin: 0;
-    color: var(--color-gray-secondary);
-  }
-
-  .bio-content :global(p + p) {
-    margin-top: 1em;
-  }
-
-  /* Mobile: adjust padding en layout */
+  /* Mobile: stack layout */
   @media (max-width: 799px) {
-    .hero-bio {
+    .hero-section {
       grid-template-columns: 1fr;
-      padding: var(--space-s) var(--default-padding);
+      min-height: auto;
+    }
+
+    .hero__media {
+      min-height: 50vh;
+    }
+
+    .hero__content {
+      padding: var(--space-m);
     }
   }
 </style>

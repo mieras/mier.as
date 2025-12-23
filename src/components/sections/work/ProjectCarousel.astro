@@ -1,0 +1,274 @@
+---
+import { Image } from 'astro:assets';
+import { urlForImage } from '../../../sanity/lib/image';
+
+type ProjectMediaSlide = {
+  _key: string;
+  _type: 'imageSlide' | 'videoSlide';
+  image?: any;
+  video?: {
+    asset?: {
+      url?: string;
+      _ref?: string;
+    };
+  };
+};
+
+type Props = {
+  projectMedia?: ProjectMediaSlide[];
+  projectId?: string;
+};
+
+const { projectMedia = [], projectId = '' } = Astro.props;
+
+// Process media slides
+const slides = projectMedia.map((slide) => {
+  let imageUrl = '';
+  let imageAlt = '';
+  let videoUrl = '';
+
+  if (slide._type === 'imageSlide' && slide.image?.asset) {
+    try {
+      imageUrl = urlForImage(slide.image)?.width(1920).height(1080).url() || '';
+      imageAlt = slide.image.alt || '';
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.warn('⚠️ Failed to generate image URL:', error);
+      }
+    }
+  } else if (slide._type === 'videoSlide' && slide.video?.asset?.url) {
+    videoUrl = slide.video.asset.url;
+  }
+
+  return {
+    _key: slide._key,
+    _type: slide._type,
+    imageUrl,
+    imageAlt,
+    videoUrl,
+    hasImage: !!imageUrl,
+    hasVideo: !!videoUrl,
+  };
+}).filter(slide => slide.hasImage || slide.hasVideo);
+
+if (import.meta.env.DEV) {
+  console.log('🎠 ProjectCarousel slides:', slides.length);
+}
+---
+
+<div class="project-carousel" data-project-id={projectId}>
+  {slides.length > 0 ? (
+    <div class="project-carousel__swiper swiper">
+      <div class="swiper-wrapper" role="list">
+        {slides.map((slide) => (
+          <div class="swiper-slide" role="listitem" data-slide-key={slide._key}>
+            {slide.hasVideo ? (
+              <div class="project-carousel__video-wrapper">
+                <video
+                  class="project-carousel__video"
+                  src={slide.videoUrl}
+                  playsinline
+                  loop
+                  muted
+                  autoplay
+                  preload="metadata"
+                />
+              </div>
+            ) : slide.hasImage ? (
+              <div class="project-carousel__image-wrapper">
+                <Image
+                  src={slide.imageUrl}
+                  alt={slide.imageAlt}
+                  width={1920}
+                  height={1080}
+                  format="avif"
+                  class="project-carousel__image"
+                />
+              </div>
+            ) : null}
+          </div>
+        ))}
+      </div>
+
+      {slides.length > 1 && (
+        <div class="project-carousel__controls">
+          <button
+            class="project-carousel__button project-carousel__button--prev"
+            aria-label="Previous slide"
+            type="button"
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M5 12h14m0 0-7-7m7 7-7 7"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+          <button
+            class="project-carousel__button project-carousel__button--next"
+            aria-label="Next slide"
+            type="button"
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M5 12h14m0 0-7-7m7 7-7 7"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
+      )}
+    </div>
+  ) : (
+    <div class="project-carousel__empty">
+      <p>No media available</p>
+    </div>
+  )}
+</div>
+
+<script>
+  import Swiper from 'swiper';
+  import { Navigation } from 'swiper/modules';
+  import 'swiper/css';
+
+  document.addEventListener('astro:page-load', initProjectCarousel);
+  if (document.readyState !== 'loading') {
+    initProjectCarousel();
+  }
+
+  function initProjectCarousel() {
+    const carousels = document.querySelectorAll('.project-carousel__swiper');
+    
+    carousels.forEach((carouselEl) => {
+      const prevButton = carouselEl.querySelector('.project-carousel__button--prev') as HTMLElement;
+      const nextButton = carouselEl.querySelector('.project-carousel__button--next') as HTMLElement;
+
+      new Swiper(carouselEl as HTMLElement, {
+        modules: [Navigation],
+        navigation: {
+          nextEl: nextButton,
+          prevEl: prevButton,
+        },
+        loop: false,
+        speed: 600,
+        keyboard: {
+          enabled: true,
+        },
+      });
+    });
+  }
+</script>
+
+<style>
+  .project-carousel {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .project-carousel__swiper {
+    width: 100%;
+    height: 100%;
+  }
+
+  .project-carousel__swiper .swiper-wrapper {
+    width: 100%;
+    height: 100%;
+  }
+
+  .project-carousel__swiper .swiper-slide {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .project-carousel__image-wrapper,
+  .project-carousel__video-wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+
+  .project-carousel__image,
+  .project-carousel__video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .project-carousel__controls {
+    position: absolute;
+    bottom: var(--space-m);
+    right: var(--space-m);
+    z-index: 10;
+    display: flex;
+    gap: var(--space-xs);
+    align-items: center;
+  }
+
+  .project-carousel__button {
+    backdrop-filter: blur(30px);
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    padding: 0;
+  }
+
+  .project-carousel__button:hover {
+    color: #000;
+    background-color: #fff;
+  }
+
+  .project-carousel__button:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+
+  .project-carousel__button svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .project-carousel__button--prev svg {
+    transform: rotate(180deg);
+  }
+
+  .project-carousel__empty {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+  }
+</style>
+

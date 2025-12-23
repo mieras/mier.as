@@ -8,48 +8,57 @@
 </button>
 
 <style>
+  :root {
+    --white: #fdfdfa;
+    --black: #4d4d4d;
+    --primary: #00b7c6;
+    --grey-dark: #aca79a;
+  }
+
+  :root[data-theme='dark'] {
+    --white: #4d4d4d;
+    --black: rgba(0, 0, 0, 0.25);
+    --primary: var(--color-accent-yellow);
+    --grey-dark: #fff;
+  }
+
   .dark-mode-toggle {
+    font-size: 8px;
     appearance: none;
     -moz-appearance: none;
     -webkit-appearance: none;
-    background: var(--bg);
-    display: inline-block;
-    border: none;
-    border-radius: 0;
+    background: var(--black);
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 4rem;
-    height: 4rem;
+    width: 4em;
+    height: 4em;
     cursor: pointer;
     overflow: hidden;
     border-radius: 100vw;
-    border: 0.2rem solid var(--border);
-    position: fixed;
-    bottom: 0.5rem;
-    right: 0.5rem;
-    transform: scale(0.5);
+    border: 0em solid var(--grey-dark);
+    position: relative;
   }
 
   .dark-mode-toggle:focus {
     outline: none;
-    border-color: var(--link);
+    border-color: var(--primary);
   }
 
-  :root[data-theme="dark"] .dark-mode-toggle__text:before {
-    content: "deactivate ";
+  :root[data-theme='dark'] .dark-mode-toggle__text:before {
+    content: 'deactivate ';
   }
 
-  :root[data-theme="light"] .dark-mode-toggle__text:before {
-    content: "activate ";
+  :root[data-theme='light'] .dark-mode-toggle__text:before {
+    content: 'activate ';
   }
 
   .dark-mode-toggle__icon {
     display: block;
-    background: var(--border);
+    background: var(--grey-dark);
     border-radius: 50%;
-    width: 2rem;
-    height: 2rem;
+    width: 2em;
+    height: 2em;
     position: relative;
     transition:
       width 0.3s,
@@ -60,59 +69,60 @@
 
   .dark-mode-toggle__icon:before {
     z-index: 0;
-    content: "";
+    content: '';
     position: absolute;
     display: block;
     border-right: none;
     border-radius: 50%;
-    width: 2.4rem;
-    height: 2.4rem;
+    width: 3em;
+    height: 3em;
     top: 50%;
     left: 50%;
     transition:
       opacity 0.3s,
-      background-image 03s;
+      background-image 0.3s;
     opacity: 0;
     transform: translate(-50%, -50%) rotate(0deg);
     animation: spin__rays 4s linear infinite;
-    background-image: linear-gradient(
+    background-image:
+      linear-gradient(
         0deg,
         transparent 46%,
-        var(--border) 46%,
-        var(--border) 54%,
+        var(--grey-dark) 46%,
+        var(--grey-dark) 54%,
         transparent 54%
       ),
       linear-gradient(
         90deg,
         transparent 46%,
-        var(--border) 46%,
-        var(--border) 54%,
+        var(--grey-dark) 46%,
+        var(--grey-dark) 54%,
         transparent 54%
       ),
       linear-gradient(
         45deg,
         transparent 47%,
-        var(--border) 47%,
-        var(--border) 53%,
+        var(--grey-dark) 47%,
+        var(--grey-dark) 53%,
         transparent 53%
       ),
       linear-gradient(
         135deg,
         transparent 47%,
-        var(--border) 47%,
-        var(--border) 53%,
+        var(--grey-dark) 47%,
+        var(--grey-dark) 53%,
         transparent 53%
       );
   }
 
   .dark-mode-toggle__icon:after {
-    content: "";
+    content: '';
     position: absolute;
     display: block;
-    background: var(--bg);
-    border-radius: 0.7rem;
-    width: 1.4rem;
-    height: 1.4rem;
+    background: var(--black);
+    border-radius: 100%;
+    width: 1.5em;
+    height: 1.5em;
     top: 50%;
     left: 200%;
     transform: translateY(-50%);
@@ -120,47 +130,48 @@
   }
 
   .dark-mode-toggle:hover .dark-mode-toggle__icon {
-    background: var(--link);
+    background: var(--primary);
   }
   .dark-mode-toggle:hover .dark-mode-toggle__icon:before {
-    background-image: linear-gradient(
+    background-image:
+      linear-gradient(
         0deg,
         transparent 47%,
-        var(--link) 47%,
-        var(--link) 53%,
+        var(--primary) 47%,
+        var(--primary) 53%,
         transparent 53%
       ),
       linear-gradient(
         90deg,
         transparent 47%,
-        var(--link) 47%,
-        var(--link) 53%,
+        var(--primary) 47%,
+        var(--primary) 53%,
         transparent 53%
       ),
       linear-gradient(
         45deg,
         transparent 48%,
-        var(--link) 48%,
-        var(--link) 52%,
+        var(--primary) 48%,
+        var(--primary) 52%,
         transparent 52%
       ),
       linear-gradient(
         135deg,
         transparent 48%,
-        var(--link) 48%,
-        var(--link) 52%,
+        var(--primary) 48%,
+        var(--primary) 52%,
         transparent 52%
       );
   }
 
-  :root[data-theme="light"] .dark-mode-toggle__icon:after {
+  :root[data-theme='light'] .dark-mode-toggle__icon:after {
     left: 40%;
   }
-  :root[data-theme="dark"] .dark-mode-toggle__icon {
-    width: 1.6rem;
-    height: 1.6rem;
+  :root[data-theme='dark'] .dark-mode-toggle__icon {
+    width: 1.6em;
+    height: 1.6em;
   }
-  :root[data-theme="dark"] .dark-mode-toggle__icon:before {
+  :root[data-theme='dark'] .dark-mode-toggle__icon:before {
     opacity: 1;
   }
 
@@ -191,44 +202,34 @@
   const setDarkMode = (active = false) => {
     const root = document.documentElement;
     if (active) {
-      root.setAttribute("data-theme", "dark");
-      localStorage.setItem("theme", "dark");
+      root.setAttribute('data-theme', 'dark');
+      localStorage.setItem('theme', 'dark');
     } else {
-      root.setAttribute("data-theme", "light");
-      localStorage.setItem("theme", "light");
+      root.setAttribute('data-theme', 'light');
+      localStorage.setItem('theme', 'light');
     }
   };
 
   const toggleDarkMode = () => {
-    const theme = document.documentElement.getAttribute("data-theme");
-    setDarkMode(theme === "light");
-  };
-
-  const initDarkMode = () => {
-    const query = window.matchMedia("(prefers-color-scheme: dark)");
-    const pref = localStorage.getItem("theme");
-    let active = pref ? pref === "dark" : query.matches;
-    setDarkMode(active);
-    if (!pref && query.addEventListener) {
-      query.addEventListener("change", (e) => setDarkMode(e.matches));
-    }
+    const theme = document.documentElement.getAttribute('data-theme');
+    setDarkMode(theme === 'light');
   };
 
   const bindToggle = () => {
-    if (document.documentElement.dataset.dmDelegated === "true") return;
-    document.addEventListener("click", (e) => {
-      const t = e.target;
-      if (t && (t.closest?.(".js__dark-mode-toggle"))) {
-        toggleDarkMode();
-      }
-    });
-    document.documentElement.dataset.dmDelegated = "true";
+    // Check if already bound to prevent duplicate event listeners
+    const toggleButton = document.querySelector('.js__dark-mode-toggle');
+    if (!toggleButton) return;
+
+    // Remove existing listener if any
+    const newButton = toggleButton.cloneNode(true);
+    toggleButton.parentNode?.replaceChild(newButton, toggleButton);
+
+    // Add fresh event listener
+    newButton.addEventListener('click', toggleDarkMode);
   };
 
-  document.addEventListener("DOMContentLoaded", () => {
-    initDarkMode();
-    bindToggle();
-  });
-  document.addEventListener("astro:page-load", bindToggle);
-  document.addEventListener("astro:after-swap", bindToggle);
+  // Bind toggle on page load
+  document.addEventListener('DOMContentLoaded', bindToggle);
+  document.addEventListener('astro:page-load', bindToggle);
+  document.addEventListener('astro:after-swap', bindToggle);
 </script>

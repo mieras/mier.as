@@ -91,15 +91,18 @@ export const musicTickerPreset = {
   },
   breakpoints: {
     640: {
-      slidesPerView: 1.5,
+      slidesPerView: 1.25,
     },
     768: {
       slidesPerView: 1.5,
     },
     1024: {
-      slidesPerView: 2,
+      slidesPerView: 1.25,
     },
     1512: {
+      slidesPerView: 1.5,
+    },
+    1920: {
       slidesPerView: 3,
     },
   },

@@ -53,8 +53,8 @@ const processedSlides = slides.map((slide: any) => {
       
       if (slug) {
         if (internalLink._type === 'work') {
-          // Project link - use /project/ prefix
-          updatedUrl = `/project/${slug}`;
+          // Project link - use /work/ prefix
+          updatedUrl = `/work/${slug}`;
         } else if (internalLink._type === 'page') {
           // Page link - use direct slug
           updatedUrl = `/${slug}`;
@@ -70,7 +70,7 @@ const processedSlides = slides.map((slide: any) => {
       
       if (slug) {
         if (internalLink._type === 'work') {
-          updatedUrl = `/project/${slug}`;
+          updatedUrl = `/work/${slug}`;
         } else {
           updatedUrl = `/${slug}`;
         }
@@ -336,6 +336,7 @@ if (import.meta.env.DEV) {
     pointer-events: auto; /* Zorgt ervoor dat de slides klikbaar zijn */
     min-height: 100%; /* Zorgt ervoor dat de slides 100% van de hoogte innemen */
     min-width: 100%; /* Zorgt ervoor dat de slides 100% van de breedte innemen */
+    flex-shrink: 0; /* Voorkomt dat slides krimpen */
     padding: 0;
     margin: 0;
     /* overflow: hidden; */

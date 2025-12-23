@@ -1,0 +1,208 @@
+// | -------------------------------------------------------------
+// | Colors
+// | -------------------------------------------------------------
+// | Base colors, OKLCH paletten, sectie achtergronden
+// | Progressive enhancement: OKLCH voor moderne browsers, hex fallback voor oudere browsers
+
+:root {
+  /* Base colors - Light mode - sRGB hex fallback */
+  --bg: #f5f2eb;
+  --text: #060205;
+  --link: #060205;
+  --border: #060205;
+  --tile-hover: #ffffff;
+
+  @supports (color: oklch(0 0 0)) {
+    /* Base colors - Light mode - OKLCH */
+    --bg: oklch(0.97 0.01 95);
+    --text: oklch(0.15 0.01 300);
+    --link: oklch(0.15 0.01 300);
+    --border: oklch(0.15 0.01 300);
+    --tile-hover: oklch(1 0 0);
+  }
+
+  /* Design tokens voor Figma design - Light Mode */
+  --color-accent-yellow: #D5FE1A;
+  --color-accent-yellow-oklch: oklch(0.9367 0.2376 120.93);
+  --color-black: #000;
+  --color-black-oklch: oklch(0 0 0);
+  --color-gray-secondary: #999999;
+  --color-gray-secondary-rgba: rgba(6, 2, 5, 0.4);
+  --color-dark-container: #222222;
+  --color-dark-container-oklch: oklch(18.674% 0.00002 271.152);
+
+  @supports (color: oklch(0 0 0)) {
+    --color-accent-yellow: var(--color-accent-yellow-oklch);
+    --color-black: var(--color-black-oklch);
+    --color-dark-container: var(--color-dark-container-oklch);
+  }
+
+  /* Sectie achtergronden - Light Mode */
+  --section-hero-bg: #000;
+  --section-hero-bg-oklch: oklch(0 0 0);
+  --section-work-bg: #f1f0ec;
+  --section-work-bg-oklch: oklch(0.95 0.01 95);
+  --section-media-bg: #ffffff;
+  --section-media-bg-oklch: oklch(1 0 0);
+  --section-music-bg: #000;
+  --section-music-bg-oklch: oklch(0 0 0);
+  --section-footer-bg: #D5FE1A;
+  --section-footer-bg-oklch: oklch(0.9367 0.2376 120.93);
+
+  /* Light text tokens (altijd wit, voor donkere achtergronden) */
+  --text-light: #ffffff;
+  --text-light-oklch: oklch(1 0 0);
+  --text-light-secondary: rgba(255, 255, 255, 0.7);
+  --text-light-secondary-oklch: oklch(1 0 0 / 0.7);
+
+  @supports (color: oklch(0 0 0)) {
+    --text-light: var(--text-light-oklch);
+    --text-light-secondary: var(--text-light-secondary-oklch);
+  }
+
+  @supports (color: oklch(0 0 0)) {
+    --section-hero-bg: var(--section-hero-bg-oklch);
+    --section-work-bg: var(--section-work-bg-oklch);
+    --section-media-bg: var(--section-media-bg-oklch);
+    --section-music-bg: var(--section-music-bg-oklch);
+    --section-footer-bg: var(--section-footer-bg-oklch);
+  }
+
+  /* Work sectie tokens - Light Mode */
+  --work-ticker-text: #111111;
+  --work-ticker-text-oklch: oklch(0.2 0.01 300);
+  --work-tabs-bg: #ffffff;
+  --work-tabs-bg-oklch: oklch(1 0 0);
+  --work-tabs-active-bg: #D5FE1A;
+  --work-tabs-active-bg-oklch: oklch(0.9367 0.2376 120.93);
+  --work-tabs-active-text: #060205;
+  --work-tabs-active-text-oklch: oklch(0.15 0.01 300);
+  --work-tabs-inactive-text: #060205;
+  --work-tabs-inactive-text-oklch: oklch(0.15 0.01 300);
+  --work-items-active-bg: #ffffff;
+  --work-items-active-bg-oklch: oklch(1 0 0);
+  --work-items-text: #060205;
+  --work-items-text-oklch: oklch(0.15 0.01 300);
+  --work-items-secondary: rgba(6, 2, 5, 0.4);
+  --work-items-hover-bg: rgba(255, 255, 255, 0.2);
+  --work-items-hover-bg-oklch: oklch(1 0 0 / 0.2);
+
+  @supports (color: oklch(0 0 0)) {
+    --work-ticker-text: var(--work-ticker-text-oklch);
+    --work-tabs-bg: var(--work-tabs-bg-oklch);
+    --work-tabs-active-bg: var(--work-tabs-active-bg-oklch);
+    --work-tabs-active-text: var(--work-tabs-active-text-oklch);
+    --work-tabs-inactive-text: var(--work-tabs-inactive-text-oklch);
+    --work-items-active-bg: var(--work-items-active-bg-oklch);
+    --work-items-text: var(--work-items-text-oklch);
+    --work-items-hover-bg: var(--work-items-hover-bg-oklch);
+  }
+
+  /* Footer tokens - altijd hetzelfde */
+  --footer-text: #060205;
+  --footer-text-oklch: oklch(0.15 0.01 300);
+
+  @supports (color: oklch(0 0 0)) {
+    --footer-text: var(--footer-text-oklch);
+  }
+}
+
+:root[data-theme='dark'] {
+  /* Base colors - Dark mode - sRGB hex fallback */
+  --bg: #060205;
+  --text: #f5f2eb;
+  --link: #f5f2eb;
+  --border: #f5f2eb;
+  --tile-hover: #000;
+
+  @supports (color: oklch(0 0 0)) {
+    /* Base colors - Dark mode - OKLCH */
+    --bg: oklch(0.15 0.01 300);
+    --text: oklch(0.97 0.01 95);
+    --link: oklch(0.97 0.01 95);
+    --border: oklch(0.97 0.01 95);
+    --tile-hover: oklch(0 0 0);
+  }
+
+  /* Sectie achtergronden - Dark Mode (alleen work en media veranderen) */
+  --section-work-bg: #12110f;
+  --section-work-bg-oklch: oklch(18.674% 0.00002 271.152);
+  --section-media-bg: #0d0d0d;
+  --section-media-bg-oklch: oklch(0.15 0 0);
+
+  @supports (color: oklch(0 0 0)) {
+    --section-work-bg: var(--section-work-bg-oklch);
+    --section-media-bg: var(--section-media-bg-oklch);
+  }
+
+  /* Work sectie tokens - Dark Mode */
+  --work-ticker-text: #f1f0ec;
+  --work-ticker-text-oklch: oklch(0.95 0.01 95);
+  --work-tabs-bg: #0d0d0d;
+  --work-tabs-bg-oklch: oklch(0.15 0 0);
+  --work-tabs-active-bg: #D5FE1A;
+  --work-tabs-active-bg-oklch: oklch(0.9391 0.1371 101.48);
+  --work-tabs-inactive-text: #f1f0ec;
+  --work-tabs-inactive-text-oklch: oklch(0.95 0.01 95);
+  --work-items-active-bg: #0d0d0d;
+  --work-items-active-bg-oklch: oklch(0.15 0 0);
+  --work-items-text: #ffffff;
+  --work-items-text-oklch: oklch(1 0 0);
+  --work-items-secondary: rgba(255, 255, 255, 0.4);
+  --work-items-hover-bg: rgba(0, 0, 0, 0.5);
+  --work-items-hover-bg-oklch: oklch(0 0 0 / 0.5);
+
+  @supports (color: oklch(0 0 0)) {
+    --work-ticker-text: var(--work-ticker-text-oklch);
+    --work-tabs-bg: var(--work-tabs-bg-oklch);
+    --work-tabs-active-bg: var(--work-tabs-active-bg-oklch);
+    --work-tabs-inactive-text: var(--work-tabs-inactive-text-oklch);
+    --work-items-active-bg: var(--work-items-active-bg-oklch);
+    --work-items-text: var(--work-items-text-oklch);
+    --work-items-hover-bg: var(--work-items-hover-bg-oklch);
+  }
+
+  /* Cookie Consent - Dark Mode */
+  --cc-btn-primary-bg: #ffffff;
+  --cc-btn-primary-color: #000;
+  --cc-btn-primary-hover-bg: #ccd4d8;
+  --cc-btn-primary-hover-color: #000;
+  --cc-btn-primary-border-color: var(--cc-btn-primary-bg);
+
+  --cc-btn-secondary-bg: rgba(255, 255, 255, 0.039);
+  --cc-btn-secondary-color: var(--cc-primary-color);
+  --cc-btn-secondary-border-color: #252729;
+  --cc-btn-secondary-hover-bg: #252729;
+  --cc-btn-secondary-hover-color: #fff;
+  --cc-btn-secondary-hover-border-color: #252729;
+
+  --cc-cookie-category-block-bg: #101111;
+  --cc-cookie-category-block-border: #1d1e1f;
+  --cc-cookie-category-block-hover-bg: #151516;
+  --cc-cookie-category-block-hover-border: #1d1e1f;
+  --cc-cookie-category-expanded-block-hover-bg: #1d1e1f;
+  --cc-cookie-category-expanded-block-bg: #101111;
+  --cc-toggle-readonly-bg: #2f3132;
+  --cc-overlay-bg: rgba(0, 0, 0, 0.9) !important;
+
+  --cc-toggle-on-bg: var(--cc-btn-primary-bg);
+  --cc-toggle-off-bg: #525f6b;
+  --cc-toggle-on-knob-bg: var(--cc-bg);
+  --cc-toggle-off-knob-bg: var(--cc-btn-primary-color);
+  --cc-toggle-readonly-knob-bg: var(--cc-cookie-category-block-bg);
+  --cc-toggle-enabled-icon-color: var(--cc-btn-primary-color);
+  --cc-toggle-disabled-icon-color: var(--cc-btn-primary-color);
+  --cc-toggle-readonly-knob-icon-color: var(--cc-toggle-readonly-bg);
+  --cc-section-category-border: #1e2428;
+
+  --cc-webkit-scrollbar-bg: var(--cc-section-category-border);
+  --cc-webkit-scrollbar-hover-bg: var(--cc-btn-primary-hover-bg);
+
+  --cc-separator-border-color: #252729;
+
+  --cc-footer-bg: #000;
+  --cc-footer-color: var(--cc-secondary-color);
+  --cc-footer-border-color: #212529;
+}
+
+

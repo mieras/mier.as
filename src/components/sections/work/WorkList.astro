@@ -1,0 +1,61 @@
+---
+import WorkListItem from './WorkListItem.astro';
+
+type Project = {
+  _id: string;
+  title: string;
+  slug?: string;
+  year?: number;
+  role?: string;
+  thumbnail?: {
+    image?: any;
+    aspectRatio?: string;
+  };
+  client?: {
+    title: string;
+  };
+};
+
+type PhotographyItem = {
+  _id: string;
+  title: string;
+  year?: number;
+  city?: string;
+  country?: string;
+  camera?: string;
+  thumbnail?: any;
+};
+
+type Props = {
+  projects?: Project[];
+  photography?: PhotographyItem[];
+  activeTab?: 'design' | 'photography';
+};
+
+const { projects = [], photography = [], activeTab = 'design' } = Astro.props;
+
+const filteredItems = activeTab === 'design' ? projects : photography;
+---
+
+<div class="work__list" aria-label="Projects">
+  {
+    filteredItems.map((item) =>
+      activeTab === 'design' ? (
+        <WorkListItem project={item as Project} type="design" />
+      ) : (
+        <WorkListItem
+          photography={item as PhotographyItem}
+          type="photography"
+        />
+      ),
+    )
+  }
+</div>
+
+<style>
+  .work__list {
+    display: grid;
+    min-height: 0;
+    overflow: auto;
+  }
+</style>

@@ -39,6 +39,28 @@ export default defineType({
       description: 'Camera used for this photo',
     }),
     defineField({
+      name: 'hero',
+      type: 'object',
+      title: 'Hero',
+      fields: [
+        defineField({
+          name: 'title',
+          type: 'string',
+          title: 'Title',
+        }),
+        defineField({
+          name: 'subtitle',
+          type: 'string',
+          title: 'Subtitle',
+        }),
+        defineField({
+          name: 'intro',
+          type: 'text',
+          title: 'Intro',
+        }),
+      ],
+    }),
+    defineField({
       name: 'thumbnail',
       type: 'image',
       title: 'Thumbnail',
@@ -49,6 +71,74 @@ export default defineType({
           type: 'string',
           title: 'Alt Text',
         }),
+      ],
+    }),
+    defineField({
+      name: 'projectMedia',
+      type: 'array',
+      title: 'Project Media',
+      description: 'Media slides for the photography carousel. Each slide can contain an image or video.',
+      of: [
+        {
+          type: 'object',
+          name: 'imageSlide',
+          title: 'Image',
+          fields: [
+            defineField({
+              name: 'image',
+              type: 'image',
+              title: 'Image',
+              options: { hotspot: true },
+              validation: (Rule) => Rule.required(),
+              fields: [
+                defineField({
+                  name: 'alt',
+                  type: 'string',
+                  title: 'Alt Text',
+                }),
+              ],
+            }),
+          ],
+          preview: {
+            select: {
+              image: 'image',
+            },
+            prepare({ image }) {
+              return {
+                title: 'Image Slide',
+                media: image,
+              };
+            },
+          },
+        },
+        {
+          type: 'object',
+          name: 'videoSlide',
+          title: 'Video (MP4)',
+          fields: [
+            defineField({
+              name: 'video',
+              type: 'file',
+              title: 'Video (MP4)',
+              description: 'Upload MP4 video file. Media will fill the slide (object-fit: cover).',
+              options: {
+                accept: 'video/mp4',
+              },
+              validation: (Rule) => Rule.required(),
+            }),
+          ],
+          preview: {
+            select: {
+              video: 'video',
+            },
+            prepare({ video }) {
+              return {
+                title: 'Video Slide',
+                media: video,
+              };
+            },
+          },
+        },
       ],
     }),
   ],
