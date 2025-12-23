@@ -1,5 +1,6 @@
 ---
 import { getSiteSettings } from '../lib/sanity';
+import DarkMode from './DarkMode.astro';
 
 const siteSettings = await getSiteSettings();
 const title = siteSettings?.title || '';
@@ -74,6 +75,10 @@ const tAndCFile = (legal as any)?.termsAndConditions?.asset;
         </li>
       )
     }
+
+    <li class="footer__item">
+      <DarkMode />
+    </li>
   </ul>
 </footer>
 
@@ -118,7 +123,7 @@ const tAndCFile = (legal as any)?.termsAndConditions?.asset;
   }
 
   .footer__item {
-    font-size: var(--fs--2);
+    font-size: var(--fs--3);
     color: var(--footer-text);
     text-decoration: none;
     text-transform: uppercase;

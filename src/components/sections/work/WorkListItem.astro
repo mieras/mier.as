@@ -62,8 +62,8 @@ const dataId =
   type === 'photography'
     ? { 'data-photo-id': item._id }
     : {
-        'data-project-id': item._id,
-        'data-project-slug': project?.slug || '',
+        'data-work-id': item._id,
+        'data-work-slug': project?.slug || '',
         'data-preview': imageUrl || '',
       };
 ---
@@ -90,7 +90,7 @@ const dataId =
     grid-template-columns: 1.25fr 1.5fr 0.5fr;
     gap: var(--space-s);
     align-items: center;
-    padding: var(--space-xs);
+    padding: 0;
     text-decoration: none;
     color: inherit;
     background: var(--section-work-bg);
@@ -106,12 +106,12 @@ const dataId =
   }
 
   .work-row.is-active {
-    background: var(--work-items-active-bg);
+    background: #000;
     color: var(--text-light);
   }
 
   .work-row.is-active:hover {
-    background: var(--work-items-active-bg);
+    background: #000;
     color: var(--text-light);
   }
 
@@ -120,12 +120,14 @@ const dataId =
     font-size: var(--fs-0);
     font-weight: 650;
     line-height: 1.2;
+    padding: var(--space-xs);
   }
 
   .work-row__desc {
     font-size: var(--fs--2);
     opacity: 0.6;
     line-height: 1.2;
+    padding: var(--space-xs);
   }
 
   .work-row.is-active .work-row__desc {
@@ -138,6 +140,8 @@ const dataId =
     font-size: var(--fs--2);
     opacity: 0.6;
     line-height: 1.2;
+    padding: var(--space-xs);
+    padding-right: var(--space-xs);
   }
 
   .work-row.is-active .work-row__year {

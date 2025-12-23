@@ -2,7 +2,7 @@
 import { getHomeData, getPageData, getProjectData } from './sanity';
 
 // templates
-import Single from '../components/templates/Single.astro';
+// import Single from '../components/templates/_Single.astro'; // Unused template
 import WorkOverview from '../components/templates/WorkOverview.astro';
 import Page from '../components/templates/Page.astro';
 import Home from '../components/templates/Home.astro';
@@ -83,8 +83,8 @@ export function getTemplateByRoute(node: any) {
       // Note: 'work' type projects are now handled via /work/[slug].astro route
       default:
         if (import.meta.env.DEV)
-          console.log('📄 Selected Single template (default)');
-        return Single;
+          console.log('📄 Selected Page template (default fallback)');
+        return Page;
     }
   }
 

@@ -28,6 +28,7 @@ export class WorkController {
   private canHover: boolean;
   private projects: Array<{ _id: string; slug?: string; [key: string]: any }>;
   private initialProjectSlug: string | null;
+  private hoverTimeouts = new Map<HTMLElement, number>();
 
   constructor(options: WorkControllerOptions) {
     this.workSection = options.workSection;
@@ -60,26 +61,54 @@ export class WorkController {
 
     // Row hover and click handlers
     this.rows.forEach((row) => {
-      // Hover preview (desktop only)
+      // Hover preview (desktop only) with 300ms delay
       row.addEventListener('mouseenter', () => {
         if (!this.canHover) return;
         if (row.hasAttribute('hidden')) return;
 
-        const previewUrl = row.getAttribute('data-preview');
-        if (previewUrl) {
-          this.swapPreview(previewUrl);
+        // Clear any existing timeout for this row
+        const existingTimeout = this.hoverTimeouts.get(row);
+        if (existingTimeout) {
+          clearTimeout(existingTimeout);
         }
+
+        // Set new timeout for preview
+        const timeoutId = window.setTimeout(() => {
+          const previewUrl = row.getAttribute('data-preview');
+          if (previewUrl) {
+            // Always show hover preview, even if another item is active
+            this.swapPreview(previewUrl);
+          }
+          this.hoverTimeouts.delete(row);
+        }, 300);
+
+        this.hoverTimeouts.set(row, timeoutId);
       });
 
       row.addEventListener('mouseleave', () => {
         if (!this.canHover) return;
         if (row.hasAttribute('hidden')) return;
 
-        // If nothing is clicked active, return to tab default
-        const hasActive = Array.from(this.rows).some((r) =>
+        // Clear hover timeout to prevent flitsende beelden
+        const timeoutId = this.hoverTimeouts.get(row);
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          this.hoverTimeouts.delete(row);
+        }
+
+        // Find the active row to restore its preview
+        const activeRow = Array.from(this.rows).find((r) =>
           r.classList.contains('is-active'),
         );
-        if (!hasActive) {
+
+        if (activeRow) {
+          // If there's an active row, restore its preview
+          const activePreviewUrl = activeRow.getAttribute('data-preview');
+          if (activePreviewUrl) {
+            this.swapPreview(activePreviewUrl);
+          }
+        } else {
+          // If nothing is clicked active, return to tab default
           const defaultImage =
             this.activeTab === 'design'
               ? this.defaultImages.design
@@ -93,7 +122,7 @@ export class WorkController {
         e.preventDefault();
         if (row.hasAttribute('hidden')) return;
 
-        const projectSlug = row.getAttribute('data-project-slug');
+        const projectSlug = row.getAttribute('data-work-slug');
         const photoId = row.getAttribute('data-photo-id');
 
         if (projectSlug) {
@@ -283,11 +312,11 @@ export class WorkController {
 
     // Update data attribute for mode switching
     this.workPanel.setAttribute('data-mode', mode);
-    this.workPanel.setAttribute('data-project-type', type);
+    this.workPanel.setAttribute('data-work-type', type);
     if (slug) {
-      this.workPanel.setAttribute('data-project-slug', slug);
+      this.workPanel.setAttribute('data-work-slug', slug);
     } else {
-      this.workPanel.removeAttribute('data-project-slug');
+      this.workPanel.removeAttribute('data-work-slug');
     }
 
     // Dispatch custom event for panel mode change
@@ -393,7 +422,7 @@ export class WorkController {
   ) {
     if (type === 'project') {
       const row = Array.from(this.rows).find(
-        (r) => r.getAttribute('data-project-slug') === slug,
+        (r) => r.getAttribute('data-work-slug') === slug,
       );
       if (row) {
         const rowType = row.getAttribute('data-type');
@@ -407,9 +436,9 @@ export class WorkController {
           await this.openProject(slug, row as HTMLElement);
         }
       } else if (import.meta.env.DEV) {
-        console.warn('⚠️ Project row not found for slug:', slug, {
+        console.warn('⚠️ Work row not found for slug:', slug, {
           availableRows: Array.from(this.rows).map((r) => ({
-            slug: r.getAttribute('data-project-slug'),
+            slug: r.getAttribute('data-work-slug'),
             type: r.getAttribute('data-type'),
           })),
         });
@@ -440,9 +469,9 @@ export class WorkController {
     if (path.startsWith('/work/')) {
       const slug = path.split('/work/')[1];
       if (slug) {
-        // Restore project view from URL
+        // Restore work view from URL
         const row = Array.from(this.rows).find(
-          (r) => r.getAttribute('data-project-slug') === slug,
+          (r) => r.getAttribute('data-work-slug') === slug,
         );
         if (row) {
           const rowType = row.getAttribute('data-type');
@@ -480,7 +509,23 @@ export class WorkController {
   }
 
   public destroy() {
-    // Cleanup if needed
+    // Cleanup event listeners
+    this.hoverTimeouts.forEach((timeoutId) => {
+      clearTimeout(timeoutId);
+    });
+    this.hoverTimeouts.clear();
+
+    // Remove event listeners from rows
+    this.rows.forEach((row) => {
+      const newRow = row.cloneNode(true);
+      row.parentNode?.replaceChild(newRow, row);
+    });
+
+    // Cleanup tab button listeners
+    this.tabButtons.forEach((btn) => {
+      const newBtn = btn.cloneNode(true);
+      btn.parentNode?.replaceChild(newBtn, btn);
+    });
   }
 }
 
@@ -495,12 +540,12 @@ export function initWorkController() {
   const defaultPhotoImage =
     workSection.getAttribute('data-default-photo-image') || '';
 
-  // Get initial project slug from SSR
+  // Get initial work slug from SSR
   const initialProjectSlug =
-    workSection.getAttribute('data-initial-project-slug') || null;
+    workSection.getAttribute('data-initial-work-slug') || null;
 
-  // Get projects data from data attribute (JSON string)
-  const projectsData = workSection.getAttribute('data-projects');
+  // Get works data from data attribute (JSON string)
+  const projectsData = workSection.getAttribute('data-works');
   let projects: Array<{ _id: string; slug?: string; [key: string]: any }> = [];
   if (projectsData) {
     try {

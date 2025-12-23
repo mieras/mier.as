@@ -39,9 +39,10 @@ const heroIntro = data?.hero?.intro || '';
 const year = data?.year;
 const client = type === 'project' ? project?.client?.title : null;
 const role = type === 'project' ? project?.role : null;
-const location = type === 'photography' && photography
-  ? [photography.city, photography.country].filter(Boolean).join(', ')
-  : null;
+const location =
+  type === 'photography' && photography
+    ? [photography.city, photography.country].filter(Boolean).join(', ')
+    : null;
 const camera = type === 'photography' ? photography?.camera : null;
 ---
 
@@ -66,8 +67,7 @@ const camera = type === 'photography' ? photography?.camera : null;
           stroke="currentColor"
           stroke-width="2"
           stroke-linecap="round"
-          stroke-linejoin="round"
-        />
+          stroke-linejoin="round"></path>
       </svg>
     </button>
 
@@ -77,36 +77,46 @@ const camera = type === 'photography' ? photography?.camera : null;
       {heroIntro && <p class="info-panel__intro">{heroIntro}</p>}
 
       <dl class="info-panel__meta">
-        {client && (
-          <>
-            <dt>Client</dt>
-            <dd>{client}</dd>
-          </>
-        )}
-        {role && (
-          <>
-            <dt>Role</dt>
-            <dd>{role}</dd>
-          </>
-        )}
-        {year && (
-          <>
-            <dt>Year</dt>
-            <dd>{year}</dd>
-          </>
-        )}
-        {location && (
-          <>
-            <dt>Location</dt>
-            <dd>{location}</dd>
-          </>
-        )}
-        {camera && (
-          <>
-            <dt>Camera</dt>
-            <dd>{camera}</dd>
-          </>
-        )}
+        {
+          client && (
+            <>
+              <dt>Client</dt>
+              <dd>{client}</dd>
+            </>
+          )
+        }
+        {
+          role && (
+            <>
+              <dt>Role</dt>
+              <dd>{role}</dd>
+            </>
+          )
+        }
+        {
+          year && (
+            <>
+              <dt>Year</dt>
+              <dd>{year}</dd>
+            </>
+          )
+        }
+        {
+          location && (
+            <>
+              <dt>Location</dt>
+              <dd>{location}</dd>
+            </>
+          )
+        }
+        {
+          camera && (
+            <>
+              <dt>Camera</dt>
+              <dd>{camera}</dd>
+            </>
+          )
+        }
       </dl>
     </div>
   </div>
@@ -130,40 +140,70 @@ const camera = type === 'photography' ? photography?.camera : null;
       stroke="currentColor"
       stroke-width="2"
       stroke-linecap="round"
-      stroke-linejoin="round"
-    />
+      stroke-linejoin="round"></path>
     <path
       d="M12 16v-4M12 8h.01"
       stroke="currentColor"
       stroke-width="2"
       stroke-linecap="round"
-      stroke-linejoin="round"
-    />
+      stroke-linejoin="round"></path>
   </svg>
 </button>
 
 <script>
   function initInfoPanel() {
-    const panel = document.querySelector('[data-info-panel]') as HTMLElement;
-    const overlay = document.querySelector('[data-info-overlay]') as HTMLElement;
-    const content = document.querySelector('[data-info-content]') as HTMLElement;
-    const toggle = document.querySelector('[data-info-toggle]') as HTMLElement;
-    const close = document.querySelector('[data-info-close]') as HTMLElement;
+    // Find panel within work preview container (for dynamically loaded panels)
+    const workPreview = document.querySelector('.work__preview');
+    const scope = workPreview || document;
+
+    const panel = scope.querySelector('[data-info-panel]') as HTMLElement;
+    const overlay = scope.querySelector('[data-info-overlay]') as HTMLElement;
+    const content = scope.querySelector('[data-info-content]') as HTMLElement;
+    const toggle = scope.querySelector('[data-info-toggle]') as HTMLElement;
+    const close = scope.querySelector('[data-info-close]') as HTMLElement;
 
     if (!panel || !overlay || !content || !toggle || !close) return;
+
+    // Remove existing listeners to prevent duplicates by cloning nodes
+    const newToggle = toggle.cloneNode(true) as HTMLElement;
+    toggle.parentNode?.replaceChild(newToggle, toggle);
+    const newClose = close.cloneNode(true) as HTMLElement;
+    close.parentNode?.replaceChild(newClose, close);
 
     function openPanel() {
       panel.classList.add('is-open');
       document.body.style.overflow = 'hidden';
+      // Hide info toggle, show close button
+      if (newToggle) {
+        newToggle.style.display = 'none';
+      }
+      if (newClose) {
+        newClose.style.display = 'flex';
+      }
     }
 
     function closePanel() {
       panel.classList.remove('is-open');
       document.body.style.overflow = '';
+      // Show info toggle, hide close button
+      if (newToggle) {
+        newToggle.style.display = 'flex';
+      }
+      if (newClose) {
+        newClose.style.display = 'none';
+      }
     }
 
-    toggle.addEventListener('click', openPanel);
-    close.addEventListener('click', closePanel);
+    // Initialize: hide close button, show toggle
+    if (newClose) {
+      newClose.style.display = 'none';
+    }
+    if (newToggle) {
+      newToggle.style.display = 'flex';
+    }
+
+    newToggle.addEventListener('click', openPanel);
+    newClose.addEventListener('click', closePanel);
     overlay.addEventListener('click', closePanel);
 
     // Close on Escape key
@@ -188,7 +228,9 @@ const camera = type === 'photography' ? photography?.camera : null;
     pointer-events: none;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
+    transition:
+      opacity 0.3s ease,
+      visibility 0.3s ease;
   }
 
   .info-panel.is-open {
@@ -230,18 +272,40 @@ const camera = type === 'photography' ? photography?.camera : null;
 
   .info-panel__close {
     position: absolute;
-    top: var(--space-m);
-    right: var(--space-m);
-    background: none;
+    bottom: var(--space-m);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(30px);
     border: none;
-    padding: var(--space-xs);
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
     cursor: pointer;
-    color: currentColor;
+    color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: opacity 0.2s ease;
-    z-index: 10;
+    transition:
+      opacity 0.2s ease,
+      visibility 0.2s ease,
+      background-color 0.2s,
+      color 0.2s;
+    z-index: 60;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .info-panel.is-open .info-panel__close {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .info-panel__close:hover {
+    background: rgba(255, 255, 255, 0.2);
   }
 
   .info-panel__close:hover {
@@ -301,8 +365,9 @@ const camera = type === 'photography' ? photography?.camera : null;
 
   .info-panel__toggle {
     position: absolute;
-    top: var(--space-m);
-    right: var(--space-m);
+    bottom: var(--space-m);
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 40;
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(30px);
@@ -315,8 +380,18 @@ const camera = type === 'photography' ? photography?.camera : null;
     justify-content: center;
     cursor: pointer;
     color: #fff;
-    transition: background-color 0.2s, color 0.2s;
+    transition:
+      background-color 0.2s,
+      color 0.2s,
+      opacity 0.2s,
+      visibility 0.2s;
     padding: 0;
+  }
+
+  .info-panel.is-open .info-panel__toggle {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
   }
 
   .info-panel__toggle:hover {
@@ -345,4 +420,3 @@ const camera = type === 'photography' ? photography?.camera : null;
     }
   }
 </style>
-
