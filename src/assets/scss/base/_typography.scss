@@ -107,7 +107,7 @@ body {
     padding-left: var(--space-m);
   }
 
-  li {
+  li:not([class]) {
     margin-bottom: var(--space-xs);
   }
 }

@@ -6,6 +6,7 @@ interface Props {
 }
 
 const { city = 'Rotterdam' } = Astro.props;
+const weatherApiKey = import.meta.env.PUBLIC_WEATHER_API_KEY || '';
 ---
 
 <span class="weather-container">
@@ -13,8 +14,8 @@ const { city = 'Rotterdam' } = Astro.props;
   <span class="nav-temperature" id="temperature">--°C</span>
 </span>
 
-<script define:vars={{ city }}>
-  const API_KEY = '14ca45f46d204e66bd3165215251411';
+<script define:vars={{ city, weatherApiKey }}>
+  const API_KEY = weatherApiKey;
   const API_URL = 'https://api.weatherapi.com/v1/current.json';
 
   // Map WeatherAPI condition codes to weather-icons classes
@@ -76,6 +77,16 @@ const { city = 'Rotterdam' } = Astro.props;
   }
 
   async function fetchTemperature() {
+    // Skip if API key is not configured
+    if (!API_KEY) {
+      console.warn('⚠️ Weather API key not configured. Set PUBLIC_WEATHER_API_KEY environment variable.');
+      const tempElement = document.getElementById('temperature');
+      if (tempElement) {
+        tempElement.textContent = '--°C';
+      }
+      return;
+    }
+
     try {
       const response = await fetch(
         `${API_URL}?key=${API_KEY}&q=${city}&aqi=no`,

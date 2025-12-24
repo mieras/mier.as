@@ -141,7 +141,7 @@
   --work-tabs-bg: #0d0d0d;
   --work-tabs-bg-oklch: oklch(0.15 0 0);
   --work-tabs-active-bg: #D5FE1A;
-  --work-tabs-active-bg-oklch: oklch(0.9391 0.1371 101.48);
+  --work-tabs-active-bg-oklch:var(--color-accent-yellow-oklch);
   --work-tabs-inactive-text: #f1f0ec;
   --work-tabs-inactive-text-oklch: oklch(0.95 0.01 95);
   --work-items-active-bg: #0d0d0d;
@@ -204,5 +204,3 @@
   --cc-footer-color: var(--cc-secondary-color);
   --cc-footer-border-color: #212529;
 }
-
-

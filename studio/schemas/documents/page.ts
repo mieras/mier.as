@@ -231,6 +231,34 @@ export default defineType({
       },
     }),
     defineField({
+      name: 'workPlaceholders',
+      type: 'object',
+      title: 'Work Section Placeholder Images',
+      description: 'Placeholder images shown in work section when no project is selected',
+      hidden: ({ document }) => document?.pageType !== 'homepage',
+      group: 'homepage',
+      fields: [
+        defineField({
+          name: 'designPlaceholder',
+          type: 'image',
+          title: 'Design Projects Placeholder',
+          description: 'Shown in work panel when no design project is selected',
+          options: {
+            hotspot: true,
+          },
+        }),
+        defineField({
+          name: 'photographyPlaceholder',
+          type: 'image',
+          title: 'Photography Placeholder',
+          description: 'Shown in work panel when no photography item is selected',
+          options: {
+            hotspot: true,
+          },
+        }),
+      ],
+    }),
+    defineField({
       name: 'content',
       type: 'array',
       title: 'Page Content',

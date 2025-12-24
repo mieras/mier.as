@@ -21,6 +21,9 @@ export class WorkController {
   private rows: NodeListOf<HTMLElement>;
   private previewBox: HTMLElement | null;
   private previewImg: HTMLImageElement | null;
+  private cursorPreview: HTMLElement | null;
+  private cursorImage: HTMLImageElement | null;
+  private cursorVideo: HTMLVideoElement | null = null;
   private workPanel: HTMLElement | null;
   private activeTab: string = 'design';
   private activeProjectSlug: string | null = null;
@@ -31,6 +34,8 @@ export class WorkController {
   private initialProjectSlug: string | null;
   private initialPhotographySlug: string | null;
   private hoverTimeouts = new Map<HTMLElement, number>();
+  private isInitializing: boolean = true;
+  private mouseMoveHandler: ((e: MouseEvent) => void) | null = null;
 
   constructor(options: WorkControllerOptions) {
     this.workSection = options.workSection;
@@ -47,6 +52,8 @@ export class WorkController {
     this.rows = this.workSection.querySelectorAll('.work-row');
     this.previewBox = this.workSection.querySelector('[data-preview]');
     this.previewImg = this.workSection.querySelector('.work__preview-img');
+    this.cursorPreview = this.workSection.querySelector('[data-work-cursor]');
+    this.cursorImage = this.workSection.querySelector('.work__cursor-image');
     this.workPanel = this.workSection.querySelector('.work__right');
 
     this.init();
@@ -81,60 +88,18 @@ export class WorkController {
 
     // Row hover and click handlers
     this.rows.forEach((row) => {
-      // Hover preview (desktop only) with 300ms delay
+      // Hover preview (desktop only) with delay
       row.addEventListener('mouseenter', () => {
         if (!this.canHover) return;
         if (row.hasAttribute('hidden')) return;
-
-        // Clear any existing timeout for this row
-        const existingTimeout = this.hoverTimeouts.get(row);
-        if (existingTimeout) {
-          clearTimeout(existingTimeout);
-        }
-
-        // Set new timeout for preview (200ms delay for smooth UX)
-        const timeoutId = window.setTimeout(() => {
-          const previewUrl = row.getAttribute('data-preview');
-          if (previewUrl) {
-            // Always show hover preview in workpanel, even if another item is active
-            this.swapPreview(previewUrl);
-          }
-          this.hoverTimeouts.delete(row);
-        }, 200);
-
-        this.hoverTimeouts.set(row, timeoutId);
+        this.scheduleCursorPreview(row);
       });
 
       row.addEventListener('mouseleave', () => {
         if (!this.canHover) return;
         if (row.hasAttribute('hidden')) return;
 
-        // Clear hover timeout to prevent flitsende beelden
-        const timeoutId = this.hoverTimeouts.get(row);
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-          this.hoverTimeouts.delete(row);
-        }
-
-        // Find the active row to restore its preview
-        const activeRow = Array.from(this.rows).find((r) =>
-          r.classList.contains('is-active'),
-        );
-
-        if (activeRow) {
-          // If there's an active row, restore its preview
-          const activePreviewUrl = activeRow.getAttribute('data-preview');
-          if (activePreviewUrl) {
-            this.swapPreview(activePreviewUrl);
-          }
-        } else {
-          // If nothing is clicked active, return to tab default
-          const defaultImage =
-            this.activeTab === 'design'
-              ? this.defaultImages.design
-              : this.defaultImages.photo;
-          this.swapPreview(defaultImage);
-        }
+        this.clearCursorPreview(row);
       });
 
       // Click = active + preview + routing
@@ -152,11 +117,16 @@ export class WorkController {
         } else {
           // Fallback: just set active
           this.setActiveRow(row);
+          const previewVideo = row.getAttribute('data-preview-video');
           const previewUrl = row.getAttribute('data-preview');
-          if (previewUrl) {
+          if (previewVideo) {
+            this.swapPreviewVideo(previewVideo);
+          } else if (previewUrl) {
             this.swapPreview(previewUrl);
           }
         }
+
+        this.hideCursorPreview();
       };
 
       row.addEventListener('click', handleRowActivate);
@@ -168,6 +138,15 @@ export class WorkController {
           handleRowActivate(e);
         }
       });
+
+      row.addEventListener('focus', () => {
+        if (row.hasAttribute('hidden')) return;
+        this.scheduleCursorPreview(row);
+      });
+
+      row.addEventListener('blur', () => {
+        this.clearCursorPreview(row);
+      });
     });
 
     // Handle popstate (back/forward navigation)
@@ -175,8 +154,23 @@ export class WorkController {
       this.handlePopState(e.state);
     });
 
+    if (this.canHover && this.cursorPreview) {
+      this.mouseMoveHandler = (e: MouseEvent) => {
+        if (!this.cursorPreview) return;
+        this.cursorPreview.style.left = `${e.clientX}px`;
+        this.cursorPreview.style.top = `${e.clientY}px`;
+      };
+      window.addEventListener('mousemove', this.mouseMoveHandler);
+    }
+
     // Initialize with default tab first
     this.setTab('design');
+
+    // Mark initialization as complete after a short delay
+    // This prevents auto-opening first item during init
+    setTimeout(() => {
+      this.isInitializing = false;
+    }, 500);
 
     // Check for initial project or photography slug from SSR first
     if (this.initialProjectSlug) {
@@ -207,10 +201,10 @@ export class WorkController {
       // Also check after a short delay to ensure DOM is fully ready
       setTimeout(() => {
         this.handleDeepLink();
-        // If no deep link found, open first item
-        if (!this.hasActiveItem()) {
-          this.openFirstItem();
-        }
+        // Don't auto-open first item on plain homepage visits
+        // This prevents redirect loops when openFirstItem() changes URL to /work/[slug]
+        // which then triggers handleDeepLink() to redirect back to /
+        // Only handleDeepLink() should open projects when there's an actual deep link
       }, 100);
     }
   }
@@ -260,13 +254,139 @@ export class WorkController {
   private swapPreview(src: string) {
     if (!this.previewImg || !this.previewBox) return;
 
+    // Hide video if showing
+    const existingVideo = this.previewBox.querySelector('video');
+    if (existingVideo) {
+      existingVideo.remove();
+    }
+
     this.previewBox.classList.add('is-fading');
     window.setTimeout(() => {
       if (this.previewImg) {
         this.previewImg.src = src;
+        this.previewImg.style.display = 'block';
       }
       this.previewBox?.classList.remove('is-fading');
     }, 120);
+  }
+
+  private swapPreviewVideo(videoUrl: string) {
+    if (!this.previewBox) return;
+
+    // Hide image if showing
+    if (this.previewImg) {
+      this.previewImg.style.display = 'none';
+    }
+
+    // Remove existing video if any
+    const existingVideo = this.previewBox.querySelector('video');
+    if (existingVideo) {
+      existingVideo.remove();
+    }
+
+    this.previewBox.classList.add('is-fading');
+    window.setTimeout(() => {
+      const video = document.createElement('video');
+      video.src = videoUrl;
+      video.autoplay = true;
+      video.loop = true;
+      video.muted = true;
+      video.playsInline = true;
+      video.className = 'work__preview-video';
+      video.style.cssText =
+        'width: 100%; height: 100%; object-fit: cover; display: block;';
+
+      this.previewBox?.appendChild(video);
+      this.previewBox?.classList.remove('is-fading');
+    }, 120);
+  }
+
+  private scheduleCursorPreview(row: HTMLElement) {
+    const existingTimeout = this.hoverTimeouts.get(row);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      const previewUrl = row.getAttribute('data-preview');
+      const previewVideo = row.getAttribute('data-preview-video');
+      this.showCursorPreview(previewVideo, previewUrl);
+      this.hoverTimeouts.delete(row);
+    }, 200);
+
+    this.hoverTimeouts.set(row, timeoutId);
+  }
+
+  private clearCursorPreview(row: HTMLElement) {
+    const timeoutId = this.hoverTimeouts.get(row);
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      this.hoverTimeouts.delete(row);
+    }
+    this.hideCursorPreview();
+  }
+
+  private showCursorPreview(
+    previewVideo: string | null,
+    previewUrl: string | null,
+  ) {
+    if (!this.canHover || !this.cursorPreview) return;
+    if (!previewVideo && !previewUrl) {
+      this.hideCursorPreview();
+      return;
+    }
+
+    if (previewVideo) {
+      this.setCursorVideo(previewVideo);
+    } else if (previewUrl) {
+      this.setCursorImage(previewUrl);
+    }
+
+    this.cursorPreview.classList.add('is-visible');
+  }
+
+  private hideCursorPreview() {
+    if (!this.cursorPreview) return;
+    this.cursorPreview.classList.remove('is-visible');
+    if (this.cursorVideo) {
+      this.cursorVideo.pause();
+    }
+  }
+
+  private setCursorImage(src: string) {
+    if (!this.cursorImage) return;
+    this.cursorImage.src = src;
+    this.cursorImage.style.display = 'block';
+    if (this.cursorVideo) {
+      this.cursorVideo.pause();
+      this.cursorVideo.style.display = 'none';
+    }
+  }
+
+  private setCursorVideo(src: string) {
+    if (!this.cursorPreview) return;
+    if (!this.cursorVideo) {
+      const video = document.createElement('video');
+      video.autoplay = true;
+      video.loop = true;
+      video.muted = true;
+      video.playsInline = true;
+      video.className = 'work__cursor-video';
+      video.style.cssText =
+        'width: 100%; height: 100%; object-fit: cover; display: block;';
+      this.cursorVideo = video;
+      this.cursorPreview.appendChild(video);
+    }
+
+    if (this.cursorVideo.src !== src) {
+      this.cursorVideo.src = src;
+    }
+
+    this.cursorVideo.style.display = 'block';
+    if (this.cursorImage) {
+      this.cursorImage.style.display = 'none';
+    }
+    this.cursorVideo.play().catch(() => {});
   }
 
   private setTab(key: string) {
@@ -324,9 +444,11 @@ export class WorkController {
     const defaultImage =
       key === 'design' ? this.defaultImages.design : this.defaultImages.photo;
     this.swapPreview(defaultImage);
+    this.hideCursorPreview();
 
     // Auto-open first item in the new tab if nothing is active
-    if (!this.hasActiveItem()) {
+    // But only if we're not still initializing (prevents redirect loops)
+    if (!this.hasActiveItem() && !this.isInitializing) {
       setTimeout(() => {
         this.openFirstItem();
       }, 100);
@@ -688,6 +810,10 @@ export class WorkController {
       const newBtn = btn.cloneNode(true);
       btn.parentNode?.replaceChild(newBtn, btn);
     });
+
+    if (this.mouseMoveHandler) {
+      window.removeEventListener('mousemove', this.mouseMoveHandler);
+    }
   }
 }
 

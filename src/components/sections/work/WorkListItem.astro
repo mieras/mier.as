@@ -53,21 +53,45 @@ if (import.meta.env.DEV && type === 'photography') {
   });
 }
 
-// Get preview image URL
+// Get preview image and video URLs
 let imageUrl: string | null = null;
+let videoUrl: string | null = null;
+
 if (type === 'design' && project?.preview) {
+  if (project.preview.video?.asset) {
+    // Get video URL from Sanity asset
+    const videoAsset = project.preview.video.asset;
+    if (videoAsset.url) {
+      videoUrl = videoAsset.url;
+    } else if (videoAsset._ref) {
+      const assetId = videoAsset._ref.replace('file-', '').replace('-mp4', '');
+      videoUrl = `https://cdn.sanity.io/files/${import.meta.env.PUBLIC_SANITY_PROJECT_ID}/${import.meta.env.PUBLIC_SANITY_DATASET}/${assetId}.mp4`;
+    }
+  }
+
   if (project.preview.image?.asset) {
     imageUrl =
       urlForImage(project.preview.image)?.width(1200).height(800).url() || null;
-  } else if (project.preview.video?.asset) {
-    // For video, we'd need to get a thumbnail or use a placeholder
-    // For now, we'll leave it null and handle it in the component
-    imageUrl = null;
   }
 } else if (type === 'photography' && photography?.preview?.asset) {
   imageUrl =
     urlForImage(photography.preview)?.width(1200).height(800).url() || null;
 }
+
+const dataId =
+  type === 'photography'
+    ? {
+        'data-photo-id': item._id,
+        'data-photo-slug': photography?.slug || '',
+        'data-preview': imageUrl || '',
+        'data-preview-video': videoUrl || '',
+      }
+    : {
+        'data-work-id': item._id,
+        'data-work-slug': project?.slug || '',
+        'data-preview': imageUrl || '',
+        'data-preview-video': videoUrl || '',
+      };
 
 const year = item.year || null;
 const projectTitle = item.projectTitle || item.title || '';
@@ -78,18 +102,6 @@ const client = project?.client?.title || '';
 // For photography: show Project Title, Country, and Year in tile
 const country = photography?.country || '';
 
-const dataId =
-  type === 'photography'
-    ? {
-        'data-photo-id': item._id,
-        'data-photo-slug': photography?.slug || '',
-        'data-preview': imageUrl || '',
-      }
-    : {
-        'data-work-id': item._id,
-        'data-work-slug': project?.slug || '',
-        'data-preview': imageUrl || '',
-      };
 ---
 
 <a

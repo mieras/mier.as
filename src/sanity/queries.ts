@@ -68,6 +68,20 @@ export const HOME_QUERY = `*[_type == "page" && pageType == "homepage"][0] {
       }
     }
   },
+  workPlaceholders {
+    designPlaceholder {
+      ...,
+      asset->,
+      crop,
+      hotspot
+    },
+    photographyPlaceholder {
+      ...,
+      asset->,
+      crop,
+      hotspot
+    }
+  },
   seo {
     _type,
     title,
@@ -185,6 +199,20 @@ export const HOME_FALLBACK_QUERY = `*[_type == "page" && title == "Homepage"][0]
         ...,
         asset->
       }
+    }
+  },
+  workPlaceholders {
+    designPlaceholder {
+      ...,
+      asset->,
+      crop,
+      hotspot
+    },
+    photographyPlaceholder {
+      ...,
+      asset->,
+      crop,
+      hotspot
     }
   },
   seo {
