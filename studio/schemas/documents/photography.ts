@@ -57,8 +57,15 @@ export default defineType({
       name: 'projectTitle',
       type: 'string',
       title: 'Project Title',
-      description: 'Project title used in work list tile (only Project Title, Location and Year are shown)',
+      description: 'Project title used in work list tile (shown with Country and Year)',
       validation: (Rule) => Rule.required().min(3).max(100),
+      group: 'general',
+    }),
+    defineField({
+      name: 'country',
+      type: 'string',
+      title: 'Country',
+      description: 'Country name (shown in work list tile)',
       group: 'general',
     }),
     defineField({
@@ -72,7 +79,7 @@ export default defineType({
       name: 'location',
       type: 'array',
       title: 'Location',
-      description: 'Location tags (e.g., city, country)',
+      description: 'Location tags (shown in info panel only)',
       of: [{ type: 'string' }],
       options: {
         layout: 'tags',
@@ -253,13 +260,14 @@ export default defineType({
     select: {
       title: 'projectTitle',
       subtitle: 'subtitle',
+      country: 'country',
       location: 'location',
       year: 'year',
       media: 'preview',
     },
-    prepare({ title, subtitle, location, year, media }) {
+    prepare({ title, subtitle, country, location, year, media }) {
       const locationStr = location && location.length > 0 ? location.join(', ') : null;
-      const parts = [subtitle, locationStr, year].filter(Boolean);
+      const parts = [subtitle, country, locationStr, year].filter(Boolean);
       return {
         title: title || 'Untitled Photo',
         subtitle: parts.length > 0 ? parts.join(' • ') : 'No details',

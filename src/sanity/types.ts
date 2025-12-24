@@ -368,9 +368,10 @@ export interface SanityPhotography {
   slug: {
     current: string;
   };
-  projectTitle: string; // Project title used in work list tile (only Project Title, Location and Year are shown)
+  projectTitle: string; // Project title used in work list tile (shown with Country and Year)
+  country?: string; // Country name (shown in work list tile)
   subtitle?: string; // Project subtitle used in info panel
-  location?: string[]; // Location tags (e.g., city, country)
+  location?: string[]; // Location tags (shown in info panel only)
   camera?: string[]; // Camera tags
   film?: string[]; // Film tags
   year?: number;

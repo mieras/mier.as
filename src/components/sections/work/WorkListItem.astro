@@ -23,6 +23,7 @@ type PhotographyItem = {
   title?: string; // Fallback for old data
   slug?: string;
   year?: number;
+  country?: string;
   location?: string[];
   preview?: any;
 };
@@ -45,6 +46,7 @@ if (import.meta.env.DEV && type === 'photography') {
     _id: item._id,
     projectTitle: item.projectTitle,
     title: item.title,
+    country: photography?.country,
     location: photography?.location,
     year: item.year,
     fullItem: item,
@@ -74,11 +76,8 @@ const projectTitle = item.projectTitle || item.title || '';
 const client = project?.client?.title || '';
 const description = projectTitle;
 
-// For photography: show location and project title (only Project Title, Location and Year are shown)
-const location =
-  photography?.location && photography.location.length > 0
-    ? photography.location.join(', ')
-    : '';
+// For photography: show Project Title, Country, and Year in tile
+const country = photography?.country || '';
 const photoDescription = projectTitle;
 
 const dataId =
@@ -95,27 +94,34 @@ const dataId =
 ---
 
 <a
-  class="work-row"
+  class={`work-row work-row--${type}`}
   href="#"
   data-type={type}
   {...dataId}
   role="button"
   tabindex="0"
-  aria-label={`${type === 'design' ? client : location} - ${projectTitle}`}
+  aria-label={`${type === 'design' ? client : country} - ${projectTitle}`}
 >
-  <span class="work-row__client">{type === 'design' ? client : location}</span>
-  <span class="work-row__desc"
-    >{type === 'design' ? description : photoDescription}</span
-  >
-  {year && <span class="work-row__year">{year}</span>}
+  {type === 'design' ? (
+    <>
+      <p class="work-row__client">{client}</p>
+      <h3 class="work-row__title">{projectTitle}</h3>
+      {year && <p class="work-row__year">{year}</p>}
+    </>
+  ) : (
+    <>
+      <h3 class="work-row__title">{projectTitle}</h3>
+      {country && <p class="work-row__country">{country}</p>}
+      {year && <p class="work-row__year">{year}</p>}
+    </>
+  )}
 </a>
 
 <style>
   .work-row {
     display: grid;
-    grid-template-columns: 1.25fr 1.5fr 0.5fr;
     gap: var(--space-s);
-    align-items: center;
+    align-items: baseline;
     padding: 0;
     text-decoration: none;
     color: inherit;
@@ -124,6 +130,14 @@ const dataId =
     transition:
       background 0.2s ease,
       color 0.2s ease;
+  }
+
+  .work-row--design {
+    grid-template-columns: 1.25fr 1.5fr 0.5fr;
+  }
+
+  .work-row--photography {
+    grid-template-columns: 1.5fr 1.25fr 0.5fr;
   }
 
   .work-row:hover {
@@ -141,22 +155,47 @@ const dataId =
     color: var(--text-light);
   }
 
-  .work-row__client {
+  /* For design: client is large, title is small */
+  .work-row--design .work-row__client {
     font-family: var(--font-family-heading);
     font-size: var(--fs-0);
     font-weight: 650;
     line-height: 1.2;
+    margin: 0;
     padding: var(--space-xs);
   }
 
-  .work-row__desc {
+  .work-row--design .work-row__title {
     font-size: var(--fs--2);
     opacity: 0.6;
     line-height: 1.2;
+    margin: 0;
     padding: var(--space-xs);
   }
 
-  .work-row.is-active .work-row__desc {
+  .work-row--design.is-active .work-row__title {
+    opacity: 0.9;
+  }
+
+  /* For photography: title is large, country is small */
+  .work-row--photography .work-row__title {
+    font-family: var(--font-family-heading);
+    font-size: var(--fs-0);
+    font-weight: 650;
+    line-height: 1.2;
+    margin: 0;
+    padding: var(--space-xs);
+  }
+
+  .work-row--photography .work-row__country {
+    font-size: var(--fs--2);
+    opacity: 0.6;
+    line-height: 1.2;
+    margin: 0;
+    padding: var(--space-xs);
+  }
+
+  .work-row--photography.is-active .work-row__country {
     opacity: 0.9;
   }
 
@@ -166,6 +205,7 @@ const dataId =
     font-size: var(--fs--2);
     opacity: 0.6;
     line-height: 1.2;
+    margin: 0;
     padding: var(--space-xs);
     padding-right: var(--space-xs);
   }
