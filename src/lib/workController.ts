@@ -12,6 +12,7 @@ interface WorkControllerOptions {
     [key: string]: any;
   }>;
   initialProjectSlug?: string | null;
+  initialPhotographySlug?: string | null;
 }
 
 export class WorkController {
@@ -26,15 +27,17 @@ export class WorkController {
   private activePhotoId: string | null = null;
   private defaultImages: { design: string; photo: string };
   private canHover: boolean;
-  private projects: Array<{ _id: string; slug?: string; [key: string]: any }>;
+  private _projects: Array<{ _id: string; slug?: string; [key: string]: any }>;
   private initialProjectSlug: string | null;
+  private initialPhotographySlug: string | null;
   private hoverTimeouts = new Map<HTMLElement, number>();
 
   constructor(options: WorkControllerOptions) {
     this.workSection = options.workSection;
     this.defaultImages = options.defaultImages;
-    this.projects = options.projects || [];
+    this._projects = options.projects || [];
     this.initialProjectSlug = options.initialProjectSlug || null;
+    this.initialPhotographySlug = options.initialPhotographySlug || null;
     this.canHover = window.matchMedia('(hover: hover)').matches;
 
     this.tabButtons = this.workSection.querySelectorAll(
@@ -140,12 +143,12 @@ export class WorkController {
         if (row.hasAttribute('hidden')) return;
 
         const projectSlug = row.getAttribute('data-work-slug');
-        const photoId = row.getAttribute('data-photo-id');
+        const photoSlug = row.getAttribute('data-photo-slug');
 
         if (projectSlug) {
           this.openProject(projectSlug, row);
-        } else if (photoId) {
-          this.openPhotography(photoId, row);
+        } else if (photoSlug) {
+          this.openPhotography(photoSlug, row);
         } else {
           // Fallback: just set active
           this.setActiveRow(row);
@@ -175,7 +178,7 @@ export class WorkController {
     // Initialize with default tab first
     this.setTab('design');
 
-    // Check for initial project slug from SSR first
+    // Check for initial project or photography slug from SSR first
     if (this.initialProjectSlug) {
       if (import.meta.env.DEV) {
         console.log(
@@ -186,6 +189,17 @@ export class WorkController {
       // Wait a bit for DOM to be ready
       setTimeout(() => {
         this.openProjectBySlug(this.initialProjectSlug!, 'project');
+      }, 300);
+    } else if (this.initialPhotographySlug) {
+      if (import.meta.env.DEV) {
+        console.log(
+          '🎯 Opening initial photography from SSR:',
+          this.initialPhotographySlug,
+        );
+      }
+      // Wait a bit for DOM to be ready
+      setTimeout(() => {
+        this.openProjectBySlug(this.initialPhotographySlug!, 'photography');
       }, 300);
     } else {
       // Check for deep link in URL (fallback for client-side navigation)
@@ -333,20 +347,62 @@ export class WorkController {
     }
   }
 
-  private openPhotography(id: string, row: HTMLElement) {
-    if (import.meta.env.DEV) {
-      console.log('📌 WorkController openPhotography:', id);
+  private async loadPhotographyData(slug: string) {
+    try {
+      if (import.meta.env.DEV) {
+        console.log('📡 Fetching photography data via API:', slug);
+      }
+
+      const response = await fetch(
+        `/api/photography/${encodeURIComponent(slug)}.json`,
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to load photography: ${response.statusText}`);
+      }
+
+      const photographyData = await response.json();
+
+      // Dispatch event with photography data for WorkPanel to consume
+      const event = new CustomEvent('work-panel-photography-loaded', {
+        detail: { photographyData, slug },
+        bubbles: true,
+      });
+      this.workSection.dispatchEvent(event);
+
+      if (import.meta.env.DEV) {
+        console.log(
+          '✅ Photography data loaded:',
+          photographyData.projectTitle,
+        );
+      }
+    } catch (error) {
+      console.error('❌ Failed to load photography data:', error);
+
+      // Dispatch error event
+      const errorEvent = new CustomEvent('work-panel-photography-error', {
+        detail: { error, slug },
+        bubbles: true,
+      });
+      this.workSection.dispatchEvent(errorEvent);
     }
-    this.activePhotoId = id;
+  }
+
+  private async openPhotography(slug: string, row: HTMLElement) {
+    if (import.meta.env.DEV) {
+      console.log('📌 WorkController openPhotography:', slug);
+    }
+    this.activePhotoId = slug;
     this.activeProjectSlug = null;
     this.setActiveRow(row);
 
     // Update URL with pushState
-    const newUrl = `/photography/${id}`;
-    window.history.pushState({ id, type: 'photography' }, '', newUrl);
+    const newUrl = `/photography/${slug}`;
+    window.history.pushState({ slug, type: 'photography' }, '', newUrl);
 
-    // Switch panel to detail mode with photography type
-    this.switchPanelMode('detail', id, 'photography');
+    // Fetch photography data via API and switch panel to detail mode
+    await this.loadPhotographyData(slug);
+    this.switchPanelMode('detail', slug, 'photography');
   }
 
   private closeProject() {
@@ -510,20 +566,20 @@ export class WorkController {
       }
     } else {
       const row = Array.from(this.rows).find(
-        (r) => r.getAttribute('data-photo-id') === slug,
+        (r) => r.getAttribute('data-photo-slug') === slug,
       );
       if (row) {
         const rowType = row.getAttribute('data-type');
         if (rowType && rowType !== this.activeTab) {
           this.setTab(rowType);
-          setTimeout(() => {
-            this.openPhotography(slug, row as HTMLElement);
+          setTimeout(async () => {
+            await this.openPhotography(slug, row as HTMLElement);
           }, 100);
         } else {
-          this.openPhotography(slug, row as HTMLElement);
+          await this.openPhotography(slug, row as HTMLElement);
         }
       } else if (import.meta.env.DEV) {
-        console.warn('⚠️ Photography row not found for id:', slug);
+        console.warn('⚠️ Photography row not found for slug:', slug);
       }
     }
   }
@@ -555,17 +611,17 @@ export class WorkController {
           this.switchPanelMode('detail', slug, 'project');
         }
       }
-    } else if (state && state.id && state.type === 'photography') {
+    } else if (state && state.slug && state.type === 'photography') {
       // Restore photography view
       const row = Array.from(this.rows).find(
-        (r) => r.getAttribute('data-photo-id') === state.id,
+        (r) => r.getAttribute('data-photo-slug') === state.slug,
       );
       if (row) {
         const rowType = row.getAttribute('data-type');
         if (rowType && rowType !== this.activeTab) {
           this.setTab(rowType);
         }
-        this.openPhotography(state.id, row as HTMLElement);
+        await this.openPhotography(state.slug, row as HTMLElement);
       }
     } else {
       // Return to preview/default
@@ -608,6 +664,8 @@ export function initWorkController() {
   // Get initial work slug from SSR
   const initialProjectSlug =
     workSection.getAttribute('data-initial-work-slug') || null;
+  const initialPhotographySlug =
+    workSection.getAttribute('data-initial-photography-slug') || null;
 
   // Get works data from data attribute (JSON string)
   const projectsData = workSection.getAttribute('data-works');
@@ -628,5 +686,6 @@ export function initWorkController() {
     },
     projects,
     initialProjectSlug,
+    initialPhotographySlug,
   });
 }

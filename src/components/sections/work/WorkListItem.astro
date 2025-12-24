@@ -74,16 +74,15 @@ const projectTitle = item.projectTitle || item.title || '';
 
 // For design projects: show client and project title
 const client = project?.client?.title || '';
-const description = projectTitle;
 
 // For photography: show Project Title, Country, and Year in tile
 const country = photography?.country || '';
-const photoDescription = projectTitle;
 
 const dataId =
   type === 'photography'
     ? {
         'data-photo-id': item._id,
+        'data-photo-slug': photography?.slug || '',
         'data-preview': imageUrl || '',
       }
     : {

@@ -26,9 +26,11 @@ type Project = {
 type Props = {
   data?: any;
   initialProjectSlug?: string | null;
+  initialPhotographySlug?: string | null;
 };
 
-const { data, initialProjectSlug = null } = Astro.props as Props;
+const { initialProjectSlug = null, initialPhotographySlug = null } =
+  Astro.props as Props;
 
 // Haal alle data op
 const homeData = await getHomeData();
@@ -77,6 +79,7 @@ if (import.meta.env.DEV) {
         {projects}
         {photography}
         initialProjectSlug={initialProjectSlug}
+        initialPhotographySlug={initialPhotographySlug}
       />
     </section>
 

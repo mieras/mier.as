@@ -721,6 +721,14 @@ const {
         'work-panel-project-error',
         handleProjectError,
       );
+      workSection.removeEventListener(
+        'work-panel-photography-loaded',
+        handlePhotographyLoaded,
+      );
+      workSection.removeEventListener(
+        'work-panel-photography-error',
+        handlePhotographyError,
+      );
 
       // Add event listeners
       workSection.addEventListener('work-panel-mode-change', handleModeChange);
@@ -731,6 +739,14 @@ const {
       workSection.addEventListener(
         'work-panel-project-error',
         handleProjectError,
+      );
+      workSection.addEventListener(
+        'work-panel-photography-loaded',
+        handlePhotographyLoaded,
+      );
+      workSection.addEventListener(
+        'work-panel-photography-error',
+        handlePhotographyError,
       );
 
       if (import.meta.env.DEV) {
@@ -783,6 +799,52 @@ const {
       mediaContainer.innerHTML = `
         <div class="work__detail-error">
           <p>Failed to load project details.</p>
+          ${import.meta.env.DEV ? `<p style="font-size: 0.75rem; opacity: 0.7; margin-top: 0.5rem;">Error: ${error?.message || 'Unknown error'}</p>` : ''}
+        </div>
+      `;
+    }
+  }
+
+  // Handle photography loaded event from workController
+  /**
+   * @param {Event} e
+   */
+  function handlePhotographyLoaded(e) {
+    const customEvent = /** @type {CustomEvent} */ (e);
+    const { photographyData, slug } = customEvent.detail;
+
+    if (import.meta.env.DEV) {
+      console.log('✅ Photography data received from workController:', {
+        title: photographyData?.projectTitle,
+        slug,
+        hasProjectMedia: !!photographyData?.projectMedia,
+        mediaCount: photographyData?.projectMedia?.length || 0,
+      });
+    }
+
+    // Use the loaded photography data directly instead of fetching again
+    if (photographyData) {
+      photographyCache.set(slug, photographyData);
+      loadWorkMedia('detail', slug, 'photography', photographyData);
+    }
+  }
+
+  // Handle photography error event from workController
+  /**
+   * @param {Event} e
+   */
+  function handlePhotographyError(e) {
+    const customEvent = /** @type {CustomEvent} */ (e);
+    const { error, slug } = customEvent.detail;
+
+    console.error('❌ Photography load error:', error);
+
+    const { panel, mediaContainer } = getPanelElements();
+
+    if (panel && mediaContainer) {
+      mediaContainer.innerHTML = `
+        <div class="work__detail-error">
+          <p>Failed to load photography details.</p>
           ${import.meta.env.DEV ? `<p style="font-size: 0.75rem; opacity: 0.7; margin-top: 0.5rem;">Error: ${error?.message || 'Unknown error'}</p>` : ''}
         </div>
       `;

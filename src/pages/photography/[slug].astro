@@ -1,0 +1,14 @@
+---
+import Index from '../index.astro';
+
+export const prerender = false;
+
+const { slug } = Astro.params;
+
+if (!slug) {
+  return new Response(null, { status: 404 });
+}
+---
+
+<Index initialPhotographySlug={slug} />
+

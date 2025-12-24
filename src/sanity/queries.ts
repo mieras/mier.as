@@ -274,6 +274,101 @@ export const ALL_PHOTOGRAPHY_QUERY = `*[_type == "photography"] | order(_created
   }
 }`;
 
+// Photography by slug query
+export const PHOTOGRAPHY_BY_SLUG_QUERY = `*[_type == "photography" && slug.current == $slug][0] {
+  _id,
+  _type,
+  title,
+  "slug": slug.current,
+  projectTitle,
+  country,
+  subtitle,
+  location,
+  camera,
+  film,
+  year,
+  preview {
+    ...,
+    asset->,
+    crop,
+    hotspot
+  },
+  projectMedia[] {
+    _key,
+    _type,
+    image {
+      ...,
+      asset->,
+      crop,
+      hotspot
+    },
+    video {
+      ...,
+      asset->
+    },
+    fitMode
+  },
+  description[] {
+    ...,
+    markDefs[] {
+      ...,
+      _type == "link" => {
+        ...,
+        "href": href
+      }
+    }
+  },
+  seo {
+    _type,
+    title,
+    description,
+    keywords,
+    canonicalUrl,
+    metaImage {
+      ...,
+      asset->,
+      crop,
+      hotspot
+    },
+    openGraph {
+      _type,
+      title,
+      description,
+      siteName,
+      type,
+      imageType,
+      image {
+        ...,
+        asset->,
+        crop,
+        hotspot,
+        alt
+      },
+      imageUrl
+    },
+    twitter {
+      _type,
+      card,
+      site,
+      title,
+      description,
+      imageType,
+      image {
+        ...,
+        asset->,
+        crop,
+        hotspot,
+        alt
+      },
+      imageUrl
+    },
+    robots {
+      noIndex,
+      noFollow
+    }
+  }
+}`;
+
 // Photography by ID query
 export const PHOTOGRAPHY_BY_ID_QUERY = `*[_type == "photography" && _id == $id][0] {
   _id,

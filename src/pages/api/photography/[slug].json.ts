@@ -3,11 +3,11 @@ import { PHOTOGRAPHY_BY_SLUG_QUERY } from '../../../sanity/queries';
 import { urlForImage } from '../../../sanity/lib/image';
 import type { SanityPhotography } from '../../../sanity/types';
 
-export async function GET({ params }: { params: { id: string } }) {
+export async function GET({ params }: { params: { slug: string } }) {
   try {
     const { data: photography } = await loadQuery<SanityPhotography>({
       query: PHOTOGRAPHY_BY_SLUG_QUERY,
-      params: { slug: params.id },
+      params: { slug: params.slug },
     });
 
     if (!photography) {
@@ -73,7 +73,7 @@ export async function GET({ params }: { params: { id: string } }) {
       },
     });
   } catch (error) {
-    console.error(`Failed to load photography ${params.id}:`, error);
+    console.error(`Failed to load photography ${params.slug}:`, error);
     return new Response(
       JSON.stringify({ error: 'Photography not found' }),
       {

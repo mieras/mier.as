@@ -1,5 +1,5 @@
 // Nieuwe Sanity imports
-import { getHomeData, getPageData, getProjectData } from './sanity';
+import { getHomeData, getPageData } from './sanity';
 
 // templates
 // import Single from '../components/templates/_Single.astro'; // Unused template
@@ -92,5 +92,5 @@ export function getTemplateByRoute(node: any) {
   if (import.meta.env.DEV) {
     console.warn('⚠️ Unknown data source or node type:', node);
   }
-  return Single;
+  return Page;
 }

@@ -39,6 +39,14 @@ export default defineType({
       group: 'general',
     }),
     defineField({
+      name: 'projectTitle',
+      type: 'string',
+      title: 'Project Title',
+      description: 'Project title used in work list tile (shown with Country and Year)',
+      validation: (Rule) => Rule.required().min(3).max(100),
+      group: 'general',
+    }),
+    defineField({
       name: 'slug',
       type: 'slug',
       title: 'Slug',
@@ -51,14 +59,6 @@ export default defineType({
           }
           return true;
         }),
-      group: 'general',
-    }),
-    defineField({
-      name: 'projectTitle',
-      type: 'string',
-      title: 'Project Title',
-      description: 'Project title used in work list tile (shown with Country and Year)',
-      validation: (Rule) => Rule.required().min(3).max(100),
       group: 'general',
     }),
     defineField({
