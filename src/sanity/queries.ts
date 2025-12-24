@@ -448,7 +448,8 @@ export const PROJECT_BY_SLUG_QUERY = `*[_type == "work" && slug.current == $slug
     video {
       ...,
       asset->
-    }
+    },
+    fitMode
   },
   description[] {
     ...,

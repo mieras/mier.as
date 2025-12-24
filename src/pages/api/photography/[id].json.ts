@@ -36,7 +36,7 @@ export async function GET({ params }: { params: { id: string } }) {
             if (slide._type === 'imageSlide' && slide.image?.asset) {
               processedSlide.image = {
                 ...slide.image,
-                url: urlForImage(slide.image)?.width(1920).height(1080).url() || null,
+                url: urlForImage(slide.image)?.width(1920).fit('max').auto('format').url() || null,
                 alt: slide.image.alt || '',
               };
               processedSlide.fitMode = slide.fitMode || 'fill'; // Include fitMode

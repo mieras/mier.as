@@ -22,7 +22,7 @@ export async function loadProjectForCarousel(slug: string) {
             processedSlide.image = {
               ...slide.image,
               url:
-                urlForImage(slide.image)?.width(1920).height(1080).url() ||
+                urlForImage(slide.image)?.width(1920).fit('max').auto('format').url() ||
                 null,
               alt: slide.image.alt || '',
             };

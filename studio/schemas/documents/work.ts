@@ -151,14 +151,29 @@ export default defineType({
                 }),
               ],
             }),
+            defineField({
+              name: 'fitMode',
+              type: 'string',
+              title: 'Fit Mode',
+              description: 'How the image should fit in the carousel container',
+              options: {
+                list: [
+                  { title: 'Fill', value: 'fill' },
+                  { title: 'Fit', value: 'fit' },
+                ],
+              },
+              initialValue: 'fill',
+            }),
           ],
           preview: {
             select: {
               image: 'image',
+              fitMode: 'fitMode',
             },
-            prepare({ image }) {
+            prepare({ image, fitMode }) {
               return {
                 title: 'Image Slide',
+                subtitle: fitMode ? `Fit: ${fitMode}` : 'Fill',
                 media: image,
               };
             },
@@ -180,14 +195,29 @@ export default defineType({
               },
               validation: (Rule) => Rule.required(),
             }),
+            defineField({
+              name: 'fitMode',
+              type: 'string',
+              title: 'Fit Mode',
+              description: 'How the video should fit in the carousel container',
+              options: {
+                list: [
+                  { title: 'Fill', value: 'fill' },
+                  { title: 'Fit', value: 'fit' },
+                ],
+              },
+              initialValue: 'fill',
+            }),
           ],
           preview: {
             select: {
               video: 'video',
+              fitMode: 'fitMode',
             },
-            prepare({ video }) {
+            prepare({ video, fitMode }) {
               return {
                 title: 'Video Slide',
+                subtitle: fitMode ? `Fit: ${fitMode}` : 'Fill',
                 media: video,
               };
             },

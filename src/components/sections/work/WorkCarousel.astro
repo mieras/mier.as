@@ -32,7 +32,11 @@ const slides = workMedia
     if (slide._type === 'imageSlide' && slide.image?.asset) {
       try {
         imageUrl =
-          urlForImage(slide.image)?.width(1920).height(1080).url() || '';
+          urlForImage(slide.image)
+            ?.width(1920)
+            .fit('max')
+            .auto('format')
+            .url() || '';
         imageAlt = slide.image.alt || '';
       } catch (error) {
         if (import.meta.env.DEV) {
@@ -73,7 +77,9 @@ if (import.meta.env.DEV) {
               data-slide-key={slide._key}
             >
               {slide.hasVideo ? (
-                <div class={`work-carousel__video-wrapper work-carousel__media--${slide.fitMode}`}>
+                <div
+                  class={`work-carousel__video-wrapper work-carousel__media--${slide.fitMode}`}
+                >
                   <video
                     class="work-carousel__video"
                     src={slide.videoUrl}
@@ -85,7 +91,9 @@ if (import.meta.env.DEV) {
                   />
                 </div>
               ) : slide.hasImage ? (
-                <div class={`work-carousel__image-wrapper work-carousel__media--${slide.fitMode}`}>
+                <div
+                  class={`work-carousel__image-wrapper work-carousel__media--${slide.fitMode}`}
+                >
                   <Image
                     src={slide.imageUrl}
                     alt={slide.imageAlt}
@@ -155,6 +163,138 @@ if (import.meta.env.DEV) {
   }
 </div>
 
+<style>
+  :global(.work-carousel) {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  :global(.work-carousel__swiper) {
+    width: 100%;
+    height: 100%;
+  }
+
+  :global(.work-carousel__swiper .swiper-wrapper) {
+    width: 100%;
+    height: 100%;
+  }
+
+  :global(.work-carousel__swiper .swiper-slide) {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  :global(.work-carousel__image-wrapper),
+  :global(.work-carousel__video-wrapper) {
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+
+  :global(.work-carousel__image),
+  :global(.work-carousel__video) {
+    display: block;
+  }
+
+  /* Fit mode: fill (default) - fills container, may crop */
+  :global(.work-carousel__media--fill .work-carousel__image),
+  :global(.work-carousel__media--fill .work-carousel__video) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Fit mode: fit - maintains aspect ratio, centered at 80% of container */
+  :global(.work-carousel__media--fit) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  :global(.work-carousel__media--fit .work-carousel__image),
+  :global(.work-carousel__media--fit .work-carousel__video) {
+    object-fit: contain;
+    max-width: 80%;
+    max-height: 80%;
+    width: auto;
+    height: auto;
+  }
+
+  :global(.work-carousel__controls) {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    display: flex;
+    gap: var(--space-m);
+    align-items: center;
+    width: 100%;
+    max-width: 1200px;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+
+  :global(.work-carousel__button) {
+    backdrop-filter: blur(30px);
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition:
+      background-color 0.2s,
+      color 0.2s;
+    padding: 0;
+    pointer-events: auto;
+  }
+
+  :global(.work-carousel__button:hover) {
+    color: #000;
+    background-color: #fff;
+  }
+
+  :global(.work-carousel__button:focus-visible) {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+
+  :global(.work-carousel__button svg) {
+    width: 24px;
+    height: 24px;
+  }
+
+  :global(.work-carousel__button--prev) {
+    margin-right: auto;
+  }
+
+  :global(.work-carousel__button--prev svg) {
+    transform: rotate(180deg);
+  }
+
+  :global(.work-carousel__button--next) {
+    margin-left: auto;
+  }
+
+  :global(.work-carousel__empty) {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+  }
+</style>
+
 <script>
   import Swiper from 'swiper';
   import { Navigation } from 'swiper/modules';
@@ -199,126 +339,3 @@ if (import.meta.env.DEV) {
   // Export function for manual initialization (e.g., from WorkPanel)
   (window as any).initWorkCarousel = initWorkCarousel;
 </script>
-
-<style>
-  .work-carousel {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .work-carousel__swiper {
-    width: 100%;
-    height: 100%;
-  }
-
-  .work-carousel__swiper .swiper-wrapper {
-    width: 100%;
-    height: 100%;
-  }
-
-  .work-carousel__swiper .swiper-slide {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .work-carousel__image-wrapper,
-  .work-carousel__video-wrapper {
-    width: 100%;
-    height: 100%;
-    position: relative;
-  }
-
-  .work-carousel__image,
-  .work-carousel__video {
-    width: 100%;
-    height: 100%;
-    display: block;
-  }
-
-  /* Fit mode: fill (default) - fills container, may crop */
-  .work-carousel__media--fill .work-carousel__image,
-  .work-carousel__media--fill .work-carousel__video {
-    object-fit: cover;
-  }
-
-  /* Fit mode: fit - maintains aspect ratio, may show letterboxing */
-  .work-carousel__media--fit .work-carousel__image,
-  .work-carousel__media--fit .work-carousel__video {
-    object-fit: contain;
-  }
-
-  .work-carousel__controls {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 10;
-    display: flex;
-    gap: var(--space-m);
-    align-items: center;
-    width: 100%;
-    max-width: 1200px;
-    justify-content: space-between;
-    pointer-events: none;
-  }
-
-  .work-carousel__button {
-    backdrop-filter: blur(30px);
-    color: #fff;
-    background-color: rgba(255, 255, 255, 0.1);
-    border: none;
-    border-radius: 50%;
-    width: 2.5rem;
-    height: 2.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition:
-      background-color 0.2s,
-      color 0.2s;
-    padding: 0;
-    pointer-events: auto;
-  }
-
-  .work-carousel__button:hover {
-    color: #000;
-    background-color: #fff;
-  }
-
-  .work-carousel__button:focus-visible {
-    outline: 2px solid currentColor;
-    outline-offset: 2px;
-  }
-
-  .work-carousel__button svg {
-    width: 24px;
-    height: 24px;
-  }
-
-  .work-carousel__button--prev {
-    margin-right: auto;
-  }
-
-  .work-carousel__button--prev svg {
-    transform: rotate(180deg);
-  }
-
-  .work-carousel__button--next {
-    margin-left: auto;
-  }
-
-  .work-carousel__empty {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-secondary, rgba(255, 255, 255, 0.6));
-  }
-</style>
-

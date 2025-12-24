@@ -49,8 +49,8 @@ const {
     color: var(--work-items-secondary);
   }
 
-  /* Work Carousel Styles */
-  .work-carousel {
+  /* Work Carousel Styles - Global for dynamic HTML */
+  :global(.work-carousel) {
     width: 100%;
     height: 100%;
     position: relative;
@@ -59,21 +59,21 @@ const {
     flex-direction: column;
   }
 
-  .work-carousel__swiper {
+  :global(.work-carousel__swiper) {
     width: 100% !important;
     height: 100% !important;
     flex: 1;
     min-height: 0;
   }
 
-  .work-carousel__swiper .swiper-wrapper {
+  :global(.work-carousel__swiper .swiper-wrapper) {
     width: 100% !important;
     height: 100% !important;
     display: flex !important;
     align-items: stretch;
   }
 
-  .work-carousel__swiper .swiper-slide {
+  :global(.work-carousel__swiper .swiper-slide) {
     width: 100% !important;
     height: 100% !important;
     min-width: 0 !important;
@@ -88,8 +88,8 @@ const {
     box-sizing: border-box;
   }
 
-  .work-carousel__image-wrapper,
-  .work-carousel__video-wrapper {
+  :global(.work-carousel__image-wrapper),
+  :global(.work-carousel__video-wrapper) {
     width: 100% !important;
     height: 100% !important;
     position: relative;
@@ -98,27 +98,37 @@ const {
     min-height: 0;
   }
 
-  .work-carousel__image,
-  .work-carousel__video {
-    width: 100% !important;
-    height: 100% !important;
+  :global(.work-carousel__image),
+  :global(.work-carousel__video) {
     display: block;
     flex: 1;
   }
 
   /* Fit mode: fill (default) - fills container, may crop */
-  .work-carousel__media--fill .work-carousel__image,
-  .work-carousel__media--fill .work-carousel__video {
+  :global(.work-carousel__media--fill .work-carousel__image),
+  :global(.work-carousel__media--fill .work-carousel__video) {
+    width: 100% !important;
+    height: 100% !important;
     object-fit: cover;
   }
 
-  /* Fit mode: fit - maintains aspect ratio, may show letterboxing */
-  .work-carousel__media--fit .work-carousel__image,
-  .work-carousel__media--fit .work-carousel__video {
-    object-fit: contain;
+  /* Fit mode: fit - maintains aspect ratio, centered at 80% of container */
+  :global(.work-carousel__media--fit) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
-  .work-carousel__controls {
+  :global(.work-carousel__media--fit .work-carousel__image),
+  :global(.work-carousel__media--fit .work-carousel__video) {
+    object-fit: contain;
+    max-width: 80%;
+    max-height: 80%;
+    width: auto;
+    height: auto;
+  }
+
+  :global(.work-carousel__controls) {
     position: absolute;
     left: 50%;
     top: 50%;
@@ -133,7 +143,7 @@ const {
     pointer-events: none;
   }
 
-  .work-carousel__button {
+  :global(.work-carousel__button) {
     backdrop-filter: blur(30px);
     color: #fff;
     background-color: rgba(255, 255, 255, 0.1);
@@ -152,34 +162,34 @@ const {
     pointer-events: auto;
   }
 
-  .work-carousel__button:hover {
+  :global(.work-carousel__button:hover) {
     color: #000;
     background-color: #fff;
   }
 
-  .work-carousel__button:focus-visible {
+  :global(.work-carousel__button:focus-visible) {
     outline: 2px solid currentColor;
     outline-offset: 2px;
   }
 
-  .work-carousel__button svg {
+  :global(.work-carousel__button svg) {
     width: 24px;
     height: 24px;
   }
 
-  .work-carousel__button--prev {
+  :global(.work-carousel__button--prev) {
     margin-right: auto;
   }
 
-  .work-carousel__button--prev svg {
+  :global(.work-carousel__button--prev svg) {
     transform: rotate(180deg);
   }
 
-  .work-carousel__button--next {
+  :global(.work-carousel__button--next) {
     margin-left: auto;
   }
 
-  .work-carousel__empty {
+  :global(.work-carousel__empty) {
     width: 100%;
     height: 100%;
     display: flex;
@@ -397,7 +407,11 @@ const {
         const imageUrl =
           slide?.image?.url ||
           (slide?.image?.asset
-            ? urlForImage(slide.image)?.width(1920).height(1080).url()
+            ? urlForImage(slide.image)
+                ?.width(1920)
+                .fit('max')
+                .auto('format')
+                .url()
             : '');
         const imageAlt = slide?.image?.alt || '';
 
