@@ -40,6 +40,7 @@ export class WorkController {
     this.tabButtons = this.workSection.querySelectorAll(
       '.tab-group-tabs .tab-button',
     );
+    // Query all rows from all tab contents (including hidden ones)
     this.rows = this.workSection.querySelectorAll('.work-row');
     this.previewBox = this.workSection.querySelector('[data-preview]');
     this.previewImg = this.workSection.querySelector('.work__preview-img');
@@ -49,7 +50,23 @@ export class WorkController {
   }
 
   private init() {
-    // Tab click handlers
+    // Listen to tab-change event from TabGroup component
+    // This event is dispatched by TabGroup.astro when a tab is clicked
+    // Listen on both workSection and tab-group to catch the event
+    const tabGroup = this.workSection.querySelector('.tab-group');
+    const handleTabChange = ((e: CustomEvent) => {
+      const tabId = e.detail?.tabId;
+      if (tabId) {
+        this.setTab(tabId);
+      }
+    }) as EventListener;
+
+    this.workSection.addEventListener('tab-change', handleTabChange);
+    if (tabGroup) {
+      tabGroup.addEventListener('tab-change', handleTabChange);
+    }
+
+    // Fallback: direct tab button handlers (in case TabGroup event doesn't fire)
     this.tabButtons.forEach((btn) => {
       btn.addEventListener('click', () => {
         const tabId = btn.getAttribute('data-tab');
@@ -205,19 +222,54 @@ export class WorkController {
   }
 
   private setTab(key: string) {
+    if (import.meta.env.DEV) {
+      console.log('🧭 WorkController setTab:', {
+        key,
+        previousTab: this.activeTab,
+        activeProjectSlug: this.activeProjectSlug,
+        activePhotoId: this.activePhotoId,
+      });
+    }
     this.activeTab = key;
 
-    // Filter rows
-    this.rows.forEach((r) => {
-      const show = r.getAttribute('data-type') === key;
-      r.toggleAttribute('hidden', !show);
-      r.style.display = show ? '' : 'none';
+    // Fallback: ensure tab buttons + content reflect active tab
+    const tabButtons = Array.from(this.tabButtons);
+    tabButtons.forEach((btn, index) => {
+      const isActive = btn.getAttribute('data-tab') === key;
+      btn.classList.toggle('tab-active', isActive);
+      btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      if (isActive) {
+        const tabsContainer = btn.closest('.tab-group-tabs') as HTMLElement;
+        if (tabsContainer) {
+          tabsContainer.style.setProperty(
+            '--active-tab-index',
+            index.toString(),
+          );
+        }
+      }
+    });
+
+    const tabContents = this.workSection.querySelectorAll('.tab-content');
+    tabContents.forEach((content) => {
+      const contentTab = content.getAttribute('data-tab-content');
+      content.classList.toggle('tab-content-active', contentTab === key);
+    });
+
+    // Ensure rows within the active tab are visible in case tab content
+    // classes are not updating for any reason.
+    this.rows.forEach((row) => {
+      const show = row.getAttribute('data-type') === key;
+      row.toggleAttribute('hidden', !show);
+      row.style.display = show ? '' : 'none';
     });
 
     // IMPORTANT: no default active row
     this.clearActiveRow();
 
     // Reset to preview mode when switching tabs
+    if (import.meta.env.DEV) {
+      console.log('🧹 WorkController setTab: closing active project');
+    }
     this.closeProject();
 
     // Reset preview to default for the active tab
@@ -227,6 +279,9 @@ export class WorkController {
   }
 
   private async openProject(slug: string, row: HTMLElement) {
+    if (import.meta.env.DEV) {
+      console.log('📌 WorkController openProject:', slug);
+    }
     this.activeProjectSlug = slug;
     this.activePhotoId = null;
     this.setActiveRow(row);
@@ -279,6 +334,9 @@ export class WorkController {
   }
 
   private openPhotography(id: string, row: HTMLElement) {
+    if (import.meta.env.DEV) {
+      console.log('📌 WorkController openPhotography:', id);
+    }
     this.activePhotoId = id;
     this.activeProjectSlug = null;
     this.setActiveRow(row);
@@ -292,12 +350,19 @@ export class WorkController {
   }
 
   private closeProject() {
+    if (import.meta.env.DEV) {
+      console.log('📤 WorkController closeProject: resetting to home');
+    }
+    const hadActiveProject = !!this.activeProjectSlug || !!this.activePhotoId;
+
     this.activeProjectSlug = null;
     this.activePhotoId = null;
     this.clearActiveRow();
 
-    // Update URL to homepage
-    window.history.pushState({ type: 'home' }, '', '/');
+    // Only update URL if we were actually in a detail state
+    if (hadActiveProject && window.location.pathname !== '/') {
+      window.history.pushState({ type: 'home' }, '', '/');
+    }
 
     // Switch panel back to preview mode
     this.switchPanelMode('preview');
