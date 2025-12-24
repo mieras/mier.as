@@ -10,12 +10,8 @@ const pageTitle = data.title || "";
 const pageIntroduction = data.introCols?.[0]?.content;
 const projectData = data.work?.nodes || [];
 
-// Extract services from Sanity structure (services is an array with title property)
-const allServices = projectData.flatMap((project:any) => 
-  project.services?.map((service:any) => service.title) || []
-).filter(Boolean);
-
-const uniqueServices = [...new Set(allServices)];
+// Services removed from schema - no longer available for filtering
+const uniqueServices: string[] = [];
 
 // PortableText components
 const components = {

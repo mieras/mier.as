@@ -22,7 +22,10 @@ type ProjectProps = {
   fitCards?: boolean
   aspectRatio?: string
   // Sanity specific props
-  thumbnail?: any
+  preview?: {
+    image?: any;
+    video?: any;
+  }
   client?: any
 }
 
@@ -38,7 +41,7 @@ const {
   services, 
   fitCards,
   aspectRatio = '16:9',
-  thumbnail,
+  preview,
   client
 } = Astro.props as ProjectProps
 
@@ -48,18 +51,18 @@ const clientName = client?.title || clientname || '';
 const projectTitle = title || '';
 const projectLink = link || '#';
 const projectServices = services || [];
-const projectSize = thumbnail?.size || size;
+const projectSize = size; // Size removed from preview, use direct prop if needed
 const projectFitCards = fitCards ?? false;
-const projectAspectRatio = thumbnail?.aspectRatio || aspectRatio;
+const projectAspectRatio = aspectRatio;
 
-// Generate image URL - prefer Sanity thumbnail (more flexible), fallback to pre-generated imgsrc
+// Generate image URL - prefer Sanity preview (more flexible), fallback to pre-generated imgsrc
 // Only generate from Sanity if imgsrc wasn't already provided
 let imageSrc = imgsrc || '';
 let imageAlt = imgalt || projectTitle || '';
 
-if (!imageSrc && thumbnail?.image?.asset) {
+if (!imageSrc && preview?.image?.asset) {
   try {
-    const sanityImageUrl = urlForImage(thumbnail.image)?.width(800).height(600).url();
+    const sanityImageUrl = urlForImage(preview.image)?.width(800).height(600).url();
     if (sanityImageUrl) {
       imageSrc = sanityImageUrl;
     }
@@ -70,13 +73,13 @@ if (!imageSrc && thumbnail?.image?.asset) {
   }
 }
 
-// Alt text from thumbnail takes precedence if available
-if (thumbnail?.alt) {
-  imageAlt = thumbnail.alt;
+// Alt text from preview image takes precedence if available
+if (preview?.image?.alt) {
+  imageAlt = preview.image.alt;
 }
 
-// Video source - Sanity takes precedence
-const videoSrc = thumbnail?.video || vidsrc;
+// Video source - Sanity preview takes precedence
+const videoSrc = preview?.video || vidsrc;
 
 // Generate poster image for video if needed
 const posterImage = videoSrc && imageSrc 

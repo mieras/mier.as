@@ -29,10 +29,10 @@ export async function GET({ url }: { url: URL }) {
 
     if (import.meta.env.DEV) {
       console.log('✅ API: Project loaded:', {
-        title: project.title,
+        title: project.projectTitle || project.title,
         slug: project.slug,
-        hasHero: !!project.hero,
-        contentBlocks: project.content?.length || 0,
+        hasPreview: !!project.preview,
+        descriptionBlocks: project.description?.length || 0,
       });
     }
 

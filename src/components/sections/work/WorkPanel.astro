@@ -102,9 +102,20 @@ const {
   .work-carousel__video {
     width: 100% !important;
     height: 100% !important;
-    object-fit: cover;
     display: block;
     flex: 1;
+  }
+
+  /* Fit mode: fill (default) - fills container, may crop */
+  .work-carousel__media--fill .work-carousel__image,
+  .work-carousel__media--fill .work-carousel__video {
+    object-fit: cover;
+  }
+
+  /* Fit mode: fit - maintains aspect ratio, may show letterboxing */
+  .work-carousel__media--fit .work-carousel__image,
+  .work-carousel__media--fit .work-carousel__video {
+    object-fit: contain;
   }
 
   .work-carousel__controls {
@@ -221,7 +232,6 @@ const {
       width: 20px;
       height: 20px;
     }
-
   }
 </style>
 
@@ -371,7 +381,12 @@ const {
    * @param {HTMLElement} panel - Work panel element
    * @param {string} projectType - Type of work ('project' or 'photography')
    */
-  function renderWorkData(data, mediaContainer, panel, projectType = 'project') {
+  function renderWorkData(
+    data,
+    mediaContainer,
+    panel,
+    projectType = 'project',
+  ) {
     if (!data || !mediaContainer || !panel) return;
 
     destroySwiper();
@@ -386,8 +401,7 @@ const {
             : '');
         const imageAlt = slide?.image?.alt || '';
 
-        let videoUrl =
-          slide?.video?.url || slide?.video?.asset?.url || null;
+        let videoUrl = slide?.video?.url || slide?.video?.asset?.url || null;
 
         if (!videoUrl && slide?.video?.asset?._ref) {
           const assetId = slide.video.asset._ref
@@ -403,16 +417,18 @@ const {
           imageUrl,
           imageAlt,
           videoUrl,
+          fitMode: slide?.fitMode || 'fill', // Include fitMode for photography
         };
       })
       .filter((slide) => slide.imageUrl || slide.videoUrl);
 
     const slidesHtml = slides
       .map((slide) => {
+        const fitModeClass = `work-carousel__media--${slide.fitMode || 'fill'}`;
         if (slide.videoUrl) {
           return `
             <div class="swiper-slide" role="listitem" data-slide-key="${slide.key}">
-              <div class="work-carousel__video-wrapper">
+              <div class="work-carousel__video-wrapper ${fitModeClass}">
                 <video
                   class="work-carousel__video"
                   src="${slide.videoUrl}"
@@ -429,7 +445,7 @@ const {
 
         return `
           <div class="swiper-slide" role="listitem" data-slide-key="${slide.key}">
-            <div class="work-carousel__image-wrapper">
+            <div class="work-carousel__image-wrapper ${fitModeClass}">
               <img
                 src="${slide.imageUrl}"
                 alt="${slide.imageAlt}"
@@ -576,17 +592,26 @@ const {
     const infoPanel = panel?.querySelector('[data-info-panel]');
     if (!infoPanel) return;
 
-    const heroTitle = data.hero?.title || data.title || '';
-    const heroSubtitle = data.hero?.subtitle || '';
-    const heroIntro = data.hero?.intro || '';
+    const heroTitle = data.projectTitle || data.title || '';
+    const heroSubtitle = data.subtitle || '';
+    const heroIntro = ''; // Description is now separate, not in hero
     const year = data.year ? String(data.year) : '';
     const client = projectType === 'project' ? data.client?.title : '';
-    const role = projectType === 'project' ? data.role : '';
+    const role = ''; // Role removed from schema
     const location =
-      projectType === 'photography' && data.city && data.country
-        ? `${data.city}, ${data.country}`
+      projectType === 'photography' &&
+      data.location &&
+      Array.isArray(data.location)
+        ? data.location.join(', ')
         : '';
-    const camera = projectType === 'photography' ? data.camera : '';
+    const camera =
+      projectType === 'photography' && data.camera && Array.isArray(data.camera)
+        ? data.camera.join(', ')
+        : '';
+    const film =
+      projectType === 'photography' && data.film && Array.isArray(data.film)
+        ? data.film.join(', ')
+        : '';
 
     const setText = (el, value) => {
       if (!el) return;
@@ -603,7 +628,7 @@ const {
     setText(infoPanel.querySelector('[data-info-subtitle]'), heroSubtitle);
     setText(infoPanel.querySelector('[data-info-intro]'), heroIntro);
 
-    const fields = { client, role, year, location, camera };
+    const fields = { client, year, location, camera, film };
     Object.entries(fields).forEach(([key, value]) => {
       const label = infoPanel.querySelector(`[data-info-label="${key}"]`);
       const val = infoPanel.querySelector(`[data-info-value="${key}"]`);
@@ -773,11 +798,7 @@ const {
       return;
     }
 
-    if (
-      projectType === 'photography' &&
-      slug &&
-      photographyCache.has(slug)
-    ) {
+    if (projectType === 'photography' && slug && photographyCache.has(slug)) {
       loadWorkMedia('detail', slug, projectType, photographyCache.get(slug));
       return;
     }

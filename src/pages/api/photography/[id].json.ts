@@ -39,6 +39,7 @@ export async function GET({ params }: { params: { id: string } }) {
                 url: urlForImage(slide.image)?.width(1920).height(1080).url() || null,
                 alt: slide.image.alt || '',
               };
+              processedSlide.fitMode = slide.fitMode || 'fill'; // Include fitMode
             } else if (slide._type === 'videoSlide' && slide.video?.asset) {
               // Get video URL from Sanity asset
               const videoAsset = slide.video.asset;
@@ -57,6 +58,7 @@ export async function GET({ params }: { params: { id: string } }) {
                 ...slide.video,
                 url: videoUrl,
               };
+              processedSlide.fitMode = slide.fitMode || 'fill'; // Include fitMode
             }
 
             return processedSlide;

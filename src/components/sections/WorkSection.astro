@@ -7,13 +7,13 @@ import { urlForImage } from '../../sanity/lib/image';
 
 type Project = {
   _id: string;
-  title: string;
+  projectTitle?: string;
+  title?: string; // Fallback for old data
   slug?: string;
   year?: number;
-  role?: string;
-  thumbnail?: {
+  preview?: {
     image?: any;
-    aspectRatio?: string;
+    video?: any;
   };
   client?: {
     title: string;
@@ -22,12 +22,10 @@ type Project = {
 
 type PhotographyItem = {
   _id: string;
-  title: string;
+  projectTitle?: string;
+  title?: string; // Fallback for old data
   year?: number;
-  city?: string;
-  country?: string;
-  camera?: string;
-  thumbnail?: any;
+  preview?: any;
 };
 
 type Props = {
@@ -43,12 +41,12 @@ const {
 } = Astro.props;
 
 // Get default preview images for each tab
-const defaultDesignImage = projects[0]?.thumbnail?.image?.asset
-  ? urlForImage(projects[0].thumbnail.image)?.width(1200).height(800).url()
+const defaultDesignImage = projects[0]?.preview?.image?.asset
+  ? urlForImage(projects[0].preview.image)?.width(1200).height(800).url()
   : '';
 
-const defaultPhotoImage = photography[0]?.thumbnail?.asset
-  ? urlForImage(photography[0].thumbnail)?.width(1200).height(800).url()
+const defaultPhotoImage = photography[0]?.preview?.asset
+  ? urlForImage(photography[0].preview)?.width(1200).height(800).url()
   : '';
 
 const tabs = [

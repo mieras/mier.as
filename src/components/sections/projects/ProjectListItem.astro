@@ -3,15 +3,14 @@ import { urlForImage } from '../../../sanity/lib/image';
 
 type Project = {
   _id: string;
-  title: string;
+  projectTitle?: string;
+  title?: string; // Fallback for old data
   slug?: string;
   year?: number;
   subtitle?: string;
-  intro?: string;
-  role?: string;
-  thumbnail?: {
+  preview?: {
     image?: any;
-    aspectRatio?: string;
+    video?: any;
   };
   client?: {
     title: string;
@@ -20,11 +19,11 @@ type Project = {
 
 type PhotographyItem = {
   _id: string;
-  title: string;
+  projectTitle?: string;
+  title?: string; // Fallback for old data
   year?: number;
-  city?: string;
-  country?: string;
-  camera?: string;
+  location?: string[];
+  preview?: any;
 };
 
 type Props = {
@@ -45,22 +44,24 @@ const {
 const item = type === 'photography' ? photography : project;
 if (!item) return null;
 
-const imageUrl = project?.thumbnail?.image?.asset
-  ? urlForImage(project.thumbnail.image)?.width(1200).height(800).url()
-  : null;
+// Get preview image URL
+let imageUrl: string | null = null;
+if (type === 'design' && project?.preview?.image?.asset) {
+  imageUrl = urlForImage(project.preview.image)?.width(1200).height(800).url() || null;
+} else if (type === 'photography' && photography?.preview?.asset) {
+  imageUrl = urlForImage(photography.preview)?.width(1200).height(800).url() || null;
+}
 
 const year = item.year || null;
-const title = item.title || '';
+const projectTitle = item.projectTitle || item.title || '';
 
 // For design projects
 const client = project?.client?.title || '';
-const role = project?.role || '';
 
 // For photography
-const city = photography?.city || '';
-const country = photography?.country || '';
-const location = [city, country].filter(Boolean).join(', ');
-const camera = photography?.camera || '';
+const location = photography?.location && photography.location.length > 0
+  ? photography.location.join(', ')
+  : '';
 
 const dataId =
   type === 'photography'
@@ -72,7 +73,7 @@ const dataId =
   {
     showThumbnail && imageUrl && (
       <div class="project-thumb project-thumb-mobile">
-        <img src={imageUrl} alt={title || 'Project thumbnail'} loading="lazy" />
+        <img src={imageUrl} alt={projectTitle || 'Project thumbnail'} loading="lazy" />
       </div>
     )
   }
@@ -83,17 +84,15 @@ const dataId =
         type === 'design' ? (
           <>
             {client && <h3 class="project-client-title">{client}</h3>}
-            {role && <h4 class="project-role">{role}</h4>}
           </>
         ) : (
           <>
             {location && <h3 class="project-client-title">{location}</h3>}
-            {camera && <h4 class="project-role">{camera}</h4>}
           </>
         )
       }
     </div>
-    <p class="project-name">{title}</p>
+    <p class="project-name">{projectTitle}</p>
   </div>
   <div class="work-item__media"></div>
 </li>

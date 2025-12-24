@@ -3,13 +3,14 @@ import WorkListItem from './WorkListItem.astro';
 
 type Project = {
   _id: string;
-  title: string;
+  projectTitle?: string;
+  title?: string; // Fallback for old data
   slug?: string;
   year?: number;
-  role?: string;
-  thumbnail?: {
+  subtitle?: string;
+  preview?: {
     image?: any;
-    aspectRatio?: string;
+    video?: any;
   };
   client?: {
     title: string;
@@ -18,12 +19,12 @@ type Project = {
 
 type PhotographyItem = {
   _id: string;
-  title: string;
+  projectTitle?: string;
+  title?: string; // Fallback for old data
+  slug?: string;
   year?: number;
-  city?: string;
-  country?: string;
-  camera?: string;
-  thumbnail?: any;
+  location?: string[];
+  preview?: any;
 };
 
 type Props = {

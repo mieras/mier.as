@@ -12,6 +12,7 @@ type WorkMediaSlide = {
       _ref?: string;
     };
   };
+  fitMode?: 'fill' | 'fit';
 };
 
 type Props = {
@@ -48,6 +49,7 @@ const slides = workMedia
       imageUrl,
       imageAlt,
       videoUrl,
+      fitMode: slide.fitMode || 'fill', // Default to 'fill' if not specified
       hasImage: !!imageUrl,
       hasVideo: !!videoUrl,
     };
@@ -71,7 +73,7 @@ if (import.meta.env.DEV) {
               data-slide-key={slide._key}
             >
               {slide.hasVideo ? (
-                <div class="work-carousel__video-wrapper">
+                <div class={`work-carousel__video-wrapper work-carousel__media--${slide.fitMode}`}>
                   <video
                     class="work-carousel__video"
                     src={slide.videoUrl}
@@ -83,7 +85,7 @@ if (import.meta.env.DEV) {
                   />
                 </div>
               ) : slide.hasImage ? (
-                <div class="work-carousel__image-wrapper">
+                <div class={`work-carousel__image-wrapper work-carousel__media--${slide.fitMode}`}>
                   <Image
                     src={slide.imageUrl}
                     alt={slide.imageAlt}
@@ -234,8 +236,19 @@ if (import.meta.env.DEV) {
   .work-carousel__video {
     width: 100%;
     height: 100%;
-    object-fit: cover;
     display: block;
+  }
+
+  /* Fit mode: fill (default) - fills container, may crop */
+  .work-carousel__media--fill .work-carousel__image,
+  .work-carousel__media--fill .work-carousel__video {
+    object-fit: cover;
+  }
+
+  /* Fit mode: fit - maintains aspect ratio, may show letterboxing */
+  .work-carousel__media--fit .work-carousel__image,
+  .work-carousel__media--fit .work-carousel__video {
+    object-fit: contain;
   }
 
   .work-carousel__controls {

@@ -40,7 +40,7 @@ const seoData = projectData
       projectData.seo,
       siteSettings,
       projectData.title,
-      projectData.intro || projectData.hero?.intro || 'Our amazing studio from Rotterdam',
+      projectData.description || 'Our amazing studio from Rotterdam',
       pageUrl,
     )
   : getSeoData(

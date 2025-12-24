@@ -3,13 +3,14 @@ import { urlForImage } from '../../../sanity/lib/image';
 
 type Project = {
   _id: string;
-  title: string;
+  projectTitle?: string;
+  title?: string; // Fallback for old data
   slug?: string;
   year?: number;
-  role?: string;
-  thumbnail?: {
+  subtitle?: string;
+  preview?: {
     image?: any;
-    aspectRatio?: string;
+    video?: any;
   };
   client?: {
     title: string;
@@ -18,12 +19,12 @@ type Project = {
 
 type PhotographyItem = {
   _id: string;
-  title: string;
+  projectTitle?: string;
+  title?: string; // Fallback for old data
+  slug?: string;
   year?: number;
-  city?: string;
-  country?: string;
-  camera?: string;
-  thumbnail?: any;
+  location?: string[];
+  preview?: any;
 };
 
 type Props = {
@@ -38,25 +39,47 @@ const { project, photography, type = 'design' } = Astro.props;
 const item = type === 'photography' ? photography : project;
 if (!item) return null;
 
-const imageUrl = project?.thumbnail?.image?.asset
-  ? urlForImage(project.thumbnail.image)?.width(1200).height(800).url()
-  : photography?.thumbnail?.asset
-    ? urlForImage(photography.thumbnail)?.width(1200).height(800).url()
-    : null;
+// Debug: log photography data to see what we're getting
+if (import.meta.env.DEV && type === 'photography') {
+  console.log('📸 Photography item data:', {
+    _id: item._id,
+    projectTitle: item.projectTitle,
+    title: item.title,
+    location: photography?.location,
+    year: item.year,
+    fullItem: item,
+  });
+}
+
+// Get preview image URL
+let imageUrl: string | null = null;
+if (type === 'design' && project?.preview) {
+  if (project.preview.image?.asset) {
+    imageUrl =
+      urlForImage(project.preview.image)?.width(1200).height(800).url() || null;
+  } else if (project.preview.video?.asset) {
+    // For video, we'd need to get a thumbnail or use a placeholder
+    // For now, we'll leave it null and handle it in the component
+    imageUrl = null;
+  }
+} else if (type === 'photography' && photography?.preview?.asset) {
+  imageUrl =
+    urlForImage(photography.preview)?.width(1200).height(800).url() || null;
+}
 
 const year = item.year || null;
-const title = item.title || '';
+const projectTitle = item.projectTitle || item.title || '';
 
-// For design projects
+// For design projects: show client and project title
 const client = project?.client?.title || '';
-const description = title;
+const description = projectTitle;
 
-// For photography
-const city = photography?.city || '';
-const country = photography?.country || '';
-const location = [city, country].filter(Boolean).join(', ');
-const camera = photography?.camera || '';
-const photoDescription = camera || title;
+// For photography: show location and project title (only Project Title, Location and Year are shown)
+const location =
+  photography?.location && photography.location.length > 0
+    ? photography.location.join(', ')
+    : '';
+const photoDescription = projectTitle;
 
 const dataId =
   type === 'photography'
@@ -78,7 +101,7 @@ const dataId =
   {...dataId}
   role="button"
   tabindex="0"
-  aria-label={`${type === 'design' ? client : location} - ${title}`}
+  aria-label={`${type === 'design' ? client : location} - ${projectTitle}`}
 >
   <span class="work-row__client">{type === 'design' ? client : location}</span>
   <span class="work-row__desc"

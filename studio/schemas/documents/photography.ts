@@ -6,12 +6,100 @@ export default defineType({
   title: 'Photography',
   type: 'document',
   icon: ImageIcon,
+  groups: [
+    {
+      name: 'general',
+      title: 'General',
+      default: true,
+    },
+    {
+      name: 'preview',
+      title: 'Preview',
+    },
+    {
+      name: 'media',
+      title: 'Media',
+    },
+    {
+      name: 'info',
+      title: 'Info',
+    },
+    {
+      name: 'seo',
+      title: 'SEO',
+    },
+  ],
   fields: [
     defineField({
       name: 'title',
       type: 'string',
       title: 'Title',
+      description: 'Internal title for Sanity Studio (not used in front-end)',
       validation: (Rule) => Rule.required().min(3).max(100),
+      group: 'general',
+    }),
+    defineField({
+      name: 'slug',
+      type: 'slug',
+      title: 'Slug',
+      options: { source: 'projectTitle' },
+      validation: (Rule) =>
+        Rule.required().custom((slug) => {
+          if (!slug?.current) return 'Slug is required';
+          if (!/^[a-z0-9-]+$/.test(slug.current)) {
+            return 'Slug can only contain lowercase letters, numbers, and hyphens';
+          }
+          return true;
+        }),
+      group: 'general',
+    }),
+    defineField({
+      name: 'projectTitle',
+      type: 'string',
+      title: 'Project Title',
+      description: 'Project title used in work list tile (only Project Title, Location and Year are shown)',
+      validation: (Rule) => Rule.required().min(3).max(100),
+      group: 'general',
+    }),
+    defineField({
+      name: 'subtitle',
+      type: 'string',
+      title: 'Subtitle',
+      description: 'Project subtitle used in info panel',
+      group: 'general',
+    }),
+    defineField({
+      name: 'location',
+      type: 'array',
+      title: 'Location',
+      description: 'Location tags (e.g., city, country)',
+      of: [{ type: 'string' }],
+      options: {
+        layout: 'tags',
+      },
+      group: 'general',
+    }),
+    defineField({
+      name: 'camera',
+      type: 'array',
+      title: 'Camera',
+      description: 'Camera tags',
+      of: [{ type: 'string' }],
+      options: {
+        layout: 'tags',
+      },
+      group: 'general',
+    }),
+    defineField({
+      name: 'film',
+      type: 'array',
+      title: 'Film',
+      description: 'Film tags',
+      of: [{ type: 'string' }],
+      options: {
+        layout: 'tags',
+      },
+      group: 'general',
     }),
     defineField({
       name: 'year',
@@ -19,51 +107,13 @@ export default defineType({
       title: 'Year',
       description: 'Photo year',
       validation: (Rule) => Rule.min(1900).max(2100),
+      group: 'general',
     }),
     defineField({
-      name: 'city',
-      type: 'string',
-      title: 'City',
-      description: 'City where the photo was taken',
-    }),
-    defineField({
-      name: 'country',
-      type: 'string',
-      title: 'Country',
-      description: 'Country where the photo was taken',
-    }),
-    defineField({
-      name: 'camera',
-      type: 'string',
-      title: 'Camera',
-      description: 'Camera used for this photo',
-    }),
-    defineField({
-      name: 'hero',
-      type: 'object',
-      title: 'Hero',
-      fields: [
-        defineField({
-          name: 'title',
-          type: 'string',
-          title: 'Title',
-        }),
-        defineField({
-          name: 'subtitle',
-          type: 'string',
-          title: 'Subtitle',
-        }),
-        defineField({
-          name: 'intro',
-          type: 'text',
-          title: 'Intro',
-        }),
-      ],
-    }),
-    defineField({
-      name: 'thumbnail',
+      name: 'preview',
       type: 'image',
-      title: 'Thumbnail',
+      title: 'Preview Media',
+      description: 'Image used for preview panel when hovering a WorkListItem',
       options: { hotspot: true },
       fields: [
         defineField({
@@ -72,12 +122,13 @@ export default defineType({
           title: 'Alt Text',
         }),
       ],
+      group: 'preview',
     }),
     defineField({
       name: 'projectMedia',
       type: 'array',
       title: 'Project Media',
-      description: 'Media slides for the photography carousel. Each slide can contain an image or video.',
+      description: 'Media slides for the photography carousel. Each slide can contain an image or video with fill/fit option.',
       of: [
         {
           type: 'object',
@@ -98,14 +149,29 @@ export default defineType({
                 }),
               ],
             }),
+            defineField({
+              name: 'fitMode',
+              type: 'string',
+              title: 'Fit Mode',
+              description: 'How the image should fit in the carousel container',
+              options: {
+                list: [
+                  { title: 'Fill', value: 'fill' },
+                  { title: 'Fit', value: 'fit' },
+                ],
+              },
+              initialValue: 'fill',
+            }),
           ],
           preview: {
             select: {
               image: 'image',
+              fitMode: 'fitMode',
             },
-            prepare({ image }) {
+            prepare({ image, fitMode }) {
               return {
                 title: 'Image Slide',
+                subtitle: fitMode ? `Fit: ${fitMode}` : 'Fill',
                 media: image,
               };
             },
@@ -126,39 +192,79 @@ export default defineType({
               },
               validation: (Rule) => Rule.required(),
             }),
+            defineField({
+              name: 'fitMode',
+              type: 'string',
+              title: 'Fit Mode',
+              description: 'How the video should fit in the carousel container',
+              options: {
+                list: [
+                  { title: 'Fill', value: 'fill' },
+                  { title: 'Fit', value: 'fit' },
+                ],
+              },
+              initialValue: 'fill',
+            }),
           ],
           preview: {
             select: {
               video: 'video',
+              fitMode: 'fitMode',
             },
-            prepare({ video }) {
+            prepare({ video, fitMode }) {
               return {
                 title: 'Video Slide',
+                subtitle: fitMode ? `Fit: ${fitMode}` : 'Fill',
                 media: video,
               };
             },
           },
         },
       ],
+      group: 'media',
+    }),
+    defineField({
+      name: 'description',
+      type: 'array',
+      title: 'Description',
+      description: 'Simple rich text description with bold and italic',
+      of: [
+        {
+          type: 'block',
+          styles: [{ title: 'Normal', value: 'normal' }],
+          marks: {
+            decorators: [
+              { title: 'Strong', value: 'strong' },
+              { title: 'Emphasis', value: 'em' },
+            ],
+          },
+        },
+      ],
+      group: 'info',
+    }),
+    defineField({
+      name: 'seo',
+      title: 'SEO & Social Media',
+      type: 'seoFields',
+      group: 'seo',
     }),
   ],
   preview: {
     select: {
-      title: 'title',
+      title: 'projectTitle',
+      subtitle: 'subtitle',
+      location: 'location',
       year: 'year',
-      city: 'city',
-      country: 'country',
-      camera: 'camera',
-      media: 'thumbnail',
+      media: 'preview',
     },
-    prepare({ title, year, city, country, camera, media }) {
-      const location = [city, country].filter(Boolean).join(', ');
+    prepare({ title, subtitle, location, year, media }) {
+      const locationStr = location && location.length > 0 ? location.join(', ') : null;
+      const parts = [subtitle, locationStr, year].filter(Boolean);
       return {
         title: title || 'Untitled Photo',
-        subtitle: [year, location, camera].filter(Boolean).join(' • ') || 'No details',
+        subtitle: parts.length > 0 ? parts.join(' • ') : 'No details',
         media: media,
       };
     },
   },
 });
-

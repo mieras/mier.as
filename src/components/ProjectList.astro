@@ -12,32 +12,33 @@ if (import.meta.env.DEV) {
 // Process Sanity projects
 const projectCards = projects.map((project: any) => {
   if (import.meta.env.DEV) {
-    console.log(`📁 Processing project "${project.title}":`, {
+    console.log(`📁 Processing project "${project.projectTitle || project.title}":`, {
       _type: project._type,
       hasKey: !!project._key,
-      hasThumbnail: !!project.thumbnail,
-      hasImage: !!project.thumbnail?.image
+      hasPreview: !!project.preview,
+      hasImage: !!project.preview?.image,
+      hasVideo: !!project.preview?.video
     });
   }
 
   // Sanity data structure
   // Pass through raw data - let ProjectCard handle URL generation to avoid duplication
   return {
-    title: project.title || '',
+    title: project.projectTitle || project.title || '',
     clientname: project.client?.title || '',
-    size: project.thumbnail?.size?.toString() || '',
+    size: '', // Size removed from preview
     // Don't pre-generate image URL here - ProjectCard will handle it more efficiently
     // This avoids duplication and allows ProjectCard to optimize image sizes per use case
-    imgsrc: '', // Let ProjectCard generate from thumbnail
-    imgalt: project.thumbnail?.alt || project.title || '',
-    vidsrc: project.thumbnail?.video || '',
-    services: project.services || [],
+    imgsrc: '', // Let ProjectCard generate from preview
+    imgalt: project.preview?.image?.alt || project.projectTitle || project.title || '',
+    vidsrc: '', // Video is now in preview.video, ProjectCard will handle it
+    services: [], // Services removed from schema
     link: `/work/${project.slug}`,
-    aspectRatio: project.thumbnail?.aspectRatio || '16:9',
+    aspectRatio: '16:9', // Aspect ratio removed from preview
     // Sanity specific props - these are the source of truth
     _type: project._type,
     _key: project._key,
-    thumbnail: project.thumbnail,
+    preview: project.preview,
     client: project.client
   };
 });

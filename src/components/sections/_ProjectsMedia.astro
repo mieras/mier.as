@@ -3,15 +3,17 @@ import { urlForImage } from '../../sanity/lib/image';
 
 type Project = {
   _id: string;
-  title: string;
-  thumbnail?: {
+  projectTitle?: string;
+  title?: string; // Fallback for old data
+  preview?: {
     image?: any;
+    video?: any;
   };
 };
 
 type PhotographyItem = {
   _id: string;
-  thumbnail?: any;
+  preview?: any;
 };
 
 type Props = {
@@ -34,8 +36,8 @@ const defaultImage = '/astronaut-hero-img.webp';
   <!-- Hover thumbnails from projects -->
   {
     projects.map((project) => {
-      const imageUrl = project.thumbnail?.image?.asset
-        ? urlForImage(project.thumbnail.image)?.width(1200).height(800).url()
+      const imageUrl = project.preview?.image?.asset
+        ? urlForImage(project.preview.image)?.width(1200).height(800).url()
         : null;
 
       if (!imageUrl) return null;
@@ -48,7 +50,7 @@ const defaultImage = '/astronaut-hero-img.webp';
         >
           <img
             src={imageUrl}
-            alt={project.title || 'Project thumbnail'}
+            alt={project.projectTitle || project.title || 'Project thumbnail'}
             loading="lazy"
           />
         </div>
@@ -59,8 +61,8 @@ const defaultImage = '/astronaut-hero-img.webp';
   <!-- Hover thumbnails from photography -->
   {
     photography.map((photo) => {
-      const imageUrl = photo.thumbnail?.asset
-        ? urlForImage(photo.thumbnail)?.width(1200).height(800).url()
+      const imageUrl = photo.preview?.asset
+        ? urlForImage(photo.preview)?.width(1200).height(800).url()
         : null;
 
       if (!imageUrl) return null;

@@ -168,11 +168,10 @@ export async function getProjectData(slug: string): Promise<SanityProject> {
 
     if (import.meta.env.DEV) {
       console.log('🎨 Project data loaded:', {
-        title: data.title,
+        title: data.projectTitle || data.title,
         slug: data.slug,
-        hasHero: !!data.hero,
-        contentBlocks: data.content?.length || 0,
-        relatedProjects: data.relatedProjects?.length || 0
+        hasPreview: !!data.preview,
+        descriptionBlocks: data.description?.length || 0
       });
     }
 

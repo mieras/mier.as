@@ -14,6 +14,7 @@ export async function loadProjectForCarousel(slug: string) {
           const processedSlide: any = {
             _key: slide._key,
             _type: slide._type,
+            fitMode: slide.fitMode || 'fill', // Include fitMode for photography
           };
 
           // Process based on _type
@@ -51,25 +52,22 @@ export async function loadProjectForCarousel(slug: string) {
         })
       : [];
 
-    // Return processed project data
+    // Return processed project data with new structure
     return {
       _id: project._id,
-      title: project.title,
-      hero: project.hero
-        ? {
-            title: project.hero.title || project.title,
-            subtitle: project.hero.subtitle || '',
-            intro: project.hero.intro || '',
-          }
-        : null,
+      _type: project._type,
+      title: project.title, // Internal title (for Studio)
+      projectTitle: project.projectTitle || project.title, // Frontend title
+      subtitle: project.subtitle,
       year: project.year,
-      role: project.role,
       client: project.client,
+      preview: project.preview,
       projectMedia: processedProjectMedia,
+      description: project.description,
+      seo: project.seo,
     };
   } catch (error) {
     console.error(`❌ Failed to load project "${slug}":`, error);
     throw error;
   }
 }
-

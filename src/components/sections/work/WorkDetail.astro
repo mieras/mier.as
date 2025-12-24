@@ -1,14 +1,15 @@
 ---
 import { urlForImage } from '../../../sanity/lib/image';
-import BlockRenderer from '../../BlockRenderer.astro';
+import { PortableText } from 'astro-portabletext';
 
 type Project = {
   _id: string;
-  title: string;
+  projectTitle?: string;
+  title?: string; // Fallback for old data
   slug?: string;
-  content?: any[];
-  hero?: {
-    coverMedia?: any;
+  description?: any[];
+  preview?: {
+    image?: any;
   };
 };
 
@@ -18,16 +19,30 @@ type Props = {
 
 const { project } = Astro.props;
 
-const coverImageUrl = project?.hero?.coverMedia?.asset
-  ? urlForImage(project.hero.coverMedia)?.width(1920).height(1080).url()
+const coverImageUrl = project?.preview?.image?.asset
+  ? urlForImage(project.preview.image)?.width(1920).height(1080).url()
   : null;
+
+// PortableText components for description
+const descriptionComponents = {
+  types: {},
+  marks: {
+    strong: ({ children }: any) => <strong>{children}</strong>,
+    em: ({ children }: any) => <em>{children}</em>,
+  },
+  block: {
+    normal: ({ children }: any) => <p>{children}</p>,
+  },
+  list: {},
+  listItem: {},
+};
 ---
 
 <div
   class="work__detail"
   data-detail
   role="region"
-  aria-label={`Project detail: ${project?.title || ''}`}
+  aria-label={`Project detail: ${project?.projectTitle || project?.title || ''}`}
   aria-live="polite"
 >
   {
@@ -35,7 +50,7 @@ const coverImageUrl = project?.hero?.coverMedia?.asset
       <div class="work__detail-hero">
         <img
           src={coverImageUrl}
-          alt={project?.title || 'Project hero image'}
+          alt={project?.projectTitle || project?.title || 'Project hero image'}
           loading="lazy"
           decoding="async"
         />
@@ -44,9 +59,12 @@ const coverImageUrl = project?.hero?.coverMedia?.asset
   }
 
   {
-    project?.content && project.content.length > 0 && (
+    project?.description && project.description.length > 0 && (
       <div class="work__detail-content">
-        <BlockRenderer prefix="ProjectContent" blocks={project.content} />
+        <PortableText
+          value={project.description}
+          components={descriptionComponents}
+        />
       </div>
     )
   }
@@ -75,5 +93,22 @@ const coverImageUrl = project?.hero?.coverMedia?.asset
 
   .work__detail-content {
     padding: var(--space-m);
+  }
+
+  .work__detail-content :global(p) {
+    margin-bottom: var(--space-m);
+    line-height: 1.6;
+  }
+
+  .work__detail-content :global(p:last-child) {
+    margin-bottom: 0;
+  }
+
+  .work__detail-content :global(strong) {
+    font-weight: 600;
+  }
+
+  .work__detail-content :global(em) {
+    font-style: italic;
   }
 </style>
