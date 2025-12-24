@@ -1,5 +1,4 @@
 ---
-import Hero from '../Hero.astro'
 import { PortableText } from 'astro-portabletext'
 
 type Props = {
@@ -19,20 +18,6 @@ if (import.meta.env.DEV) {
   });
 }
 
-// Use new structure: projectTitle, subtitle, description
-const heroData = {
-  title: data.projectTitle || data.title || '',
-  subtitle: data.subtitle || '',
-  intro: '', // Description is now separate, rendered below
-  coverMedia: data.preview?.image || null,
-  clients: data.client ? [data.client] : []
-};
-
-if (import.meta.env.DEV) {
-  console.log('🎨 Processed hero data:', heroData);
-  console.log('🎨 Description blocks count:', data.description?.length || 0);
-}
-
 // PortableText components for description
 const descriptionComponents = {
   types: {},
@@ -47,8 +32,6 @@ const descriptionComponents = {
   listItem: {},
 };
 ---
-
-<Hero data={heroData} />
 
 {
   data.description && data.description.length > 0 && (

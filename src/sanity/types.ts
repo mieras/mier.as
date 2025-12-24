@@ -113,7 +113,7 @@ export interface SanityPage {
   slug: {
     current: string;
   };
-  pageType: 'default' | 'about' | 'services' | 'contact' | 'work';
+  pageType: 'default' | 'about' | 'contact' | 'work';
   hero?: {
     title?: string;
     col1?: string;
@@ -235,32 +235,6 @@ export interface SanityTextGridBlock extends SanityBlock {
     imgposition?: string;
   };
   columns?: number;
-}
-
-export interface SanityTeamBlock extends SanityBlock {
-  _type: 'teamBlock';
-  title?: string;
-  members?: Array<{
-    _id?: string;
-    title?: string;
-    roles?: Array<{
-      name?: string;
-      description?: string;
-    }>;
-    featuredImage?: SanityImage;
-  }>;
-  layout?: string;
-  columns?: number;
-}
-
-export interface SanityServicesBlock extends SanityBlock {
-  _type: 'servicesBlock';
-  title?: string;
-  services: Array<{
-    _type: 'reference';
-    title: string;
-    content?: any[];
-  }>;
 }
 
 export interface SanityClientsBlock extends SanityBlock {

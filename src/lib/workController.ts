@@ -92,15 +92,15 @@ export class WorkController {
           clearTimeout(existingTimeout);
         }
 
-        // Set new timeout for preview
+        // Set new timeout for preview (200ms delay for smooth UX)
         const timeoutId = window.setTimeout(() => {
           const previewUrl = row.getAttribute('data-preview');
           if (previewUrl) {
-            // Always show hover preview, even if another item is active
+            // Always show hover preview in workpanel, even if another item is active
             this.swapPreview(previewUrl);
           }
           this.hoverTimeouts.delete(row);
-        }, 300);
+        }, 200);
 
         this.hoverTimeouts.set(row, timeoutId);
       });
@@ -207,7 +207,41 @@ export class WorkController {
       // Also check after a short delay to ensure DOM is fully ready
       setTimeout(() => {
         this.handleDeepLink();
+        // If no deep link found, open first item
+        if (!this.hasActiveItem()) {
+          this.openFirstItem();
+        }
       }, 100);
+    }
+  }
+
+  private hasActiveItem(): boolean {
+    return !!this.activeProjectSlug || !!this.activePhotoId;
+  }
+
+  private openFirstItem() {
+    // Find first visible row in active tab
+    const firstRow = Array.from(this.rows).find(
+      (r) =>
+        !r.hasAttribute('hidden') &&
+        r.getAttribute('data-type') === this.activeTab,
+    );
+
+    if (!firstRow) return;
+
+    const projectSlug = firstRow.getAttribute('data-work-slug');
+    const photoSlug = firstRow.getAttribute('data-photo-slug');
+
+    if (projectSlug) {
+      if (import.meta.env.DEV) {
+        console.log('🎯 Auto-opening first project:', projectSlug);
+      }
+      this.openProject(projectSlug, firstRow as HTMLElement);
+    } else if (photoSlug) {
+      if (import.meta.env.DEV) {
+        console.log('🎯 Auto-opening first photography:', photoSlug);
+      }
+      this.openPhotography(photoSlug, firstRow as HTMLElement);
     }
   }
 
@@ -290,6 +324,13 @@ export class WorkController {
     const defaultImage =
       key === 'design' ? this.defaultImages.design : this.defaultImages.photo;
     this.swapPreview(defaultImage);
+
+    // Auto-open first item in the new tab if nothing is active
+    if (!this.hasActiveItem()) {
+      setTimeout(() => {
+        this.openFirstItem();
+      }, 100);
+    }
   }
 
   private async openProject(slug: string, row: HTMLElement) {

@@ -9,6 +9,7 @@ import SiteMeta from '../components/SiteMeta.astro';
 import SiteNavigation from '../components/SiteNavigation.astro';
 import CookieConsent from '../components/CookieConsent.astro';
 import SiteFooter from '../components/SiteFooter.astro';
+import DarkMode from '../components/DarkMode.astro';
 
 import { getNavigation } from '../lib/sanity';
 
@@ -112,6 +113,7 @@ const primaryMenu = menus.nodes[0];
       {!isHomepage && <SiteFooter />}
     </div>
     <CookieConsent />
+    <DarkMode />
     <!-- JavaScript bestanden -->
     <script src="/js/cookieconsent.umd.js" is:inline></script>
     <script src="/js/iframemanager.js" is:inline></script>

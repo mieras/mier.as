@@ -1,61 +1,11 @@
 ---
 import BlockRenderer from '../BlockRenderer.astro';
-import PageIntro from '../PageIntro.astro'
-import PageTitle from '../PageTitle.astro';
-import { PortableText } from 'astro-portabletext';
 
 const { data } = Astro.props;
 
-// Null-safe data extraction
-const pageTitle = data?.title || 'Untitled Page';
-
-// Sanity data structure
-const pageHero = data?.hero;
-const pageHeroTitle = pageHero?.title || pageTitle;
-const pageHeroColOne = pageHero?.col1;
-const pageHeroColTwo = pageHero?.col2;
-
 // Content handling
-const pageIntroduction = data?.introCols?.[0]?.content;
-const pageIntroductionColTwo = data?.introCols?.[1]?.content;
 const pageContent = data?.content;
-
-// PortableText components
-const components = {
-  types: {},
-  marks: {},
-  block: {},
-  list: {},
-  listItem: {},
-};
 ---
-
-
-{pageHero ?
-  <PageTitle title={pageHeroTitle} />
-  <PageIntro class="page">
-    {pageHeroColOne && (
-      <Fragment slot="column-one" set:html={pageHeroColOne} />
-    )}
-    {pageHeroColTwo && (
-      <Fragment slot="column-two" set:html={pageHeroColTwo} />
-    )}
-  </PageIntro>
-:
-  <PageTitle title={pageTitle} />
-  <PageIntro>
-    {pageIntroduction && (
-      <Fragment slot="column-one">
-        <PortableText value={pageIntroduction} components={components} />
-      </Fragment>
-    )}
-    {pageIntroductionColTwo && (
-      <Fragment slot="column-two">
-        <PortableText value={pageIntroductionColTwo} components={components} />
-      </Fragment>
-    )}
-  </PageIntro>
-}
 
 {pageContent && (
     <article class="full">

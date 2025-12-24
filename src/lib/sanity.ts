@@ -116,7 +116,6 @@ export async function getPageData(slug: string): Promise<SanityPage> {
         } as SanityPage & { work: { nodes: SanityProject[] } };
       
       case 'about':
-      case 'services':
       case 'contact':
       case 'default':
         // Standaard pagina's - geen extra data nodig

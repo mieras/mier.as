@@ -239,7 +239,7 @@ export const HOME_FALLBACK_QUERY = `*[_type == "page" && title == "Homepage"][0]
 }`;
 
 // All photography query
-export const ALL_PHOTOGRAPHY_QUERY = `*[_type == "photography"] | order(_createdAt desc) {
+export const ALL_PHOTOGRAPHY_QUERY = `*[_type == "photography"] | order(year desc, _createdAt desc) {
   _id,
   _type,
   title,
@@ -480,7 +480,7 @@ export const ALL_MIXTAPES_QUERY = `*[_type == "mixtape"] | order(_createdAt desc
 }`;
 
 // All projects query
-export const ALL_PROJECTS_QUERY = `*[_type == "work"] | order(_createdAt desc) {
+export const ALL_PROJECTS_QUERY = `*[_type == "work"] | order(year desc, _createdAt desc) {
   _id,
   _type,
   title,
@@ -689,20 +689,6 @@ export const PAGE_BY_SLUG_QUERY = `*[_type == "page" && slug.current == $slug][0
         name,
         description
       }
-    },
-    "team": team[]-> {
-      _id,
-      title,
-      roles,
-      featuredImage {
-        ...,
-        asset->
-      }
-    },
-    "services": services[]-> {
-      _id,
-      title,
-      content
     },
     "clients": clients[]-> {
       _id,

@@ -9,8 +9,6 @@ import ColorBlock from './blocks/ColorBlock.astro'
 import TestimonialBlock from './blocks/TestimonialBlock.astro'
 import ColumnsBlock from './blocks/ColumnsBlock.astro'
 import EmbedBlock from './blocks/EmbedBlock.astro'
-import TeamBlock from './blocks/TeamBlock.astro'
-import ServicesBlock from './blocks/ServicesBlock.astro'
 import ClientsBlock from './blocks/ClientsBlock.astro'
 import GalleryBlock from './blocks/GalleryBlock.astro'
 import CarouselBlock from './blocks/CarouselBlock.astro'
@@ -72,16 +70,6 @@ const { prefix, blocks } = Astro.props;
                  />
         case 'textGridBlock':
           return <TextGridBlock title={block.title} media={block.media} items={block.items} />
-        case 'teamBlock':
-          return <TeamBlock 
-                    title={block.title} 
-                    members={block.members} />
-        case 'servicesBlock':
-          return <ServicesBlock 
-                    title={block.title} 
-                    services={block.services}
-                    layout={block.layout}
-                    showDescriptions={block.showDescriptions} />
         case 'clientsBlock':
           return <ClientsBlock 
                     title={block.title} 

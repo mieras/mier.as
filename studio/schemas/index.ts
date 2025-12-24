@@ -12,16 +12,12 @@ import colorBlock from './blocks/colorBlock';
 import galleryBlock from './blocks/galleryBlock';
 import carouselBlock from './blocks/carouselBlock';
 import textGridBlock from './blocks/textGridBlock';
-import teamBlock from './blocks/teamBlock';
-import servicesBlock from './blocks/servicesBlock';
 import clientsBlock from './blocks/clientsBlock';
 
 // Documents
 import page from './documents/page';
 import work from './documents/work';
 import client from './documents/_client';
-import service from './documents/_service';
-import teamMember from './documents/_teamMember';
 // import career from './documents/_career'; // Not used as reference
 import siteSettings from './documents/siteSettings';
 import photography from './documents/photography';
@@ -41,16 +37,12 @@ export const schemaTypes = [
   galleryBlock,
   carouselBlock,
   textGridBlock,
-  teamBlock,
-  servicesBlock,
   clientsBlock,
 
   // Documents
   page,
   work,
   client, // Used as reference in work document
-  service, // Used as reference in work and servicesBlock
-  teamMember, // Used as reference in teamBlock
   // career, // Not used as reference
   photography,
   siteSettings, // Always last
