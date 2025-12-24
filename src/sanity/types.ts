@@ -73,6 +73,10 @@ export interface SanityHome {
   };
   slides: SanitySlide[];
   featuredProjects: SanityProject[];
+  workPlaceholders?: {
+    designPlaceholder?: SanityImage;
+    photographyPlaceholder?: SanityImage;
+  };
   seo?: SanitySEO;
 }
 

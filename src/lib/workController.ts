@@ -6,11 +6,6 @@ interface WorkControllerOptions {
     design: string;
     photo: string;
   };
-  projects?: Array<{
-    _id: string;
-    slug?: string;
-    [key: string]: any;
-  }>;
   initialProjectSlug?: string | null;
   initialPhotographySlug?: string | null;
 }
@@ -30,7 +25,6 @@ export class WorkController {
   private activePhotoId: string | null = null;
   private defaultImages: { design: string; photo: string };
   private canHover: boolean;
-  private _projects: Array<{ _id: string; slug?: string; [key: string]: any }>;
   private initialProjectSlug: string | null;
   private initialPhotographySlug: string | null;
   private hoverTimeouts = new Map<HTMLElement, number>();
@@ -40,7 +34,6 @@ export class WorkController {
   constructor(options: WorkControllerOptions) {
     this.workSection = options.workSection;
     this.defaultImages = options.defaultImages;
-    this._projects = options.projects || [];
     this.initialProjectSlug = options.initialProjectSlug || null;
     this.initialPhotographySlug = options.initialPhotographySlug || null;
     this.canHover = window.matchMedia('(hover: hover)').matches;
@@ -834,24 +827,12 @@ export function initWorkController() {
   const initialPhotographySlug =
     workSection.getAttribute('data-initial-photography-slug') || null;
 
-  // Get works data from data attribute (JSON string)
-  const projectsData = workSection.getAttribute('data-works');
-  let projects: Array<{ _id: string; slug?: string; [key: string]: any }> = [];
-  if (projectsData) {
-    try {
-      projects = JSON.parse(projectsData);
-    } catch (e) {
-      console.error('Failed to parse projects data:', e);
-    }
-  }
-
   return new WorkController({
     workSection,
     defaultImages: {
       design: defaultDesignImage,
       photo: defaultPhotoImage,
     },
-    projects,
     initialProjectSlug,
     initialPhotographySlug,
   });

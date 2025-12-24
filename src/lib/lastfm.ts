@@ -73,7 +73,6 @@ export async function getRecentlyPlayed(
 
         // If it's a temporary server error (5xx), retry
         if (!response.ok && response.status >= 500 && response.status < 600) {
-          const errorText = await response.text();
           console.warn(
             `⚠️ Last.fm API temporary error (${response.status}), attempt ${attempt}/${retries}`,
           );
