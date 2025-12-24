@@ -14,15 +14,15 @@ type Props = {
 const { heroMedia } = Astro.props;
 
 // Debug logging
-if (import.meta.env.DEV) {
-  console.log('🎨 HeroMediaThree props:', {
-    hasHeroMedia: !!heroMedia,
-    mediaType: heroMedia?.mediaType,
-    hasImage: !!heroMedia?.image,
-    imageAsset: !!heroMedia?.image?.asset,
-    videoUrl: heroMedia?.videoUrl,
-  });
-}
+// if (import.meta.env.DEV) {
+//   console.log('🎨 HeroMediaThree props:', {
+//     hasHeroMedia: !!heroMedia,
+//     mediaType: heroMedia?.mediaType,
+//     hasImage: !!heroMedia?.image,
+//     imageAsset: !!heroMedia?.image?.asset,
+//     videoUrl: heroMedia?.videoUrl,
+//   });
+// }
 
 // Get image URL if media type is image
 const imageUrl =
@@ -33,14 +33,14 @@ const imageUrl =
 // Get video URL if media type is video
 const videoUrl = heroMedia?.mediaType === 'video' ? heroMedia?.videoUrl : null;
 
-if (import.meta.env.DEV) {
-  console.log('🖼️ HeroMediaThree URLs:', {
-    imageUrl,
-    videoUrl,
-    hasImageUrl: !!imageUrl,
-    hasVideoUrl: !!videoUrl,
-  });
-}
+// if (import.meta.env.DEV) {
+//   console.log('🖼️ HeroMediaThree URLs:', {
+//     imageUrl,
+//     videoUrl,
+//     hasImageUrl: !!imageUrl,
+//     hasVideoUrl: !!videoUrl,
+//   });
+// }
 ---
 
 <div
@@ -102,7 +102,7 @@ if (import.meta.env.DEV) {
           const USE_LOCAL_TEST_IMAGE = true; // Set to true to force local test image
 
           if (USE_LOCAL_TEST_IMAGE && !videoUrl) {
-            imageUrl = '/images/hero-mieras.png';
+            imageUrl = '/images/mieras-bg.png';
             console.log(
               '🧪 HeroMediaThree: Using local test image for development',
             );
@@ -247,9 +247,9 @@ if (import.meta.env.DEV) {
             videoElement.playsInline = true;
             videoElement.autoplay = true;
 
-            videoElement.addEventListener('loadeddata', () => {
-              console.log('✅ HeroMediaThree: Video loaded');
-            });
+            // videoElement.addEventListener('loadeddata', () => {
+            //   console.log('✅ HeroMediaThree: Video loaded');
+            // });
 
             videoElement.play().catch((err) => {
               console.warn('HeroMediaThree: Video autoplay failed', err);
@@ -297,9 +297,9 @@ if (import.meta.env.DEV) {
             const mesh = new THREE_NS.Mesh(geometry, material);
             scene.add(mesh);
             meshAdded = true;
-            console.log(
-              '✅ HeroMediaThree: Video texture created and mesh added',
-            );
+            // console.log(
+            //   '✅ HeroMediaThree: Video texture created and mesh added',
+            // );
           }
 
           // Post-processing setup
@@ -318,12 +318,12 @@ if (import.meta.env.DEV) {
 
           // Grain effect parameters - using example values
           const grainParams = {
-            grainStrength: 0.02, // Grain intensity from example
-            grainSpeed: 2.0, // Animation speed from example
-            grainMean: 0.0, // Gaussian mean from example
-            grainVariance: 0.5, // Gaussian variance from example
-            grainBlendMode: 1, // Screen (1) from example
-            grainSize: 3.5, // Legacy parameter from example
+            grainStrength: 3.5, // Grain intensity from example
+            grainSpeed: 0.4, // Animation speed from example
+            grainMean: 0.1, // Gaussian mean from example
+            grainVariance: 5.5, // Gaussian variance from example
+            grainBlendMode: 2, // Screen (1) from example
+            grainSize: 4.5, // Legacy parameter from example
           };
 
           // Create grain shader
@@ -444,21 +444,41 @@ if (import.meta.env.DEV) {
           // Mouse tracking for interactive bloom
           const mouse = new THREE_NS.Vector2(0, 0);
           const smoothedMouse = new THREE_NS.Vector2(0, 0);
+          let isMouseOverCanvas = false;
+          let smoothedMouseInfluence = 0.0;
 
-          // Track mouse position relative to entire window/viewport
+          // Track mouse position relative to canvas/container only
           const handleMouseMove = (event) => {
-            // Normalize to viewport coordinates (-1 to 1)
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            const rect = container.getBoundingClientRect();
+            // Check if mouse is actually within container bounds
+            const relativeX = event.clientX - rect.left;
+            const relativeY = event.clientY - rect.top;
+
+            if (
+              relativeX >= 0 &&
+              relativeX <= rect.width &&
+              relativeY >= 0 &&
+              relativeY <= rect.height
+            ) {
+              isMouseOverCanvas = true;
+              // Normalize to container coordinates (-1 to 1)
+              mouse.x = (relativeX / rect.width) * 2 - 1;
+              mouse.y = -(relativeY / rect.height) * 2 + 1;
+            } else {
+              // Mouse is outside container bounds
+              isMouseOverCanvas = false;
+              mouse.set(0, 0);
+            }
           };
 
-          window.addEventListener('mousemove', handleMouseMove);
+          container.addEventListener('mousemove', handleMouseMove);
 
-          // Reset to center when mouse leaves window
+          // Reset to center when mouse leaves container
           const handleMouseLeave = () => {
+            isMouseOverCanvas = false;
             mouse.set(0, 0);
           };
-          window.addEventListener('mouseleave', handleMouseLeave);
+          container.addEventListener('mouseleave', handleMouseLeave);
 
           // Animation loop
           let animationId;
@@ -472,8 +492,13 @@ if (import.meta.env.DEV) {
               const currentTime = (performance.now() - startTime) * 0.001;
               grainPass.uniforms.uTime.value = currentTime;
 
-              // Smooth mouse movement
-              smoothedMouse.lerp(mouse, 0.15);
+              // Smooth mouse movement - faster reset when mouse is outside canvas
+              if (isMouseOverCanvas) {
+                smoothedMouse.lerp(mouse, 0.15);
+              } else {
+                // Reset faster when mouse is outside canvas
+                smoothedMouse.lerp(mouse, 0.3);
+              }
 
               // Update video texture if it exists
               if (
@@ -487,39 +512,53 @@ if (import.meta.env.DEV) {
               }
 
               // Interactive bloom based on mouse position
-              // Create an "edge glow" effect where bloom is stronger at screen edges
-              const mouseDistance = Math.sqrt(
-                smoothedMouse.x * smoothedMouse.x +
-                  smoothedMouse.y * smoothedMouse.y,
-              );
-              // Stronger effect at edges (high distance), weaker in center
-              const mouseInfluence = Math.min(1.0, mouseDistance * 1.2); // Stronger influence at edges
+              // Calculate target mouse influence
+              let targetMouseInfluence = 0.0;
 
-              // Base values from example, enhanced at edges
-              const baseBloomStrength = 0.2; // From example
-              const maxBloomStrength = 0.6; // Much stronger at edges
+              if (isMouseOverCanvas) {
+                // Create a "center glow" effect where bloom is stronger in the center
+                const mouseDistance = Math.sqrt(
+                  smoothedMouse.x * smoothedMouse.x +
+                    smoothedMouse.y * smoothedMouse.y,
+                );
+                // Stronger effect in center (low distance), weaker at edges
+                // Invert the distance: 1.0 in center, 0.0 at edges
+                targetMouseInfluence = Math.max(
+                  0.0,
+                  1.0 - Math.min(1.0, mouseDistance * 1.2),
+                );
+              }
+
+              // Smooth transition for mouse influence to avoid abrupt changes
+              smoothedMouseInfluence +=
+                (targetMouseInfluence - smoothedMouseInfluence) * 0.1;
+              const mouseInfluence = smoothedMouseInfluence;
+
+              // Base values from example, enhanced in center
+              const baseBloomStrength = 0.4; // From example
+              const maxBloomStrength = 0.8; // Much stronger in center
               bloomPass.strength =
                 baseBloomStrength +
                 mouseInfluence * (maxBloomStrength - baseBloomStrength);
 
-              // max radius - base from example, larger at edges
+              // max radius - base from example, larger in center
               const baseBloomRadius = 0.4; // From example
-              const maxBloomRadius = 0.6; // Larger at edges
+              const maxBloomRadius = 0.9; // Larger in center
               bloomPass.radius =
                 baseBloomRadius +
                 mouseInfluence * (maxBloomRadius - baseBloomRadius);
 
-              // Increase material emissive intensity at edges for more glow
+              // Increase material emissive intensity in center for more glow
               if (material && material.emissiveIntensity !== undefined) {
-                const baseEmissive = 0.2;
-                const maxEmissive = 0.8;
+                const baseEmissive = 0.4;
+                const maxEmissive = 0.7;
                 material.emissiveIntensity =
                   baseEmissive + mouseInfluence * (maxEmissive - baseEmissive);
               }
 
-              // Also adjust grain strength at edges for more dramatic effect
-              const baseGrainStrength = 0.035; // From example
-              const maxGrainStrength = 0.065; // Stronger grain at edges
+              // Also adjust grain strength in center for more dramatic effect
+              const baseGrainStrength = 0.05; // From example
+              const maxGrainStrength = 0.09; // Stronger grain in center
               grainPass.uniforms.uGrainStrength.value =
                 baseGrainStrength +
                 mouseInfluence * (maxGrainStrength - baseGrainStrength);
@@ -601,8 +640,8 @@ if (import.meta.env.DEV) {
           // Cleanup function
           const cleanup = () => {
             window.removeEventListener('resize', handleResize);
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseleave', handleMouseLeave);
+            container.removeEventListener('mousemove', handleMouseMove);
+            container.removeEventListener('mouseleave', handleMouseLeave);
             cancelAnimationFrame(animationId);
 
             if (texture) {
@@ -656,5 +695,9 @@ if (import.meta.env.DEV) {
     height: 100%;
     object-fit: cover;
     pointer-events: none;
+  }
+
+  .hero-media-three {
+    pointer-events: auto;
   }
 </style>
