@@ -1,6 +1,7 @@
 ---
 import { urlForImage } from '../../sanity/lib/image';
-import SiteNavigation from '../SiteNavigation.astro';
+import HeroNavigation from './HeroNavigation.astro';
+import HeroInfoBar from './HeroInfoBar.astro';
 import { PortableText } from 'astro-portabletext';
 import HeroMediaThree from './HeroMediaThree.astro';
 
@@ -58,10 +59,8 @@ if (import.meta.env.DEV) {
 ---
 
 <section class="hero-section" aria-labelledby="hero-title">
-  <div class="hero-navigation">
-    <SiteNavigation />
-  </div>
   <div class="hero__media">
+    <HeroInfoBar />
     {
       useThreeJs && heroMedia ? (
         <HeroMediaThree heroMedia={heroMedia} />
@@ -103,15 +102,20 @@ if (import.meta.env.DEV) {
   </div>
 
   <div class="hero__content">
+    <HeroNavigation />
     <h1 id="hero-title" class="hero__title">Maarten Mieras</h1>
     {
       introContent && (
-        <p class="hero__text">
+        <div class="hero__text">
           <PortableText value={introContent} components={components} />
-        </p>
+        </div>
       )
     }
-    <a class="hero__cta" href="#work" aria-label="Scroll to work section">
+    <a
+      class="hero__cta button"
+      href="#work__grid"
+      aria-label="Scroll to work section"
+    >
       View work
     </a>
   </div>
@@ -131,11 +135,8 @@ if (import.meta.env.DEV) {
     background: var(--section-hero-bg);
   }
 
-  .hero-navigation {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+  .hero__content {
+    position: relative;
     z-index: 10;
   }
 
@@ -161,7 +162,7 @@ if (import.meta.env.DEV) {
     justify-items: center;
     padding: var(--space-m-l);
     text-align: center;
-    gap: var(--space-xs);
+    gap: var(--space-3xs);
   }
 
   .hero__title {
@@ -173,13 +174,18 @@ if (import.meta.env.DEV) {
   }
 
   .hero__text {
-    font-size: var(--fs-4);
-    font-weight: 600;
-    line-height: 112.5%;
-    letter-spacing: -0.05ch;
-    text-wrap: balance;
-    max-width: 32ch;
     margin: 0;
+  }
+
+  .hero__text :global(p) {
+    margin: 0;
+    font-size: var(--fs-3);
+    font-weight: 700;
+    line-height: 100%;
+    letter-spacing: -0.05ch;
+    text-wrap: pretty;
+
+    max-width: 22ch;
   }
 
   .hero__text :global(strong),

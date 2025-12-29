@@ -75,6 +75,12 @@ const activeTab = defaultTab || tabs[0]?.id || '';
 <script>
   // Tab switching functionality - scoped to tab group
   const initTabSwitching = (container: HTMLElement) => {
+    // Check if already initialized to prevent duplicate listeners
+    if (container.hasAttribute('data-tabs-initialized')) {
+      return;
+    }
+    container.setAttribute('data-tabs-initialized', 'true');
+
     const tabButtons = container.querySelectorAll(
       '.tab-group-tabs .tab-button',
     );
@@ -83,9 +89,29 @@ const activeTab = defaultTab || tabs[0]?.id || '';
       '.tab-group-tabs',
     ) as HTMLElement;
 
+    if (tabButtons.length === 0 || tabContents.length === 0) {
+      console.warn('TabGroup: No tab buttons or content found');
+      return;
+    }
+
     tabButtons.forEach((button, index) => {
-      button.addEventListener('click', () => {
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
         const targetTab = button.getAttribute('data-tab');
+        if (!targetTab) {
+          console.warn('TabGroup: No data-tab attribute found on button');
+          return;
+        }
+
+        if (import.meta.env.DEV) {
+          console.log('TabGroup: Switching to tab', {
+            targetTab,
+            index,
+            eventTarget: (e.target as HTMLElement)?.className,
+          });
+        }
 
         // Update active button
         tabButtons.forEach((btn) => {
@@ -104,39 +130,69 @@ const activeTab = defaultTab || tabs[0]?.id || '';
         }
 
         // Update active content
+        let foundActiveContent = false;
         tabContents.forEach((content) => {
-          content.classList.remove('tab-content-active');
-          if (content.getAttribute('data-tab-content') === targetTab) {
+          const contentTab = content.getAttribute('data-tab-content');
+          if (contentTab === targetTab) {
             content.classList.add('tab-content-active');
-
-            // Dispatch custom event for tab change
-            const event = new CustomEvent('tab-change', {
-              detail: { tabId: targetTab, content },
-              bubbles: true,
-            });
-            container.dispatchEvent(event);
+            foundActiveContent = true;
+            if (import.meta.env.DEV) {
+              console.log(
+                'TabGroup: Activated content for tab',
+                targetTab,
+                content,
+              );
+            }
+          } else {
+            content.classList.remove('tab-content-active');
           }
         });
+
+        if (!foundActiveContent && import.meta.env.DEV) {
+          console.warn('TabGroup: No content found for tab', targetTab, {
+            availableTabs: Array.from(tabContents).map((c) =>
+              c.getAttribute('data-tab-content'),
+            ),
+          });
+        }
+
+        // Dispatch custom event for tab change
+        const event = new CustomEvent('tab-change', {
+          detail: { tabId: targetTab },
+          bubbles: true,
+        });
+        container.dispatchEvent(event);
       });
     });
   };
 
-  document.addEventListener('DOMContentLoaded', () => {
+  const initializeAllTabs = () => {
     const tabGroups = document.querySelectorAll('.tab-group');
     tabGroups.forEach((group) => {
       initTabSwitching(group as HTMLElement);
     });
-  });
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeAllTabs);
+  } else {
+    initializeAllTabs();
+  }
 
   document.addEventListener('astro:page-load', () => {
+    // Remove initialization flag to allow re-initialization after view transition
     const tabGroups = document.querySelectorAll('.tab-group');
     tabGroups.forEach((group) => {
-      initTabSwitching(group as HTMLElement);
+      group.removeAttribute('data-tabs-initialized');
     });
+    initializeAllTabs();
   });
 </script>
 
 <style>
+  .tab-group-wrapper {
+    padding: var(--space-xs);
+  }
   .tab-group {
     /* display: grid; */
     /* grid-template-rows: auto 1fr; */

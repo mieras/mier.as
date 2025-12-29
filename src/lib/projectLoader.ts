@@ -1,5 +1,6 @@
 import { getProjectData } from './sanity';
 import { urlForImage } from '../sanity/lib/image';
+import { parseSanityFileAsset } from './utils';
 
 /**
  * Loader functie om project data op te halen en te verwerken voor carousel
@@ -14,6 +15,7 @@ export async function loadProjectForCarousel(slug: string) {
           const processedSlide: any = {
             _key: slide._key,
             _type: slide._type,
+            fitMode: slide.fitMode || 'fill', // Include fitMode for photography
           };
 
           // Process based on _type
@@ -21,7 +23,7 @@ export async function loadProjectForCarousel(slug: string) {
             processedSlide.image = {
               ...slide.image,
               url:
-                urlForImage(slide.image)?.width(1920).height(1080).url() ||
+                urlForImage(slide.image)?.width(1920).fit('max').auto('format').url() ||
                 null,
               alt: slide.image.alt || '',
             };
@@ -34,11 +36,9 @@ export async function loadProjectForCarousel(slug: string) {
               // Direct URL available
               videoUrl = videoAsset.url;
             } else if (videoAsset._ref) {
-              // Construct URL from asset reference
-              const assetId = videoAsset._ref
-                .replace('file-', '')
-                .replace('-mp4', '');
-              videoUrl = `https://cdn.sanity.io/files/${import.meta.env.PUBLIC_SANITY_PROJECT_ID}/${import.meta.env.PUBLIC_SANITY_DATASET}/${assetId}.mp4`;
+              // Construct URL from asset reference with dynamic extension
+              const { assetId, extension } = parseSanityFileAsset(videoAsset._ref);
+              videoUrl = `https://cdn.sanity.io/files/${import.meta.env.PUBLIC_SANITY_PROJECT_ID}/${import.meta.env.PUBLIC_SANITY_DATASET}/${assetId}.${extension}`;
             }
 
             processedSlide.video = {
@@ -51,25 +51,22 @@ export async function loadProjectForCarousel(slug: string) {
         })
       : [];
 
-    // Return processed project data
+    // Return processed project data with new structure
     return {
       _id: project._id,
-      title: project.title,
-      hero: project.hero
-        ? {
-            title: project.hero.title || project.title,
-            subtitle: project.hero.subtitle || '',
-            intro: project.hero.intro || '',
-          }
-        : null,
+      _type: project._type,
+      title: project.title, // Internal title (for Studio)
+      projectTitle: project.projectTitle || project.title, // Frontend title
+      subtitle: project.subtitle,
       year: project.year,
-      role: project.role,
       client: project.client,
+      preview: project.preview,
       projectMedia: processedProjectMedia,
+      description: project.description,
+      seo: project.seo,
     };
   } catch (error) {
     console.error(`❌ Failed to load project "${slug}":`, error);
     throw error;
   }
 }
-

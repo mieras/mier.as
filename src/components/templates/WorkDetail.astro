@@ -1,8 +1,5 @@
 ---
-import { Image } from 'astro:assets'
-import Hero from '../Hero.astro'
-import BlockRenderer from '../BlockRenderer.astro'
-import { urlForImage } from '../../sanity/lib/image'
+import { PortableText } from 'astro-portabletext'
 
 type Props = {
   data: any
@@ -14,89 +11,35 @@ const { data } = Astro.props
 if (import.meta.env.DEV) {
   console.log('🎨 WorkDetail received data:', {
     _type: data._type,
+    projectTitle: data.projectTitle,
     title: data.title,
-    hasHero: !!data.hero,
-    contentBlocks: data.content?.length || 0,
-    hasCredits: !!data.credits,
-    relatedProjects: data.relatedProjects?.length || 0
+    hasDescription: !!data.description,
+    descriptionBlocks: data.description?.length || 0,
   });
 }
 
-// Sanity data structuur
-const hero = data.hero;
-const content = data.content;
-const credits = data.credits;
-const relatedProjects = data.relatedProjects;
-
-const heroData = {
-  title: hero?.title || data.title,
-  subtitle: hero?.subtitle,
-  intro: hero?.intro,
-  coverMedia: hero?.coverMedia,
-  clients: data.client ? [data.client] : []
+// PortableText components for description
+const descriptionComponents = {
+  types: {},
+  marks: {
+    strong: ({ children }: any) => <strong>{children}</strong>,
+    em: ({ children }: any) => <em>{children}</em>,
+  },
+  block: {
+    normal: ({ children }: any) => <p>{children}</p>,
+  },
+  list: {},
+  listItem: {},
 };
-
-if (import.meta.env.DEV) {
-  console.log('🎨 Processed hero data:', heroData);
-  console.log('🎨 Content blocks count:', content?.length || 0);
-  console.log('🎨 Related projects count:', relatedProjects?.length || 0);
-}
 ---
 
-<Hero data={heroData} />
-
 {
-  content && content.length > 0 && (
+  data.description && data.description.length > 0 && (
     <article class="project full">
-      <BlockRenderer prefix="ProjectContent" blocks={content} />
+      <div class="project-description">
+        <PortableText value={data.description} components={descriptionComponents} />
+      </div>
     </article>
-  )
-}
-
-{
-  credits && credits.length > 0 && (
-    <section class="credits page">
-      <div class="credits-content">
-        <h2>Credits</h2>
-        <div class="credits-text">
-          {credits.map((block: any) => (
-            <div class={`text-${block.style || 'normal'}`}>
-              {block.children?.map((child: any) => child.text).join('')}
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-{
-  relatedProjects && relatedProjects.length > 0 && (
-    <section class="related-projects">
-      <div class="related-projects-content">
-        <h2>Related Projects</h2>
-        <div class="related-projects-grid">
-          {relatedProjects.map((project: any) => {
-            const thumbnailUrl = project.thumbnail?.image?.asset 
-              ? urlForImage(project.thumbnail.image)?.width(400).height(300).url() || ''
-              : '';
-            
-            return (
-              <a href={`/work/${project.slug}`} class="related-project-card" data-astro-reload>
-                <Image 
-                  src={thumbnailUrl} 
-                  alt={project.title}
-                  inferSize
-                  class="related-project-img"
-                />
-                <h3>{project.title}</h3>
-                {project.client && <p>{project.client.title}</p>}
-              </a>
-            );
-          })}
-        </div>
-      </div>
-    </section>
   )
 }
 
@@ -105,57 +48,24 @@ if (import.meta.env.DEV) {
     /* Padding now handled by page-layout grid via --site-padding */
   }
 
-  .credits {
-    /* background removed - inherits from body */
-  }
-
-  .credits-content h2 {
-    margin-bottom: var(--space-lg);
-  }
-
-  .credits-text {
-    display: grid;
-    gap: var(--space-sm);
-  }
-
-  .related-projects {
+  .project-description {
     padding: var(--site-padding);
   }
 
-  .related-projects-content h2 {
-    margin-bottom: var(--space-lg);
+  .project-description :global(p) {
+    margin-bottom: var(--space-m);
+    line-height: 1.6;
   }
 
-  .related-projects-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: var(--space-lg);
+  .project-description :global(p:last-child) {
+    margin-bottom: 0;
   }
 
-  .related-project-card {
-    text-decoration: none;
-    color: inherit;
-    transition: transform 0.3s ease;
+  .project-description :global(strong) {
+    font-weight: 600;
   }
 
-  .related-project-card:hover {
-    transform: translateY(-4px);
-  }
-
-  .related-project-img {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-    border-radius: var(--radius-sm);
-    margin-bottom: var(--space-sm);
-  }
-
-  .related-project-card h3 {
-    margin-bottom: var(--space-xs);
-  }
-
-  .related-project-card p {
-    opacity: 0.7;
-    font-size: var(--fs--1);
+  .project-description :global(em) {
+    font-style: italic;
   }
 </style>

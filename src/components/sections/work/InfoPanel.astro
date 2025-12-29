@@ -1,12 +1,8 @@
 ---
 type ProjectData = {
-  title?: string;
-  hero?: {
-    title?: string;
-    subtitle?: string;
-    intro?: string;
-  };
-  role?: string;
+  projectTitle?: string;
+  title?: string; // Fallback for old data
+  subtitle?: string;
   year?: number;
   client?: {
     title?: string;
@@ -16,16 +12,13 @@ type ProjectData = {
 type Props = {
   project?: ProjectData;
   photography?: {
-    title?: string;
-    hero?: {
-      title?: string;
-      subtitle?: string;
-      intro?: string;
-    };
+    projectTitle?: string;
+    title?: string; // Fallback for old data
+    subtitle?: string;
     year?: number;
-    city?: string;
-    country?: string;
-    camera?: string;
+    location?: string[];
+    camera?: string[];
+    film?: string[];
   };
   type?: 'project' | 'photography';
 };
@@ -33,17 +26,27 @@ type Props = {
 const { project, photography, type = 'project' } = Astro.props;
 
 const data = type === 'project' ? project : photography;
-const heroTitle = data?.hero?.title || data?.title || '';
-const heroSubtitle = data?.hero?.subtitle || '';
-const heroIntro = data?.hero?.intro || '';
+const heroTitle = data?.projectTitle || data?.title || '';
+const heroSubtitle = data?.subtitle || '';
+const heroIntro = ''; // Description is now separate, not in hero
 const year = data?.year;
 const client = type === 'project' ? project?.client?.title : null;
-const role = type === 'project' ? project?.role : null;
 const location =
-  type === 'photography' && photography
-    ? [photography.city, photography.country].filter(Boolean).join(', ')
+  type === 'photography' &&
+  photography?.location &&
+  Array.isArray(photography.location)
+    ? photography.location.join(', ')
     : null;
-const camera = type === 'photography' ? photography?.camera : null;
+const camera =
+  type === 'photography' &&
+  photography?.camera &&
+  Array.isArray(photography.camera)
+    ? photography.camera.join(', ')
+    : null;
+const film =
+  type === 'photography' && photography?.film && Array.isArray(photography.film)
+    ? photography.film.join(', ')
+    : null;
 ---
 
 <div class="info-panel" data-info-panel>
@@ -75,7 +78,11 @@ const camera = type === 'photography' ? photography?.camera : null;
       <h1 class="info-panel__title" data-info-title hidden={!heroTitle}>
         {heroTitle}
       </h1>
-      <h2 class="info-panel__subtitle" data-info-subtitle hidden={!heroSubtitle}>
+      <h2
+        class="info-panel__subtitle"
+        data-info-subtitle
+        hidden={!heroSubtitle}
+      >
         {heroSubtitle}
       </h2>
       <p class="info-panel__intro" data-info-intro hidden={!heroIntro}>
@@ -83,39 +90,29 @@ const camera = type === 'photography' ? photography?.camera : null;
       </p>
 
       <dl class="info-panel__meta">
-        <dt data-info-label="client" hidden={!client}>
-          Client
-        </dt>
+        <dt data-info-label="client" hidden={!client}>Client</dt>
         <dd data-info-value="client" hidden={!client}>
           {client}
         </dd>
 
-        <dt data-info-label="role" hidden={!role}>
-          Role
-        </dt>
-        <dd data-info-value="role" hidden={!role}>
-          {role}
-        </dd>
-
-        <dt data-info-label="year" hidden={!year}>
-          Year
-        </dt>
+        <dt data-info-label="year" hidden={!year}>Year</dt>
         <dd data-info-value="year" hidden={!year}>
           {year}
         </dd>
 
-        <dt data-info-label="location" hidden={!location}>
-          Location
-        </dt>
+        <dt data-info-label="location" hidden={!location}>Location</dt>
         <dd data-info-value="location" hidden={!location}>
           {location}
         </dd>
 
-        <dt data-info-label="camera" hidden={!camera}>
-          Camera
-        </dt>
+        <dt data-info-label="camera" hidden={!camera}>Camera</dt>
         <dd data-info-value="camera" hidden={!camera}>
           {camera}
+        </dd>
+
+        <dt data-info-label="film" hidden={!film}>Film</dt>
+        <dd data-info-value="film" hidden={!film}>
+          {film}
         </dd>
       </dl>
     </div>

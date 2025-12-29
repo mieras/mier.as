@@ -1,16 +1,17 @@
 ---
 import DefaultLayout from '../layouts/DefaultLayout.astro';
 import Home from '../components/templates/Home.astro';
-import { getHomeData, getSiteSettings, getProjectData } from '../lib/sanity';
+import { getHomeData, getSiteSettings, getProjectData, getPhotographyData } from '../lib/sanity';
 import { getSeoData } from '../lib/seo-helpers';
 
 export const prerender = false;
 
 type Props = {
   initialProjectSlug?: string | null;
+  initialPhotographySlug?: string | null;
 };
 
-const { initialProjectSlug = null } = Astro.props as Props;
+const { initialProjectSlug = null, initialPhotographySlug = null } = Astro.props as Props;
 
 // Haal homepage data op
 const homeData = await getHomeData();
@@ -18,6 +19,8 @@ const siteSettings = await getSiteSettings();
 
 // Als er een project open is, haal project data op voor SEO
 let projectData = null;
+let photographyData = null;
+
 if (initialProjectSlug) {
   try {
     projectData = await getProjectData(initialProjectSlug);
@@ -29,18 +32,37 @@ if (initialProjectSlug) {
   }
 }
 
+if (initialPhotographySlug) {
+  try {
+    photographyData = await getPhotographyData(initialPhotographySlug);
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn('⚠️ Failed to load photography data for SEO:', error);
+    }
+    // Continue with homepage SEO if photography load fails
+  }
+}
+
 // Build URL voor deze pagina
 const pageUrl = Astro.site
   ? `${Astro.site}`
   : `https://accessible-astro.dev`;
 
-// Get SEO data - gebruik project data als die beschikbaar is
+// Get SEO data - gebruik project of photography data als die beschikbaar is
 const seoData = projectData
   ? getSeoData(
       projectData.seo,
       siteSettings,
-      projectData.title,
-      projectData.intro || projectData.hero?.intro || 'Our amazing studio from Rotterdam',
+      projectData.projectTitle || projectData.title,
+      projectData.description || 'Our amazing studio from Rotterdam',
+      pageUrl,
+    )
+  : photographyData
+  ? getSeoData(
+      photographyData.seo,
+      siteSettings,
+      photographyData.projectTitle || photographyData.title,
+      photographyData.description || 'Our amazing studio from Rotterdam',
       pageUrl,
     )
   : getSeoData(
@@ -62,6 +84,6 @@ const isHomepage = true;
   url={pageUrl}
   {isHomepage}
 >
-  <Home initialProjectSlug={initialProjectSlug} />
+  <Home initialProjectSlug={initialProjectSlug} initialPhotographySlug={initialPhotographySlug} />
 </DefaultLayout>
 

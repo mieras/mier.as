@@ -53,7 +53,6 @@ export default defineType({
           { title: 'Homepage', value: 'homepage' },
           { title: 'Default', value: 'default' },
           { title: 'About', value: 'about' },
-          { title: 'Services', value: 'services' },
           { title: 'Contact', value: 'contact' },
           { title: 'Work Overview', value: 'work' },
         ],
@@ -193,8 +192,8 @@ export default defineType({
         defineField({
           name: 'videoUrl',
           type: 'url',
-          title: 'Video URL (MP4)',
-          description: 'URL to an MP4 video file',
+          title: 'Video URL (MP4/MOV)',
+          description: 'URL to an MP4 or MOV video file',
           hidden: ({ parent }) => parent?.mediaType !== 'video',
           validation: (Rule) =>
             Rule.custom((value, context) => {
@@ -202,8 +201,8 @@ export default defineType({
               if (parent?.mediaType === 'video' && !value) {
                 return 'Video URL is required when media type is video';
               }
-              if (value && !value.match(/\.mp4$/i)) {
-                return 'Video URL must be an MP4 file';
+              if (value && !value.match(/\.(mp4|mov)$/i)) {
+                return 'Video URL must be an MP4 or MOV file';
               }
               return true;
             }),
@@ -232,6 +231,34 @@ export default defineType({
       },
     }),
     defineField({
+      name: 'workPlaceholders',
+      type: 'object',
+      title: 'Work Section Placeholder Images',
+      description: 'Placeholder images shown in work section when no project is selected',
+      hidden: ({ document }) => document?.pageType !== 'homepage',
+      group: 'homepage',
+      fields: [
+        defineField({
+          name: 'designPlaceholder',
+          type: 'image',
+          title: 'Design Projects Placeholder',
+          description: 'Shown in work panel when no design project is selected',
+          options: {
+            hotspot: true,
+          },
+        }),
+        defineField({
+          name: 'photographyPlaceholder',
+          type: 'image',
+          title: 'Photography Placeholder',
+          description: 'Shown in work panel when no photography item is selected',
+          options: {
+            hotspot: true,
+          },
+        }),
+      ],
+    }),
+    defineField({
       name: 'content',
       type: 'array',
       title: 'Page Content',
@@ -246,8 +273,6 @@ export default defineType({
         { type: 'galleryBlock' },
         { type: 'carouselBlock' },
         { type: 'textGridBlock' },
-        { type: 'teamBlock' },
-        { type: 'servicesBlock' },
         { type: 'clientsBlock' },
       ],
       group: 'content',

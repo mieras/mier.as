@@ -73,6 +73,10 @@ export interface SanityHome {
   };
   slides: SanitySlide[];
   featuredProjects: SanityProject[];
+  workPlaceholders?: {
+    designPlaceholder?: SanityImage;
+    photographyPlaceholder?: SanityImage;
+  };
   seo?: SanitySEO;
 }
 
@@ -80,45 +84,28 @@ export interface SanityHome {
 export interface SanityProject {
   _type: 'work';
   _id: string;
-  title: string;
+  title: string; // Internal title for Sanity Studio (not used in front-end)
   slug: {
     current: string;
   };
-  subtitle?: string;
-  intro?: string;
-  year?: number;
-  role?: string;
-  hero?: {
-    title?: string;
-    subtitle?: string;
-    intro?: string;
-    coverMedia?: SanityImage;
-    color?: string;
-  };
-  thumbnail?: {
-    image?: SanityImage;
-    size?: 'small' | 'default' | 'large';
-    aspectRatio?: string;
-    video?: SanityFile;
-    videoUrl?: string;
-  };
+  projectTitle: string; // Project title used in work list tile and info panel
+  subtitle?: string; // Project subtitle used in work list tile and info panel
   client?: {
     _type: 'reference';
     title: string;
   };
-  services?: Array<{
-    _type: 'reference';
-    title: string;
-  }>;
-  credits?: string;
-  relatedProjects?: SanityProject[];
+  year?: number;
+  preview?: {
+    image?: SanityImage;
+    video?: SanityFile;
+  };
   projectMedia?: Array<{
     _key: string;
     _type: 'imageSlide' | 'videoSlide';
     image?: SanityImage;
     video?: SanityFile;
   }>;
-  content?: SanityBlock[];
+  description?: SanityBlock[]; // Simple rich text with bold and italic
   seo?: SanitySEO;
 }
 
@@ -130,7 +117,7 @@ export interface SanityPage {
   slug: {
     current: string;
   };
-  pageType: 'default' | 'about' | 'services' | 'contact' | 'work';
+  pageType: 'default' | 'about' | 'contact' | 'work';
   hero?: {
     title?: string;
     col1?: string;
@@ -254,32 +241,6 @@ export interface SanityTextGridBlock extends SanityBlock {
   columns?: number;
 }
 
-export interface SanityTeamBlock extends SanityBlock {
-  _type: 'teamBlock';
-  title?: string;
-  members?: Array<{
-    _id?: string;
-    title?: string;
-    roles?: Array<{
-      name?: string;
-      description?: string;
-    }>;
-    featuredImage?: SanityImage;
-  }>;
-  layout?: string;
-  columns?: number;
-}
-
-export interface SanityServicesBlock extends SanityBlock {
-  _type: 'servicesBlock';
-  title?: string;
-  services: Array<{
-    _type: 'reference';
-    title: string;
-    content?: any[];
-  }>;
-}
-
 export interface SanityClientsBlock extends SanityBlock {
   _type: 'clientsBlock';
   title?: string;
@@ -336,6 +297,7 @@ export interface SanitySiteSettings {
       btw?: string;
       bank?: string;
       kvk?: string;
+      termsAndConditions?: SanityFile;
     };
   };
   openGraphSiteName?: string;
@@ -381,23 +343,27 @@ export interface SanitySEO {
 export interface SanityPhotography {
   _type: 'photography';
   _id: string;
-  title: string;
-  year?: number;
-  city?: string;
-  country?: string;
-  camera?: string;
-  hero?: {
-    title?: string;
-    subtitle?: string;
-    intro?: string;
+  title: string; // Internal title for Sanity Studio (not used in front-end)
+  slug: {
+    current: string;
   };
-  thumbnail?: SanityImage;
+  projectTitle: string; // Project title used in work list tile (shown with Country and Year)
+  country?: string; // Country name (shown in work list tile)
+  subtitle?: string; // Project subtitle used in info panel
+  location?: string[]; // Location tags (shown in info panel only)
+  camera?: string[]; // Camera tags
+  film?: string[]; // Film tags
+  year?: number;
+  preview?: SanityImage; // Image used for preview panel when hovering a WorkListItem
   projectMedia?: Array<{
     _key: string;
     _type: 'imageSlide' | 'videoSlide';
     image?: SanityImage;
     video?: SanityFile;
+    fitMode?: 'fill' | 'fit'; // How the media should fit in the carousel container
   }>;
+  description?: SanityBlock[]; // Simple rich text with bold and italic
+  seo?: SanitySEO;
 }
 
 // Columns Block types

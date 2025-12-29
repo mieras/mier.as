@@ -49,26 +49,37 @@ export const HOME_QUERY = `*[_type == "page" && pageType == "homepage"][0] {
     _type,
     title,
     "slug": slug.current,
+    projectTitle,
     subtitle,
-    client-> {
+    "client": client-> {
       _id,
       title
     },
-    services[]-> {
-      _id,
-      title
-    },
-    thumbnail {
+    preview {
       image {
         ...,
         asset->,
         crop,
         hotspot
       },
-      size,
-      alt,
-      video,
-      aspectRatio
+      video {
+        ...,
+        asset->
+      }
+    }
+  },
+  workPlaceholders {
+    designPlaceholder {
+      ...,
+      asset->,
+      crop,
+      hotspot
+    },
+    photographyPlaceholder {
+      ...,
+      asset->,
+      crop,
+      hotspot
     }
   },
   seo {
@@ -171,26 +182,37 @@ export const HOME_FALLBACK_QUERY = `*[_type == "page" && title == "Homepage"][0]
     _type,
     title,
     "slug": slug.current,
+    projectTitle,
     subtitle,
-    client-> {
+    "client": client-> {
       _id,
       title
     },
-    services[]-> {
-      _id,
-      title
-    },
-    thumbnail {
+    preview {
       image {
         ...,
         asset->,
         crop,
         hotspot
       },
-      size,
-      alt,
-      video,
-      aspectRatio
+      video {
+        ...,
+        asset->
+      }
+    }
+  },
+  workPlaceholders {
+    designPlaceholder {
+      ...,
+      asset->,
+      crop,
+      hotspot
+    },
+    photographyPlaceholder {
+      ...,
+      asset->,
+      crop,
+      hotspot
     }
   },
   seo {
@@ -245,15 +267,19 @@ export const HOME_FALLBACK_QUERY = `*[_type == "page" && title == "Homepage"][0]
 }`;
 
 // All photography query
-export const ALL_PHOTOGRAPHY_QUERY = `*[_type == "photography"] | order(_createdAt desc) {
+export const ALL_PHOTOGRAPHY_QUERY = `*[_type == "photography"] | order(year desc, _createdAt desc) {
   _id,
   _type,
   title,
-  year,
-  city,
+  "slug": slug.current,
+  projectTitle,
   country,
+  subtitle,
+  location,
   camera,
-  thumbnail {
+  film,
+  year,
+  preview {
     ...,
     asset->,
     crop,
@@ -261,6 +287,7 @@ export const ALL_PHOTOGRAPHY_QUERY = `*[_type == "photography"] | order(_created
   },
   projectMedia[] {
     _key,
+    _type,
     image {
       ...,
       asset->,
@@ -270,6 +297,102 @@ export const ALL_PHOTOGRAPHY_QUERY = `*[_type == "photography"] | order(_created
     video {
       ...,
       asset->
+    },
+    fitMode
+  }
+}`;
+
+// Photography by slug query
+export const PHOTOGRAPHY_BY_SLUG_QUERY = `*[_type == "photography" && slug.current == $slug][0] {
+  _id,
+  _type,
+  title,
+  "slug": slug.current,
+  projectTitle,
+  country,
+  subtitle,
+  location,
+  camera,
+  film,
+  year,
+  preview {
+    ...,
+    asset->,
+    crop,
+    hotspot
+  },
+  projectMedia[] {
+    _key,
+    _type,
+    image {
+      ...,
+      asset->,
+      crop,
+      hotspot
+    },
+    video {
+      ...,
+      asset->
+    },
+    fitMode
+  },
+  description[] {
+    ...,
+    markDefs[] {
+      ...,
+      _type == "link" => {
+        ...,
+        "href": href
+      }
+    }
+  },
+  seo {
+    _type,
+    title,
+    description,
+    keywords,
+    canonicalUrl,
+    metaImage {
+      ...,
+      asset->,
+      crop,
+      hotspot
+    },
+    openGraph {
+      _type,
+      title,
+      description,
+      siteName,
+      type,
+      imageType,
+      image {
+        ...,
+        asset->,
+        crop,
+        hotspot,
+        alt
+      },
+      imageUrl
+    },
+    twitter {
+      _type,
+      card,
+      site,
+      title,
+      description,
+      imageType,
+      image {
+        ...,
+        asset->,
+        crop,
+        hotspot,
+        alt
+      },
+      imageUrl
+    },
+    robots {
+      noIndex,
+      noFollow
     }
   }
 }`;
@@ -279,16 +402,15 @@ export const PHOTOGRAPHY_BY_ID_QUERY = `*[_type == "photography" && _id == $id][
   _id,
   _type,
   title,
-  year,
-  city,
+  "slug": slug.current,
+  projectTitle,
   country,
+  subtitle,
+  location,
   camera,
-  hero {
-    title,
-    subtitle,
-    intro
-  },
-  thumbnail {
+  film,
+  year,
+  preview {
     ...,
     asset->,
     crop,
@@ -296,6 +418,7 @@ export const PHOTOGRAPHY_BY_ID_QUERY = `*[_type == "photography" && _id == $id][
   },
   projectMedia[] {
     _key,
+    _type,
     image {
       ...,
       asset->,
@@ -305,6 +428,66 @@ export const PHOTOGRAPHY_BY_ID_QUERY = `*[_type == "photography" && _id == $id][
     video {
       ...,
       asset->
+    },
+    fitMode
+  },
+  description[] {
+    ...,
+    markDefs[] {
+      ...,
+      _type == "link" => {
+        ...,
+        "href": href
+      }
+    }
+  },
+  seo {
+    _type,
+    title,
+    description,
+    keywords,
+    canonicalUrl,
+    metaImage {
+      ...,
+      asset->,
+      crop,
+      hotspot
+    },
+    openGraph {
+      _type,
+      title,
+      description,
+      siteName,
+      type,
+      imageType,
+      image {
+        ...,
+        asset->,
+        crop,
+        hotspot,
+        alt
+      },
+      imageUrl
+    },
+    twitter {
+      _type,
+      card,
+      site,
+      title,
+      description,
+      imageType,
+      image {
+        ...,
+        asset->,
+        crop,
+        hotspot,
+        alt
+      },
+      imageUrl
+    },
+    robots {
+      noIndex,
+      noFollow
     }
   }
 }`;
@@ -325,37 +508,29 @@ export const ALL_MIXTAPES_QUERY = `*[_type == "mixtape"] | order(_createdAt desc
 }`;
 
 // All projects query
-export const ALL_PROJECTS_QUERY = `*[_type == "work"] | order(_createdAt desc) {
+export const ALL_PROJECTS_QUERY = `*[_type == "work"] | order(year desc, _createdAt desc) {
   _id,
   _type,
   title,
   "slug": slug.current,
+  projectTitle,
   subtitle,
-  intro,
   year,
-  role,
-  thumbnail {
+  "client": client-> {
+    _id,
+    title
+  },
+  preview {
     image {
       ...,
       asset->,
       crop,
       hotspot
     },
-    size,
-    aspectRatio,
     video {
       ...,
       asset->
-    },
-    videoUrl
-  },
-  "client": client-> {
-    _id,
-    title
-  },
-  "services": services[]-> {
-    _id,
-    title
+    }
   }
 }`;
 
@@ -365,64 +540,23 @@ export const PROJECT_BY_SLUG_QUERY = `*[_type == "work" && slug.current == $slug
   _type,
   title,
   "slug": slug.current,
+  projectTitle,
   subtitle,
-  intro,
   year,
-  role,
-  hero {
-    title,
-    subtitle,
-    intro,
-    coverMedia {
-      ...,
-      asset->,
-      crop,
-      hotspot
-    },
-    color
+  "client": client-> {
+    _id,
+    title
   },
-  thumbnail {
+  preview {
     image {
       ...,
       asset->,
       crop,
       hotspot
     },
-    size,
-    aspectRatio,
     video {
       ...,
       asset->
-    },
-    videoUrl
-  },
-  vimeoUrl,
-  "client": client-> {
-    _id,
-    title
-  },
-  "services": services[]-> {
-    _id,
-    title
-  },
-  credits,
-  "relatedProjects": relatedProjects[]-> {
-    _id,
-    _type,
-    title,
-    "slug": slug.current,
-    thumbnail {
-      image {
-        ...,
-        asset->,
-        crop,
-        hotspot
-      },
-      size
-    },
-    "client": client-> {
-      _id,
-      title
     }
   },
   projectMedia[] {
@@ -437,6 +571,17 @@ export const PROJECT_BY_SLUG_QUERY = `*[_type == "work" && slug.current == $slug
     video {
       ...,
       asset->
+    },
+    fitMode
+  },
+  description[] {
+    ...,
+    markDefs[] {
+      ...,
+      _type == "link" => {
+        ...,
+        "href": href
+      }
     }
   },
   seo {
@@ -573,20 +718,6 @@ export const PAGE_BY_SLUG_QUERY = `*[_type == "page" && slug.current == $slug][0
         description
       }
     },
-    "team": team[]-> {
-      _id,
-      title,
-      roles,
-      featuredImage {
-        ...,
-        asset->
-      }
-    },
-    "services": services[]-> {
-      _id,
-      title,
-      content
-    },
     "clients": clients[]-> {
       _id,
       title,
@@ -694,7 +825,11 @@ export const SITE_SETTINGS_QUERY = `*[_type == "siteSettings"][0] {
     legal {
       btw,
       bank,
-      kvk
+      kvk,
+      termsAndConditions {
+        ...,
+        asset->
+      }
     }
   },
   openGraphSiteName,

@@ -60,3 +60,63 @@ export function getAspectRatioFromEmbedString(embedString) {
 
   return `${simplifiedWidth} / ${simplifiedHeight}`;
 }
+
+/**
+ * Extract file extension and asset ID from Sanity file asset reference
+ * Sanity asset references have format: file-{assetId}-{extension}
+ * @param {string} assetRef - Sanity asset reference (e.g., "file-abc123-mp4" or "file-abc123-mov")
+ * @returns {{assetId: string, extension: string}} - Object with assetId and extension
+ */
+export function parseSanityFileAsset(assetRef) {
+  if (!assetRef || typeof assetRef !== 'string') {
+    return { assetId: '', extension: 'mp4' }; // Default to mp4 for backwards compatibility
+  }
+
+  // Remove 'file-' prefix
+  const withoutPrefix = assetRef.replace(/^file-/, '');
+  
+  // Find the last hyphen to separate assetId from extension
+  const lastHyphenIndex = withoutPrefix.lastIndexOf('-');
+  
+  if (lastHyphenIndex === -1) {
+    // No extension found, return as-is with default extension
+    return { assetId: withoutPrefix, extension: 'mp4' };
+  }
+
+  const assetId = withoutPrefix.substring(0, lastHyphenIndex);
+  const extension = withoutPrefix.substring(lastHyphenIndex + 1);
+
+  return { assetId, extension: extension || 'mp4' };
+}
+
+/**
+ * Process navigation link from Sanity siteSettings
+ * Handles both internal and external links
+ * @param {Object} link - Link object from Sanity navigation menuItem
+ * @returns {{href: string, target?: string, rel?: string}} - Processed link properties
+ */
+export function processNavigationLink(link) {
+  if (!link) {
+    return { href: '#' };
+  }
+
+  if (link.linkType === 'external' && link.url) {
+    return {
+      href: link.url,
+      target: '_blank',
+      rel: 'noopener noreferrer',
+    };
+  }
+
+  if (link.linkType === 'internal' && link.internalLink) {
+    const slug = typeof link.internalLink.slug === 'string'
+      ? link.internalLink.slug
+      : link.internalLink.slug?.current || '';
+    
+    return {
+      href: slug ? `/${slug}` : '#',
+    };
+  }
+
+  return { href: '#' };
+}

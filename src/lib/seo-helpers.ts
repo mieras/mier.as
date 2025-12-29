@@ -2,6 +2,36 @@ import type { SanitySEO, SanitySiteSettings } from '../sanity/types';
 import { urlForImage } from '../sanity/lib/image';
 
 /**
+ * Helper om Portable Text array om te zetten naar plain text string
+ */
+function portableTextToString(portableText: any): string {
+  if (!portableText) return '';
+  if (typeof portableText === 'string') return portableText;
+  if (!Array.isArray(portableText)) return '';
+
+  return portableText
+    .map((block: any) => {
+      if (block._type === 'block' && block.children) {
+        return block.children
+          .map((child: any) => {
+            if (typeof child === 'string') return child;
+            if (child.text) return child.text;
+            if (child.children) {
+              return child.children
+                .map((grandchild: any) => grandchild.text || '')
+                .join('');
+            }
+            return '';
+          })
+          .join('');
+      }
+      return '';
+    })
+    .join(' ')
+    .trim();
+}
+
+/**
  * Helper functie om SEO data op te halen met fallback logica:
  * 1. Page/Project SEO velden
  * 2. Default SEO van SiteSettings
@@ -10,8 +40,8 @@ import { urlForImage } from '../sanity/lib/image';
 export function getSeoData(
   pageSeo?: SanitySEO,
   siteSettings?: SanitySiteSettings,
-  fallbackTitle?: string,
-  fallbackDescription?: string,
+  fallbackTitle?: string | any,
+  fallbackDescription?: string | any,
   fallbackUrl?: string
 ) {
   // Debug logging in development (uitgecomment om console te verminderen)
@@ -25,12 +55,22 @@ export function getSeoData(
   // Priority 1: Page/Project specific SEO
   const seo = pageSeo || siteSettings?.defaultSeo || {};
 
+  // Convert fallbackTitle and fallbackDescription to strings if they're Portable Text
+  const fallbackTitleStr =
+    typeof fallbackTitle === 'string'
+      ? fallbackTitle
+      : portableTextToString(fallbackTitle);
+  const fallbackDescriptionStr =
+    typeof fallbackDescription === 'string'
+      ? fallbackDescription
+      : portableTextToString(fallbackDescription);
+
   // Build final SEO object with fallbacks
   const finalSeo = {
-    title: seo.title || fallbackTitle || siteSettings?.title || 'Page',
+    title: seo.title || fallbackTitleStr || siteSettings?.title || 'Page',
     description:
       seo.description ||
-      fallbackDescription ||
+      fallbackDescriptionStr ||
       siteSettings?.description ||
       '',
     keywords: seo.keywords || siteSettings?.defaultSeo?.keywords || [],
@@ -48,12 +88,12 @@ export function getSeoData(
       title:
         seo.openGraph?.title ||
         seo.title ||
-        fallbackTitle ||
+        fallbackTitleStr ||
         siteSettings?.title,
       description:
         seo.openGraph?.description ||
         seo.description ||
-        fallbackDescription ||
+        fallbackDescriptionStr ||
         siteSettings?.description,
       siteName:
         seo.openGraph?.siteName || siteSettings?.openGraphSiteName || '',
@@ -75,12 +115,12 @@ export function getSeoData(
       title:
         seo.twitter?.title ||
         seo.title ||
-        fallbackTitle ||
+        fallbackTitleStr ||
         siteSettings?.title,
       description:
         seo.twitter?.description ||
         seo.description ||
-        fallbackDescription ||
+        fallbackDescriptionStr ||
         siteSettings?.description,
       image:
         seo.twitter?.image ||
@@ -100,9 +140,11 @@ export function getSeoData(
 
   // Compact debug logging (alleen belangrijkste info)
   if (import.meta.env.DEV) {
+    const titleStr = typeof finalSeo.title === 'string' ? finalSeo.title : '';
+    const descStr = typeof finalSeo.description === 'string' ? finalSeo.description : '';
     console.log('✅ SEO:', {
-      title: finalSeo.title?.substring(0, 40) + (finalSeo.title?.length > 40 ? '...' : ''),
-      desc: finalSeo.description?.substring(0, 40) + (finalSeo.description?.length > 40 ? '...' : ''),
+      title: titleStr?.substring(0, 40) + (titleStr?.length > 40 ? '...' : ''),
+      desc: descStr?.substring(0, 40) + (descStr?.length > 40 ? '...' : ''),
       og: !!finalSeo.openGraph.title,
       twitter: !!finalSeo.twitter.title,
       robots: finalSeo.robots.noIndex ? 'noindex' : finalSeo.robots.noFollow ? 'nofollow' : 'index,follow',

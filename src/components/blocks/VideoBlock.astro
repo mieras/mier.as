@@ -1,6 +1,7 @@
 ---
 import { urlForImage } from '../../sanity/lib/image';
 import type { SanityVideoBlock } from '../../sanity/types';
+import { parseSanityFileAsset } from '../../lib/utils';
 
 // Define Types - following EmbedBlock structure
 interface Props {
@@ -60,13 +61,22 @@ const aspectRatioMap = {
 
 const aspectRatioCSS = aspectRatioMap[ratio] || '16/9';
 
-// Generate video file URL
+// Generate video file URL and MIME type
 let videoFileUrl = '';
+let videoMimeType = 'video/mp4'; // Default
 if (videoFile?.asset) {
   try {
-    // For Sanity files, we need to construct the URL manually
-    const assetId = videoFile.asset._ref.replace('file-', '').replace('-mp4', '');
-    videoFileUrl = `https://cdn.sanity.io/files/${import.meta.env.PUBLIC_SANITY_PROJECT_ID}/${import.meta.env.PUBLIC_SANITY_DATASET}/${assetId}.mp4`;
+    // For Sanity files, we need to construct the URL manually with dynamic extension
+    if (videoFile.asset.url) {
+      videoFileUrl = videoFile.asset.url;
+      // Try to determine MIME type from URL extension
+      const urlExtension = videoFileUrl.split('.').pop()?.toLowerCase();
+      videoMimeType = urlExtension === 'mov' ? 'video/quicktime' : 'video/mp4';
+    } else if (videoFile.asset._ref) {
+      const { assetId, extension } = parseSanityFileAsset(videoFile.asset._ref);
+      videoFileUrl = `https://cdn.sanity.io/files/${import.meta.env.PUBLIC_SANITY_PROJECT_ID}/${import.meta.env.PUBLIC_SANITY_DATASET}/${assetId}.${extension}`;
+      videoMimeType = extension === 'mov' ? 'video/quicktime' : 'video/mp4';
+    }
   } catch (error) {
     console.warn('Failed to generate video file URL:', error);
   }
@@ -131,7 +141,7 @@ if (import.meta.env.DEV) {
             poster={thumbnailUrl}
             title={title || 'Video'}
           >
-            <source src={videoFileUrl} type="video/mp4" />
+            <source src={videoFileUrl} type={videoMimeType} />
             Your browser does not support the video tag.
           </video>
         </div>

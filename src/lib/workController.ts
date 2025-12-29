@@ -6,12 +6,8 @@ interface WorkControllerOptions {
     design: string;
     photo: string;
   };
-  projects?: Array<{
-    _id: string;
-    slug?: string;
-    [key: string]: any;
-  }>;
   initialProjectSlug?: string | null;
+  initialPhotographySlug?: string | null;
 }
 
 export class WorkController {
@@ -20,36 +16,60 @@ export class WorkController {
   private rows: NodeListOf<HTMLElement>;
   private previewBox: HTMLElement | null;
   private previewImg: HTMLImageElement | null;
+  private cursorPreview: HTMLElement | null;
+  private cursorImage: HTMLImageElement | null;
+  private cursorVideo: HTMLVideoElement | null = null;
   private workPanel: HTMLElement | null;
   private activeTab: string = 'design';
   private activeProjectSlug: string | null = null;
   private activePhotoId: string | null = null;
   private defaultImages: { design: string; photo: string };
   private canHover: boolean;
-  private projects: Array<{ _id: string; slug?: string; [key: string]: any }>;
   private initialProjectSlug: string | null;
+  private initialPhotographySlug: string | null;
   private hoverTimeouts = new Map<HTMLElement, number>();
+  private isInitializing: boolean = true;
+  private mouseMoveHandler: ((e: MouseEvent) => void) | null = null;
 
   constructor(options: WorkControllerOptions) {
     this.workSection = options.workSection;
     this.defaultImages = options.defaultImages;
-    this.projects = options.projects || [];
     this.initialProjectSlug = options.initialProjectSlug || null;
+    this.initialPhotographySlug = options.initialPhotographySlug || null;
     this.canHover = window.matchMedia('(hover: hover)').matches;
 
     this.tabButtons = this.workSection.querySelectorAll(
       '.tab-group-tabs .tab-button',
     );
+    // Query all rows from all tab contents (including hidden ones)
     this.rows = this.workSection.querySelectorAll('.work-row');
     this.previewBox = this.workSection.querySelector('[data-preview]');
     this.previewImg = this.workSection.querySelector('.work__preview-img');
+    this.cursorPreview = this.workSection.querySelector('[data-work-cursor]');
+    this.cursorImage = this.workSection.querySelector('.work__cursor-image');
     this.workPanel = this.workSection.querySelector('.work__right');
 
     this.init();
   }
 
   private init() {
-    // Tab click handlers
+    // Listen to tab-change event from TabGroup component
+    // This event is dispatched by TabGroup.astro when a tab is clicked
+    // Listen on both workSection and tab-group to catch the event
+    const tabGroup = this.workSection.querySelector('.tab-group');
+    const handleTabChange = ((e: CustomEvent) => {
+      const tabId = e.detail?.tabId;
+      if (tabId) {
+        this.setTab(tabId);
+      }
+    }) as EventListener;
+
+    this.workSection.addEventListener('tab-change', handleTabChange);
+    if (tabGroup) {
+      tabGroup.addEventListener('tab-change', handleTabChange);
+    }
+
+    // Fallback: direct tab button handlers (in case TabGroup event doesn't fire)
     this.tabButtons.forEach((btn) => {
       btn.addEventListener('click', () => {
         const tabId = btn.getAttribute('data-tab');
@@ -61,60 +81,18 @@ export class WorkController {
 
     // Row hover and click handlers
     this.rows.forEach((row) => {
-      // Hover preview (desktop only) with 300ms delay
+      // Hover preview (desktop only) with delay
       row.addEventListener('mouseenter', () => {
         if (!this.canHover) return;
         if (row.hasAttribute('hidden')) return;
-
-        // Clear any existing timeout for this row
-        const existingTimeout = this.hoverTimeouts.get(row);
-        if (existingTimeout) {
-          clearTimeout(existingTimeout);
-        }
-
-        // Set new timeout for preview
-        const timeoutId = window.setTimeout(() => {
-          const previewUrl = row.getAttribute('data-preview');
-          if (previewUrl) {
-            // Always show hover preview, even if another item is active
-            this.swapPreview(previewUrl);
-          }
-          this.hoverTimeouts.delete(row);
-        }, 300);
-
-        this.hoverTimeouts.set(row, timeoutId);
+        this.scheduleCursorPreview(row);
       });
 
       row.addEventListener('mouseleave', () => {
         if (!this.canHover) return;
         if (row.hasAttribute('hidden')) return;
 
-        // Clear hover timeout to prevent flitsende beelden
-        const timeoutId = this.hoverTimeouts.get(row);
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-          this.hoverTimeouts.delete(row);
-        }
-
-        // Find the active row to restore its preview
-        const activeRow = Array.from(this.rows).find((r) =>
-          r.classList.contains('is-active'),
-        );
-
-        if (activeRow) {
-          // If there's an active row, restore its preview
-          const activePreviewUrl = activeRow.getAttribute('data-preview');
-          if (activePreviewUrl) {
-            this.swapPreview(activePreviewUrl);
-          }
-        } else {
-          // If nothing is clicked active, return to tab default
-          const defaultImage =
-            this.activeTab === 'design'
-              ? this.defaultImages.design
-              : this.defaultImages.photo;
-          this.swapPreview(defaultImage);
-        }
+        this.clearCursorPreview(row);
       });
 
       // Click = active + preview + routing
@@ -123,20 +101,25 @@ export class WorkController {
         if (row.hasAttribute('hidden')) return;
 
         const projectSlug = row.getAttribute('data-work-slug');
-        const photoId = row.getAttribute('data-photo-id');
+        const photoSlug = row.getAttribute('data-photo-slug');
 
         if (projectSlug) {
           this.openProject(projectSlug, row);
-        } else if (photoId) {
-          this.openPhotography(photoId, row);
+        } else if (photoSlug) {
+          this.openPhotography(photoSlug, row);
         } else {
           // Fallback: just set active
           this.setActiveRow(row);
+          const previewVideo = row.getAttribute('data-preview-video');
           const previewUrl = row.getAttribute('data-preview');
-          if (previewUrl) {
+          if (previewVideo) {
+            this.swapPreviewVideo(previewVideo);
+          } else if (previewUrl) {
             this.swapPreview(previewUrl);
           }
         }
+
+        this.hideCursorPreview();
       };
 
       row.addEventListener('click', handleRowActivate);
@@ -148,6 +131,15 @@ export class WorkController {
           handleRowActivate(e);
         }
       });
+
+      row.addEventListener('focus', () => {
+        if (row.hasAttribute('hidden')) return;
+        this.scheduleCursorPreview(row);
+      });
+
+      row.addEventListener('blur', () => {
+        this.clearCursorPreview(row);
+      });
     });
 
     // Handle popstate (back/forward navigation)
@@ -155,10 +147,25 @@ export class WorkController {
       this.handlePopState(e.state);
     });
 
+    if (this.canHover && this.cursorPreview) {
+      this.mouseMoveHandler = (e: MouseEvent) => {
+        if (!this.cursorPreview) return;
+        this.cursorPreview.style.left = `${e.clientX}px`;
+        this.cursorPreview.style.top = `${e.clientY}px`;
+      };
+      window.addEventListener('mousemove', this.mouseMoveHandler);
+    }
+
     // Initialize with default tab first
     this.setTab('design');
 
-    // Check for initial project slug from SSR first
+    // Mark initialization as complete after a short delay
+    // This prevents auto-opening first item during init
+    setTimeout(() => {
+      this.isInitializing = false;
+    }, 500);
+
+    // Check for initial project or photography slug from SSR first
     if (this.initialProjectSlug) {
       if (import.meta.env.DEV) {
         console.log(
@@ -170,13 +177,58 @@ export class WorkController {
       setTimeout(() => {
         this.openProjectBySlug(this.initialProjectSlug!, 'project');
       }, 300);
+    } else if (this.initialPhotographySlug) {
+      if (import.meta.env.DEV) {
+        console.log(
+          '🎯 Opening initial photography from SSR:',
+          this.initialPhotographySlug,
+        );
+      }
+      // Wait a bit for DOM to be ready
+      setTimeout(() => {
+        this.openProjectBySlug(this.initialPhotographySlug!, 'photography');
+      }, 300);
     } else {
       // Check for deep link in URL (fallback for client-side navigation)
       this.handleDeepLink();
       // Also check after a short delay to ensure DOM is fully ready
       setTimeout(() => {
         this.handleDeepLink();
+        // Don't auto-open first item on plain homepage visits
+        // This prevents redirect loops when openFirstItem() changes URL to /work/[slug]
+        // which then triggers handleDeepLink() to redirect back to /
+        // Only handleDeepLink() should open projects when there's an actual deep link
       }, 100);
+    }
+  }
+
+  private hasActiveItem(): boolean {
+    return !!this.activeProjectSlug || !!this.activePhotoId;
+  }
+
+  private openFirstItem() {
+    // Find first visible row in active tab
+    const firstRow = Array.from(this.rows).find(
+      (r) =>
+        !r.hasAttribute('hidden') &&
+        r.getAttribute('data-type') === this.activeTab,
+    );
+
+    if (!firstRow) return;
+
+    const projectSlug = firstRow.getAttribute('data-work-slug');
+    const photoSlug = firstRow.getAttribute('data-photo-slug');
+
+    if (projectSlug) {
+      if (import.meta.env.DEV) {
+        console.log('🎯 Auto-opening first project:', projectSlug);
+      }
+      this.openProject(projectSlug, firstRow as HTMLElement);
+    } else if (photoSlug) {
+      if (import.meta.env.DEV) {
+        console.log('🎯 Auto-opening first photography:', photoSlug);
+      }
+      this.openPhotography(photoSlug, firstRow as HTMLElement);
     }
   }
 
@@ -195,38 +247,211 @@ export class WorkController {
   private swapPreview(src: string) {
     if (!this.previewImg || !this.previewBox) return;
 
+    // Hide video if showing
+    const existingVideo = this.previewBox.querySelector('video');
+    if (existingVideo) {
+      existingVideo.remove();
+    }
+
     this.previewBox.classList.add('is-fading');
     window.setTimeout(() => {
       if (this.previewImg) {
         this.previewImg.src = src;
+        this.previewImg.style.display = 'block';
       }
       this.previewBox?.classList.remove('is-fading');
     }, 120);
   }
 
+  private swapPreviewVideo(videoUrl: string) {
+    if (!this.previewBox) return;
+
+    // Hide image if showing
+    if (this.previewImg) {
+      this.previewImg.style.display = 'none';
+    }
+
+    // Remove existing video if any
+    const existingVideo = this.previewBox.querySelector('video');
+    if (existingVideo) {
+      existingVideo.remove();
+    }
+
+    this.previewBox.classList.add('is-fading');
+    window.setTimeout(() => {
+      const video = document.createElement('video');
+      video.src = videoUrl;
+      video.autoplay = true;
+      video.loop = true;
+      video.muted = true;
+      video.playsInline = true;
+      video.className = 'work__preview-video';
+      video.style.cssText =
+        'width: 100%; height: 100%; object-fit: cover; display: block;';
+
+      this.previewBox?.appendChild(video);
+      this.previewBox?.classList.remove('is-fading');
+    }, 120);
+  }
+
+  private scheduleCursorPreview(row: HTMLElement) {
+    const existingTimeout = this.hoverTimeouts.get(row);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      const previewUrl = row.getAttribute('data-preview');
+      const previewVideo = row.getAttribute('data-preview-video');
+      this.showCursorPreview(previewVideo, previewUrl);
+      this.hoverTimeouts.delete(row);
+    }, 200);
+
+    this.hoverTimeouts.set(row, timeoutId);
+  }
+
+  private clearCursorPreview(row: HTMLElement) {
+    const timeoutId = this.hoverTimeouts.get(row);
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      this.hoverTimeouts.delete(row);
+    }
+    this.hideCursorPreview();
+  }
+
+  private showCursorPreview(
+    previewVideo: string | null,
+    previewUrl: string | null,
+  ) {
+    if (!this.canHover || !this.cursorPreview) return;
+    if (!previewVideo && !previewUrl) {
+      this.hideCursorPreview();
+      return;
+    }
+
+    if (previewVideo) {
+      this.setCursorVideo(previewVideo);
+    } else if (previewUrl) {
+      this.setCursorImage(previewUrl);
+    }
+
+    this.cursorPreview.classList.add('is-visible');
+  }
+
+  private hideCursorPreview() {
+    if (!this.cursorPreview) return;
+    this.cursorPreview.classList.remove('is-visible');
+    if (this.cursorVideo) {
+      this.cursorVideo.pause();
+    }
+  }
+
+  private setCursorImage(src: string) {
+    if (!this.cursorImage) return;
+    this.cursorImage.src = src;
+    this.cursorImage.style.display = 'block';
+    if (this.cursorVideo) {
+      this.cursorVideo.pause();
+      this.cursorVideo.style.display = 'none';
+    }
+  }
+
+  private setCursorVideo(src: string) {
+    if (!this.cursorPreview) return;
+    if (!this.cursorVideo) {
+      const video = document.createElement('video');
+      video.autoplay = true;
+      video.loop = true;
+      video.muted = true;
+      video.playsInline = true;
+      video.className = 'work__cursor-video';
+      video.style.cssText =
+        'width: 100%; height: 100%; object-fit: cover; display: block;';
+      this.cursorVideo = video;
+      this.cursorPreview.appendChild(video);
+    }
+
+    if (this.cursorVideo.src !== src) {
+      this.cursorVideo.src = src;
+    }
+
+    this.cursorVideo.style.display = 'block';
+    if (this.cursorImage) {
+      this.cursorImage.style.display = 'none';
+    }
+    this.cursorVideo.play().catch(() => {});
+  }
+
   private setTab(key: string) {
+    if (import.meta.env.DEV) {
+      console.log('🧭 WorkController setTab:', {
+        key,
+        previousTab: this.activeTab,
+        activeProjectSlug: this.activeProjectSlug,
+        activePhotoId: this.activePhotoId,
+      });
+    }
     this.activeTab = key;
 
-    // Filter rows
-    this.rows.forEach((r) => {
-      const show = r.getAttribute('data-type') === key;
-      r.toggleAttribute('hidden', !show);
-      r.style.display = show ? '' : 'none';
+    // Fallback: ensure tab buttons + content reflect active tab
+    const tabButtons = Array.from(this.tabButtons);
+    tabButtons.forEach((btn, index) => {
+      const isActive = btn.getAttribute('data-tab') === key;
+      btn.classList.toggle('tab-active', isActive);
+      btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      if (isActive) {
+        const tabsContainer = btn.closest('.tab-group-tabs') as HTMLElement;
+        if (tabsContainer) {
+          tabsContainer.style.setProperty(
+            '--active-tab-index',
+            index.toString(),
+          );
+        }
+      }
+    });
+
+    const tabContents = this.workSection.querySelectorAll('.tab-content');
+    tabContents.forEach((content) => {
+      const contentTab = content.getAttribute('data-tab-content');
+      content.classList.toggle('tab-content-active', contentTab === key);
+    });
+
+    // Ensure rows within the active tab are visible in case tab content
+    // classes are not updating for any reason.
+    this.rows.forEach((row) => {
+      const show = row.getAttribute('data-type') === key;
+      row.toggleAttribute('hidden', !show);
+      row.style.display = show ? '' : 'none';
     });
 
     // IMPORTANT: no default active row
     this.clearActiveRow();
 
     // Reset to preview mode when switching tabs
+    if (import.meta.env.DEV) {
+      console.log('🧹 WorkController setTab: closing active project');
+    }
     this.closeProject();
 
     // Reset preview to default for the active tab
     const defaultImage =
       key === 'design' ? this.defaultImages.design : this.defaultImages.photo;
     this.swapPreview(defaultImage);
+    this.hideCursorPreview();
+
+    // Auto-open first item in the new tab if nothing is active
+    // But only if we're not still initializing (prevents redirect loops)
+    if (!this.hasActiveItem() && !this.isInitializing) {
+      setTimeout(() => {
+        this.openFirstItem();
+      }, 100);
+    }
   }
 
   private async openProject(slug: string, row: HTMLElement) {
+    if (import.meta.env.DEV) {
+      console.log('📌 WorkController openProject:', slug);
+    }
     this.activeProjectSlug = slug;
     this.activePhotoId = null;
     this.setActiveRow(row);
@@ -278,26 +503,78 @@ export class WorkController {
     }
   }
 
-  private openPhotography(id: string, row: HTMLElement) {
-    this.activePhotoId = id;
+  private async loadPhotographyData(slug: string) {
+    try {
+      if (import.meta.env.DEV) {
+        console.log('📡 Fetching photography data via API:', slug);
+      }
+
+      const response = await fetch(
+        `/api/photography/${encodeURIComponent(slug)}.json`,
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to load photography: ${response.statusText}`);
+      }
+
+      const photographyData = await response.json();
+
+      // Dispatch event with photography data for WorkPanel to consume
+      const event = new CustomEvent('work-panel-photography-loaded', {
+        detail: { photographyData, slug },
+        bubbles: true,
+      });
+      this.workSection.dispatchEvent(event);
+
+      if (import.meta.env.DEV) {
+        console.log(
+          '✅ Photography data loaded:',
+          photographyData.projectTitle,
+        );
+      }
+    } catch (error) {
+      console.error('❌ Failed to load photography data:', error);
+
+      // Dispatch error event
+      const errorEvent = new CustomEvent('work-panel-photography-error', {
+        detail: { error, slug },
+        bubbles: true,
+      });
+      this.workSection.dispatchEvent(errorEvent);
+    }
+  }
+
+  private async openPhotography(slug: string, row: HTMLElement) {
+    if (import.meta.env.DEV) {
+      console.log('📌 WorkController openPhotography:', slug);
+    }
+    this.activePhotoId = slug;
     this.activeProjectSlug = null;
     this.setActiveRow(row);
 
     // Update URL with pushState
-    const newUrl = `/photography/${id}`;
-    window.history.pushState({ id, type: 'photography' }, '', newUrl);
+    const newUrl = `/photography/${slug}`;
+    window.history.pushState({ slug, type: 'photography' }, '', newUrl);
 
-    // Switch panel to detail mode with photography type
-    this.switchPanelMode('detail', id, 'photography');
+    // Fetch photography data via API and switch panel to detail mode
+    await this.loadPhotographyData(slug);
+    this.switchPanelMode('detail', slug, 'photography');
   }
 
   private closeProject() {
+    if (import.meta.env.DEV) {
+      console.log('📤 WorkController closeProject: resetting to home');
+    }
+    const hadActiveProject = !!this.activeProjectSlug || !!this.activePhotoId;
+
     this.activeProjectSlug = null;
     this.activePhotoId = null;
     this.clearActiveRow();
 
-    // Update URL to homepage
-    window.history.pushState({ type: 'home' }, '', '/');
+    // Only update URL if we were actually in a detail state
+    if (hadActiveProject && window.location.pathname !== '/') {
+      window.history.pushState({ type: 'home' }, '', '/');
+    }
 
     // Switch panel back to preview mode
     this.switchPanelMode('preview');
@@ -445,20 +722,20 @@ export class WorkController {
       }
     } else {
       const row = Array.from(this.rows).find(
-        (r) => r.getAttribute('data-photo-id') === slug,
+        (r) => r.getAttribute('data-photo-slug') === slug,
       );
       if (row) {
         const rowType = row.getAttribute('data-type');
         if (rowType && rowType !== this.activeTab) {
           this.setTab(rowType);
-          setTimeout(() => {
-            this.openPhotography(slug, row as HTMLElement);
+          setTimeout(async () => {
+            await this.openPhotography(slug, row as HTMLElement);
           }, 100);
         } else {
-          this.openPhotography(slug, row as HTMLElement);
+          await this.openPhotography(slug, row as HTMLElement);
         }
       } else if (import.meta.env.DEV) {
-        console.warn('⚠️ Photography row not found for id:', slug);
+        console.warn('⚠️ Photography row not found for slug:', slug);
       }
     }
   }
@@ -490,17 +767,17 @@ export class WorkController {
           this.switchPanelMode('detail', slug, 'project');
         }
       }
-    } else if (state && state.id && state.type === 'photography') {
+    } else if (state && state.slug && state.type === 'photography') {
       // Restore photography view
       const row = Array.from(this.rows).find(
-        (r) => r.getAttribute('data-photo-id') === state.id,
+        (r) => r.getAttribute('data-photo-slug') === state.slug,
       );
       if (row) {
         const rowType = row.getAttribute('data-type');
         if (rowType && rowType !== this.activeTab) {
           this.setTab(rowType);
         }
-        this.openPhotography(state.id, row as HTMLElement);
+        await this.openPhotography(state.slug, row as HTMLElement);
       }
     } else {
       // Return to preview/default
@@ -526,6 +803,10 @@ export class WorkController {
       const newBtn = btn.cloneNode(true);
       btn.parentNode?.replaceChild(newBtn, btn);
     });
+
+    if (this.mouseMoveHandler) {
+      window.removeEventListener('mousemove', this.mouseMoveHandler);
+    }
   }
 }
 
@@ -543,17 +824,8 @@ export function initWorkController() {
   // Get initial work slug from SSR
   const initialProjectSlug =
     workSection.getAttribute('data-initial-work-slug') || null;
-
-  // Get works data from data attribute (JSON string)
-  const projectsData = workSection.getAttribute('data-works');
-  let projects: Array<{ _id: string; slug?: string; [key: string]: any }> = [];
-  if (projectsData) {
-    try {
-      projects = JSON.parse(projectsData);
-    } catch (e) {
-      console.error('Failed to parse projects data:', e);
-    }
-  }
+  const initialPhotographySlug =
+    workSection.getAttribute('data-initial-photography-slug') || null;
 
   return new WorkController({
     workSection,
@@ -561,7 +833,7 @@ export function initWorkController() {
       design: defaultDesignImage,
       photo: defaultPhotoImage,
     },
-    projects,
     initialProjectSlug,
+    initialPhotographySlug,
   });
 }

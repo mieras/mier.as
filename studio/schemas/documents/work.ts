@@ -8,17 +8,21 @@ export default defineType({
   icon: ProjectsIcon,
   groups: [
     {
-      name: 'hero',
-      title: 'Hero',
+      name: 'general',
+      title: 'General',
       default: true,
     },
     {
-      name: 'content',
-      title: 'Content',
+      name: 'preview',
+      title: 'Preview',
     },
     {
-      name: 'meta',
-      title: 'Project Details',
+      name: 'media',
+      title: 'Media',
+    },
+    {
+      name: 'info',
+      title: 'Info',
     },
     {
       name: 'seo',
@@ -29,15 +33,16 @@ export default defineType({
     defineField({
       name: 'title',
       type: 'string',
-      title: 'Project Title',
+      title: 'Title',
+      description: 'Internal title for Sanity Studio (not used in front-end)',
       validation: (Rule) => Rule.required().min(3).max(100),
-      group: 'content',
+      group: 'general',
     }),
     defineField({
       name: 'slug',
       type: 'slug',
       title: 'Slug',
-      options: { source: 'title' },
+      options: { source: 'projectTitle' },
       validation: (Rule) =>
         Rule.required().custom((slug) => {
           if (!slug?.current) return 'Slug is required';
@@ -46,32 +51,49 @@ export default defineType({
           }
           return true;
         }),
-      group: 'content',
+      group: 'general',
     }),
     defineField({
-      name: 'hero',
+      name: 'projectTitle',
+      type: 'string',
+      title: 'Project Title',
+      description: 'Project title used in work list tile and info panel',
+      validation: (Rule) => Rule.required().min(3).max(100),
+      group: 'general',
+    }),
+    defineField({
+      name: 'subtitle',
+      type: 'string',
+      title: 'Subtitle',
+      description: 'Project subtitle used in work list tile and info panel',
+      group: 'general',
+    }),
+    defineField({
+      name: 'client',
+      type: 'reference',
+      title: 'Client',
+      to: [{ type: 'client' }],
+      group: 'general',
+    }),
+    defineField({
+      name: 'year',
+      type: 'number',
+      title: 'Year',
+      description: 'Project year',
+      validation: (Rule) => Rule.min(1900).max(2100),
+      group: 'general',
+    }),
+    defineField({
+      name: 'preview',
       type: 'object',
-      title: 'Hero',
+      title: 'Preview Media',
+      description:
+        'Media used for preview panel when hovering a WorkListItem. Image or Video.',
       fields: [
         defineField({
-          name: 'title',
-          type: 'string',
-          title: 'Title',
-        }),
-        defineField({
-          name: 'subtitle',
-          type: 'string',
-          title: 'Subtitle',
-        }),
-        defineField({
-          name: 'intro',
-          type: 'text',
-          title: 'Intro',
-        }),
-        defineField({
-          name: 'coverMedia',
+          name: 'image',
           type: 'image',
-          title: 'Cover Media',
+          title: 'Image',
           options: { hotspot: true },
           fields: [
             defineField({
@@ -81,14 +103,34 @@ export default defineType({
             }),
           ],
         }),
+        defineField({
+          name: 'video',
+          type: 'file',
+          title: 'Video (MP4/MOV)',
+          description: 'Upload MP4 or MOV video file for preview',
+          options: {
+            accept: 'video/mp4,video/quicktime',
+          },
+        }),
       ],
-      group: 'hero',
+      validation: (Rule) =>
+        Rule.custom((preview) => {
+          if (!preview) return true;
+          const hasImage = !!preview.image;
+          const hasVideo = !!preview.video;
+          if (!hasImage && !hasVideo) {
+            return 'Either image or video is required';
+          }
+          return true;
+        }),
+      group: 'preview',
     }),
     defineField({
       name: 'projectMedia',
       type: 'array',
       title: 'Project Media',
-      description: 'Media slides for the project carousel. Each slide can contain an image or video.',
+      description:
+        'Media slides for the project carousel. Each slide can contain an image or video.',
       of: [
         {
           type: 'object',
@@ -109,14 +151,29 @@ export default defineType({
                 }),
               ],
             }),
+            defineField({
+              name: 'fitMode',
+              type: 'string',
+              title: 'Fit Mode',
+              description: 'How the image should fit in the carousel container',
+              options: {
+                list: [
+                  { title: 'Fill', value: 'fill' },
+                  { title: 'Fit', value: 'fit' },
+                ],
+              },
+              initialValue: 'fill',
+            }),
           ],
           preview: {
             select: {
               image: 'image',
+              fitMode: 'fitMode',
             },
-            prepare({ image }) {
+            prepare({ image, fitMode }) {
               return {
                 title: 'Image Slide',
+                subtitle: fitMode ? `Fit: ${fitMode}` : 'Fill',
                 media: image,
               };
             },
@@ -125,50 +182,59 @@ export default defineType({
         {
           type: 'object',
           name: 'videoSlide',
-          title: 'Video (MP4)',
+          title: 'Video (MP4/MOV)',
           fields: [
             defineField({
               name: 'video',
               type: 'file',
-              title: 'Video (MP4)',
-              description: 'Upload MP4 video file. Media will fill the slide (object-fit: cover).',
+              title: 'Video (MP4/MOV)',
+              description:
+                'Upload MP4 or MOV video file. Media will fill the slide (object-fit: cover).',
               options: {
-                accept: 'video/mp4',
+                accept: 'video/mp4,video/quicktime',
               },
               validation: (Rule) => Rule.required(),
+            }),
+            defineField({
+              name: 'fitMode',
+              type: 'string',
+              title: 'Fit Mode',
+              description: 'How the video should fit in the carousel container',
+              options: {
+                list: [
+                  { title: 'Fill', value: 'fill' },
+                  { title: 'Fit', value: 'fit' },
+                ],
+              },
+              initialValue: 'fill',
             }),
           ],
           preview: {
             select: {
               video: 'video',
+              fitMode: 'fitMode',
             },
-            prepare({ video }) {
+            prepare({ video, fitMode }) {
               return {
                 title: 'Video Slide',
+                subtitle: fitMode ? `Fit: ${fitMode}` : 'Fill',
                 media: video,
               };
             },
           },
         },
       ],
-      group: 'content',
+      group: 'media',
     }),
     defineField({
-      name: 'credits',
+      name: 'description',
       type: 'array',
-      title: 'Credits',
+      title: 'Description',
+      description: 'Simple rich text description with bold and italic',
       of: [
         {
           type: 'block',
-          styles: [
-            { title: 'Normal', value: 'normal' },
-            { title: 'Title', value: 'h3' },
-            { title: 'Subtitle', value: 'h4' },
-          ],
-          lists: [
-            { title: 'Bullet', value: 'bullet' },
-            { title: 'Numbered', value: 'number' },
-          ],
+          styles: [{ title: 'Normal', value: 'normal' }],
           marks: {
             decorators: [
               { title: 'Strong', value: 'strong' },
@@ -177,124 +243,7 @@ export default defineType({
           },
         },
       ],
-      group: 'content',
-    }),
-    defineField({
-      name: 'services',
-      type: 'array',
-      title: 'Services',
-      of: [{ type: 'reference', to: [{ type: 'service' }] }],
-      group: 'meta',
-    }),
-    defineField({
-      name: 'tags',
-      type: 'array',
-      title: 'Tags',
-      of: [{ type: 'string' }],
-      options: {
-        layout: 'tags',
-      },
-      group: 'meta',
-    }),
-    defineField({
-      name: 'thumbnail',
-      type: 'object',
-      title: 'Thumbnail',
-      fields: [
-        defineField({
-          name: 'image',
-          type: 'image',
-          title: 'Thumbnail Image',
-          options: { hotspot: true },
-          fields: [
-            defineField({
-              name: 'alt',
-              type: 'string',
-              title: 'Alt Text',
-            }),
-          ],
-        }),
-        defineField({
-          name: 'size',
-          type: 'string',
-          title: 'Size',
-          options: {
-            list: [
-              { title: 'Small', value: 'small' },
-              { title: 'Default', value: 'default' },
-              { title: 'Large', value: 'large' },
-              { title: 'Full', value: 'full' },
-            ],
-          },
-          initialValue: 'default',
-        }),
-        defineField({
-          name: 'video',
-          type: 'file',
-          title: 'Video (MP4)',
-          description: 'Upload MP4 video file for thumbnail. Alternatively, use videoUrl for external video.',
-          options: {
-            accept: 'video/mp4',
-          },
-        }),
-        defineField({
-          name: 'videoUrl',
-          type: 'url',
-          title: 'Video URL (Fallback)',
-          description: 'Optional video URL as fallback if no MP4 file is uploaded',
-        }),
-        defineField({
-          name: 'aspectRatio',
-          type: 'string',
-          title: 'Aspect Ratio',
-          description: 'Choose the aspect ratio for the thumbnail',
-          options: {
-            list: [
-              { title: '16:9 (Widescreen)', value: '16:9' },
-              { title: '5:4 (Portrait)', value: '5:4' },
-              { title: '4:3 (Standard)', value: '4:3' },
-              { title: '3:2 (Photo)', value: '3:2' },
-              { title: '1:1 (Square)', value: '1:1' },
-              { title: '2:3 (Portrait Photo)', value: '2:3' },
-              { title: '3:4 (Portrait)', value: '3:4' },
-              { title: '4:5 (Portrait)', value: '4:5' },
-              { title: '9:16 (Vertical)', value: '9:16' },
-            ],
-          },
-          initialValue: '16:9',
-        }),
-      ],
-      group: 'meta',
-    }),
-    defineField({
-      name: 'client',
-      type: 'reference',
-      title: 'Client',
-      to: [{ type: 'client' }],
-      group: 'meta',
-    }),
-    defineField({
-      name: 'year',
-      type: 'number',
-      title: 'Year',
-      description: 'Project year',
-      validation: (Rule) => Rule.min(1900).max(2100),
-      group: 'meta',
-    }),
-    defineField({
-      name: 'role',
-      type: 'string',
-      title: 'Role',
-      description: 'Your role in this project',
-      group: 'meta',
-    }),
-    defineField({
-      name: 'relatedProjects',
-      type: 'array',
-      title: 'Related Projects',
-      of: [{ type: 'reference', to: [{ type: 'work' }] }],
-      validation: (Rule) => Rule.max(3),
-      group: 'meta',
+      group: 'info',
     }),
     defineField({
       name: 'seo',
@@ -305,14 +254,17 @@ export default defineType({
   ],
   preview: {
     select: {
-      title: 'title',
-      size: 'thumbnail.size',
-      media: 'thumbnail.image',
+      title: 'projectTitle',
+      subtitle: 'subtitle',
+      client: 'client.title',
+      year: 'year',
+      media: 'preview.image',
     },
-    prepare({ title, size, media }) {
+    prepare({ title, subtitle, client, year, media }) {
+      const parts = [subtitle, client, year].filter(Boolean);
       return {
         title: title || 'Untitled Project',
-        subtitle: size ? `Size: ${size}` : 'No size set',
+        subtitle: parts.length > 0 ? parts.join(' • ') : 'No details',
         media: media,
       };
     },

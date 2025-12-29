@@ -1,5 +1,5 @@
 ---
-import WorkMarquee from './WorkMarquee.astro';
+import ScrollMarquee from '../ui/ScrollMarquee.astro';
 import TabGroup from '../ui/TabGroup.astro';
 import WorkList from './work/WorkList.astro';
 import WorkPanel from './work/WorkPanel.astro';
@@ -7,13 +7,13 @@ import { urlForImage } from '../../sanity/lib/image';
 
 type Project = {
   _id: string;
-  title: string;
+  projectTitle?: string;
+  title?: string; // Fallback for old data
   slug?: string;
   year?: number;
-  role?: string;
-  thumbnail?: {
+  preview?: {
     image?: any;
-    aspectRatio?: string;
+    video?: any;
   };
   client?: {
     title: string;
@@ -22,34 +22,49 @@ type Project = {
 
 type PhotographyItem = {
   _id: string;
-  title: string;
+  projectTitle?: string;
+  title?: string; // Fallback for old data
   year?: number;
-  city?: string;
-  country?: string;
-  camera?: string;
-  thumbnail?: any;
+  preview?: any;
 };
 
 type Props = {
   projects?: Project[];
   photography?: PhotographyItem[];
   initialProjectSlug?: string | null;
+  initialPhotographySlug?: string | null;
+  workPlaceholders?: {
+    designPlaceholder?: any;
+    photographyPlaceholder?: any;
+  };
 };
 
 const {
   projects = [],
   photography = [],
   initialProjectSlug = null,
+  initialPhotographySlug = null,
+  workPlaceholders,
 } = Astro.props;
 
-// Get default preview images for each tab
-const defaultDesignImage = projects[0]?.thumbnail?.image?.asset
-  ? urlForImage(projects[0].thumbnail.image)?.width(1200).height(800).url()
-  : '';
+// Get placeholder images from homepage settings, fallback to first project if not set
+const defaultDesignImage = workPlaceholders?.designPlaceholder?.asset
+  ? urlForImage(workPlaceholders.designPlaceholder)
+      ?.width(1200)
+      .height(800)
+      .url()
+  : projects[0]?.preview?.image?.asset
+    ? urlForImage(projects[0].preview.image)?.width(1200).height(800).url()
+    : '';
 
-const defaultPhotoImage = photography[0]?.thumbnail?.asset
-  ? urlForImage(photography[0].thumbnail)?.width(1200).height(800).url()
-  : '';
+const defaultPhotoImage = workPlaceholders?.photographyPlaceholder?.asset
+  ? urlForImage(workPlaceholders.photographyPlaceholder)
+      ?.width(1200)
+      .height(800)
+      .url()
+  : photography[0]?.preview?.asset
+    ? urlForImage(photography[0].preview)?.width(1200).height(800).url()
+    : '';
 
 const tabs = [
   { id: 'design', label: 'Design', ariaLabel: 'Show design projects' },
@@ -62,15 +77,22 @@ const tabs = [
   id="work"
   aria-label="Work"
   data-initial-work-slug={initialProjectSlug || ''}
+  data-initial-photography-slug={initialPhotographySlug || ''}
   data-default-design-image={defaultDesignImage}
   data-default-photo-image={defaultPhotoImage}
   data-works={JSON.stringify(projects)}
 >
   <div class="work__marquee">
-    <WorkMarquee />
+    <ScrollMarquee
+      word="Work"
+      repeat={12}
+      variant="dark"
+      direction="left"
+      ariaLabel="Work section title"
+    />
   </div>
 
-  <div class="work__grid" aria-label="Work grid">
+  <div class="work__grid" id="work__grid" aria-label="Work grid">
     <div class="work__left" aria-label="Project list">
       <div class="work__tabs">
         <TabGroup
@@ -99,11 +121,14 @@ const tabs = [
       initialProjectSlug={initialProjectSlug}
     />
   </div>
+
+  <div class="work__cursor" data-work-cursor aria-hidden="true">
+    <img class="work__cursor-image" alt="" />
+  </div>
 </section>
 
 <style>
   .work {
-    height: 100dvh;
     display: grid;
     grid-template-rows: auto 1fr;
     overflow: hidden;
@@ -127,7 +152,38 @@ const tabs = [
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 34rem), 1fr));
     align-items: start;
     min-width: 0;
-    min-height: 0;
+    min-height: 100dvh;
+  }
+
+  .work__cursor {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: clamp(9rem, 20vw, 14rem);
+    height: clamp(9rem, 20vw, 14rem);
+    border-radius: 999px;
+    overflow: hidden;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease;
+    z-index: 50;
+    background: var(--color-black);
+  }
+
+  .work__cursor.is-visible {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  .work__cursor-image,
+  .work__cursor video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
 
   /* Left */
@@ -144,14 +200,15 @@ const tabs = [
   }
 
   .tab-content {
-    display: none;
+    display: none !important;
     flex-direction: column;
     height: 100%;
     min-height: 0;
+    margin-inline: calc(-1 * var(--space-xs));
   }
 
   .tab-content.tab-content-active {
-    display: flex;
+    display: flex !important;
   }
 
   /* Tablet: adjust layout */

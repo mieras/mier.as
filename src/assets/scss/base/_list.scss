@@ -13,13 +13,13 @@ ol:not([class]) {
     padding: 0.5rem 1rem 0;
   }
 
-  li {
+  li:not([class]) {
     margin-bottom: 0.5rem;
   }
 }
 
 ul:not([class]) {
-  > li::marker {
+  >li::marker {
     display: block;
     color: var(--primary-800);
   }

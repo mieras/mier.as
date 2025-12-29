@@ -66,39 +66,6 @@ const {
   }
   <div class="music-item__info">
     <div class="music-item__header">
-      {
-        showPlayButton && (
-          <button
-            class="music-item__play-btn-inline"
-            aria-label={`Play ${line1}`}
-            data-mixcloud-id={mixcloudId}
-            data-action="play"
-            data-active="false"
-          >
-            <svg
-              class="music-item__play-icon"
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="currentColor"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path d="M3 2.5v11l9-5.5-9-5.5z" />
-            </svg>
-            <svg
-              class="music-item__pause-icon"
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="currentColor"
-              xmlns="http://www.w3.org/2000/svg"
-              style="display: none;"
-            >
-              <path d="M3 2.5h3v11H3V2.5zm7 0h3v11h-3V2.5z" />
-            </svg>
-          </button>
-        )
-      }
       <span class="music-item__artist">{line1}</span>
     </div>
     {
@@ -139,16 +106,17 @@ const {
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: var(--space-s);
+    gap: var(--space-xs);
   }
 
   .music-item__thumb {
     position: relative;
-    width: 5rem;
-    height: 5rem;
+    width: calc(3rem + var(--space-3xs));
+    height: calc(3rem + var(--space-3xs));
     aspect-ratio: 1 / 1;
     overflow: hidden;
     flex-shrink: 0;
+    border-radius: var(--radius-small);
   }
 
   .music-item__image {
@@ -181,16 +149,17 @@ const {
     cursor: pointer;
     transition: all 0.2s ease;
     z-index: 10;
+    border: none;
   }
 
   .music-item__play-btn:hover {
-    background-color: var(--tile-hover);
+    background-color: rgba(0, 0, 0, 0.5);
   }
 
   .music-item__play-btn .music-item__play-icon,
   .music-item__play-btn .music-item__pause-icon {
-    width: 1.2rem;
-    height: 1.2rem;
+    width: 100%;
+    height: 100%;
     fill: currentColor;
   }
 

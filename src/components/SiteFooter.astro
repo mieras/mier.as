@@ -1,12 +1,11 @@
 ---
 import { getSiteSettings } from '../lib/sanity';
-import DarkMode from './DarkMode.astro';
 
 const siteSettings = await getSiteSettings();
 const title = siteSettings?.title || '';
 const contact = siteSettings?.footer?.contact;
 const legal = siteSettings?.footer?.legal;
-const tAndCFile = (legal as any)?.termsAndConditions?.asset;
+const tAndCFile = legal?.termsAndConditions?.asset;
 ---
 
 <footer class="footer" aria-label="Footer">
@@ -68,17 +67,13 @@ const tAndCFile = (legal as any)?.termsAndConditions?.asset;
 
     {
       tAndCFile?.url && (
-        <li class="footer__item">
+        <li class="footer__item footer__item--tac">
           <a href={tAndCFile.url} target="_blank" rel="noopener">
             T&C
           </a>
         </li>
       )
     }
-
-    <li class="footer__item">
-      <DarkMode />
-    </li>
   </ul>
 </footer>
 
@@ -124,6 +119,7 @@ const tAndCFile = (legal as any)?.termsAndConditions?.asset;
 
   .footer__item {
     font-size: var(--fs--3);
+    font-weight: 500;
     color: var(--footer-text);
     text-decoration: none;
     text-transform: uppercase;
@@ -199,10 +195,18 @@ const tAndCFile = (legal as any)?.termsAndConditions?.asset;
     }
 
     .footer__list {
-      justify-content: space-between;
+      display: flex;
+      flex-direction: column;
+
+      align-content: space-between;
+      justify-content: center;
       align-items: center;
       height: 100%;
       gap: 0;
+    }
+
+    .footer__item--tac {
+      margin-top: auto;
     }
   }
 

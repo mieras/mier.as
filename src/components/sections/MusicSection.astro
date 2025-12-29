@@ -1,14 +1,19 @@
 ---
-import MusicMarquee from './MusicMarquee.astro';
+import ScrollMarquee from '../ui/ScrollMarquee.astro';
 import RecentlyPlayed from './music/RecentlyPlayed.astro';
 import Mixtapes from './music/Mixtapes.astro';
 import LatestRecords from './music/LatestRecords.astro';
 ---
 
 <section class="music" id="music" aria-label="Music">
-  <div class="music__marquee">
-    <MusicMarquee />
-  </div>
+  <ScrollMarquee
+    word="Music"
+    repeat={12}
+    variant="light"
+    direction="right"
+    start="top bottom-=300"
+    ariaLabel="Music section title"
+  />
 
   <div class="music__grid" aria-label="Music grid">
     <section class="music__col" aria-label="Now listening">

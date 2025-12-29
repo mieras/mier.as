@@ -1,6 +1,6 @@
 ---
-import { getSiteSettings } from '../lib/sanity';
-import { processNavigationLink } from '../lib/utils';
+import { getSiteSettings } from '../../lib/sanity';
+import { processNavigationLink } from '../../lib/utils';
 
 const siteSettings = await getSiteSettings();
 const menuItems = siteSettings?.navigation?.menuItems || [];
@@ -11,18 +11,18 @@ const sortedMenuItems = [...menuItems].sort(
 );
 ---
 
-<nav class="nav-monochrome" aria-label="Main navigation">
-  <ul class="nav-list">
+<nav class="hero-navigation" aria-label="Main navigation">
+  <ul class="hero-navigation__list">
     {
       sortedMenuItems.map((item) => {
         const linkProps = processNavigationLink(item.link);
         return (
-          <li class="nav-item">
+          <li class="hero-navigation__item">
             <a
               href={linkProps.href}
               target={linkProps.target}
               rel={linkProps.rel}
-              class="nav-link"
+              class="hero-navigation__link"
             >
               {item.label}
             </a>
@@ -32,59 +32,67 @@ const sortedMenuItems = [...menuItems].sort(
     }
   </ul>
 </nav>
+
 <style>
-  nav.nav-monochrome {
+  .hero-navigation {
+    display: flex;
     position: absolute;
-    top: 0;
-    left: 0;
     right: 0;
+    top: 0;
+    width: 2rem;
+    height: 100%;
+    padding: var(--space-xs) 0;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    overflow: hidden;
     z-index: 20;
-    color: #ffffff;
     pointer-events: none;
   }
 
-  .nav-list {
+  .hero-navigation__list {
     display: flex;
+    flex-direction: row;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
-    gap: var(--space-m);
+    height: 100%;
+    gap: var(--space-xs);
     list-style: none;
-    padding: var(--space-xs);
+    padding: 0;
     margin: 0;
-    flex-wrap: wrap;
   }
 
-  .nav-item {
+  .hero-navigation__item {
     pointer-events: auto;
+    font-size: var(--fs--3);
+    color: var(--text-light, #ffffff);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    line-height: 1;
+    white-space: nowrap;
   }
 
-  .nav-link {
+  .hero-navigation__link {
     font-family: var(--font-family-default);
-    font-size: var(--fs--3);
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.0463px;
-    line-height: 1;
     color: #ffffff;
     text-decoration: none;
     transition: opacity 0.3s ease;
     display: block;
   }
 
-  .nav-link:hover {
+  .hero-navigation__link:hover {
     opacity: 0.7;
   }
 
-  .nav-link:focus-visible {
+  .hero-navigation__link:focus-visible {
     outline: 2px solid #ffffff;
     outline-offset: 4px;
   }
 
-  /* Mobile: stack vertically */
-  @media (max-width: 799px) {
-    .nav-list {
-      flex-direction: column;
-      gap: var(--space-xs);
+  /* Mobile: hide on small screens */
+  @media (max-width: 899px) {
+    .hero-navigation {
+      display: none;
     }
   }
 </style>

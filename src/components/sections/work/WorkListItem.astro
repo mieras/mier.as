@@ -1,15 +1,17 @@
 ---
 import { urlForImage } from '../../../sanity/lib/image';
+import { parseSanityFileAsset } from '../../../lib/utils';
 
 type Project = {
   _id: string;
-  title: string;
+  projectTitle?: string;
+  title?: string; // Fallback for old data
   slug?: string;
   year?: number;
-  role?: string;
-  thumbnail?: {
+  subtitle?: string;
+  preview?: {
     image?: any;
-    aspectRatio?: string;
+    video?: any;
   };
   client?: {
     title: string;
@@ -18,12 +20,13 @@ type Project = {
 
 type PhotographyItem = {
   _id: string;
-  title: string;
+  projectTitle?: string;
+  title?: string; // Fallback for old data
+  slug?: string;
   year?: number;
-  city?: string;
   country?: string;
-  camera?: string;
-  thumbnail?: any;
+  location?: string[];
+  preview?: any;
 };
 
 type Props = {
@@ -38,69 +41,116 @@ const { project, photography, type = 'design' } = Astro.props;
 const item = type === 'photography' ? photography : project;
 if (!item) return null;
 
-const imageUrl = project?.thumbnail?.image?.asset
-  ? urlForImage(project.thumbnail.image)?.width(1200).height(800).url()
-  : photography?.thumbnail?.asset
-    ? urlForImage(photography.thumbnail)?.width(1200).height(800).url()
-    : null;
+// Debug: log photography data to see what we're getting
+if (import.meta.env.DEV && type === 'photography') {
+  console.log('📸 Photography item data:', {
+    _id: item._id,
+    projectTitle: item.projectTitle,
+    title: item.title,
+    country: photography?.country,
+    location: photography?.location,
+    year: item.year,
+    fullItem: item,
+  });
+}
 
-const year = item.year || null;
-const title = item.title || '';
+// Get preview image and video URLs
+let imageUrl: string | null = null;
+let videoUrl: string | null = null;
 
-// For design projects
-const client = project?.client?.title || '';
-const description = title;
+if (type === 'design' && project?.preview) {
+  if (project.preview.video?.asset) {
+    // Get video URL from Sanity asset
+    const videoAsset = project.preview.video.asset;
+    if (videoAsset.url) {
+      videoUrl = videoAsset.url;
+    } else if (videoAsset._ref) {
+      const { assetId, extension } = parseSanityFileAsset(videoAsset._ref);
+      videoUrl = `https://cdn.sanity.io/files/${import.meta.env.PUBLIC_SANITY_PROJECT_ID}/${import.meta.env.PUBLIC_SANITY_DATASET}/${assetId}.${extension}`;
+    }
+  }
 
-// For photography
-const city = photography?.city || '';
-const country = photography?.country || '';
-const location = [city, country].filter(Boolean).join(', ');
-const camera = photography?.camera || '';
-const photoDescription = camera || title;
+  if (project.preview.image?.asset) {
+    imageUrl =
+      urlForImage(project.preview.image)?.width(1200).height(800).url() || null;
+  }
+} else if (type === 'photography' && photography?.preview?.asset) {
+  imageUrl =
+    urlForImage(photography.preview)?.width(1200).height(800).url() || null;
+}
 
 const dataId =
   type === 'photography'
     ? {
         'data-photo-id': item._id,
+        'data-photo-slug': photography?.slug || '',
         'data-preview': imageUrl || '',
+        'data-preview-video': videoUrl || '',
       }
     : {
         'data-work-id': item._id,
         'data-work-slug': project?.slug || '',
         'data-preview': imageUrl || '',
+        'data-preview-video': videoUrl || '',
       };
+
+const year = item.year || null;
+const projectTitle = item.projectTitle || item.title || '';
+
+// For design projects: show client and project title
+const client = project?.client?.title || '';
+
+// For photography: show Project Title, Country, and Year in tile
+const country = photography?.country || '';
 ---
 
 <a
-  class="work-row"
+  class={`work-row work-row--${type}`}
   href="#"
   data-type={type}
   {...dataId}
   role="button"
   tabindex="0"
-  aria-label={`${type === 'design' ? client : location} - ${title}`}
+  aria-label={`${type === 'design' ? client : country} - ${projectTitle}`}
 >
-  <span class="work-row__client">{type === 'design' ? client : location}</span>
-  <span class="work-row__desc"
-    >{type === 'design' ? description : photoDescription}</span
-  >
-  {year && <span class="work-row__year">{year}</span>}
+  {
+    type === 'design' ? (
+      <>
+        <p class="work-row__client">{client}</p>
+        <h3 class="work-row__title">{projectTitle}</h3>
+        {year && <p class="work-row__year">{year}</p>}
+      </>
+    ) : (
+      <>
+        <h3 class="work-row__title">{projectTitle}</h3>
+        {country && <p class="work-row__country">{country}</p>}
+        {year && <p class="work-row__year">{year}</p>}
+      </>
+    )
+  }
 </a>
 
 <style>
   .work-row {
     display: grid;
-    grid-template-columns: 1.25fr 1.5fr 0.5fr;
     gap: var(--space-s);
-    align-items: center;
+    align-items: baseline;
     padding: 0;
     text-decoration: none;
     color: inherit;
-    background: var(--section-work-bg);
+    /* background: var(--section-work-bg); */
     border-top: 1px solid var(--work-items-hover-bg);
     transition:
       background 0.2s ease,
       color 0.2s ease;
+  }
+
+  .work-row--design {
+    grid-template-columns: 1.5fr 1.25fr 0.5fr;
+  }
+
+  .work-row--photography {
+    grid-template-columns: 1.5fr 1.25fr 0.5fr;
   }
 
   .work-row:hover {
@@ -118,22 +168,49 @@ const dataId =
     color: var(--text-light);
   }
 
-  .work-row__client {
+  /* For design: client is large, title is small */
+  .work-row--design .work-row__client {
     font-family: var(--font-family-heading);
     font-size: var(--fs-0);
     font-weight: 650;
     line-height: 1.2;
+    margin: 0;
     padding: var(--space-xs);
   }
 
-  .work-row__desc {
+  .work-row--design .work-row__title {
     font-size: var(--fs--2);
+    font-weight: 400;
     opacity: 0.6;
     line-height: 1.2;
+    margin: 0;
     padding: var(--space-xs);
   }
 
-  .work-row.is-active .work-row__desc {
+  .work-row--design.is-active .work-row__title {
+    opacity: 0.9;
+  }
+
+  /* For photography: title is large, country is small */
+  .work-row--photography .work-row__title {
+    font-family: var(--font-family-heading);
+    font-size: var(--fs-0);
+    font-weight: 650;
+    line-height: 1.2;
+    margin: 0;
+    padding: var(--space-xs);
+  }
+
+  .work-row--photography .work-row__country {
+    font-size: var(--fs--2);
+    font-weight: 400;
+    opacity: 0.6;
+    line-height: 1.2;
+    margin: 0;
+    padding: var(--space-xs);
+  }
+
+  .work-row--photography.is-active .work-row__country {
     opacity: 0.9;
   }
 
@@ -143,6 +220,7 @@ const dataId =
     font-size: var(--fs--2);
     opacity: 0.6;
     line-height: 1.2;
+    margin: 0;
     padding: var(--space-xs);
     padding-right: var(--space-xs);
   }

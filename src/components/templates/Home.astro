@@ -9,15 +9,14 @@ import SiteFooter from '../SiteFooter.astro';
 
 type Project = {
   _id: string;
-  title: string;
+  projectTitle?: string;
+  title?: string; // Fallback for old data
   slug: string;
   year?: number;
   subtitle?: string;
-  intro?: string;
-  role?: string;
-  thumbnail?: {
+  preview?: {
     image?: any;
-    aspectRatio?: string;
+    video?: any;
   };
   client?: {
     title: string;
@@ -27,9 +26,11 @@ type Project = {
 type Props = {
   data?: any;
   initialProjectSlug?: string | null;
+  initialPhotographySlug?: string | null;
 };
 
-const { data, initialProjectSlug = null } = Astro.props as Props;
+const { initialProjectSlug = null, initialPhotographySlug = null } =
+  Astro.props as Props;
 
 // Haal alle data op
 const homeData = await getHomeData();
@@ -78,6 +79,8 @@ if (import.meta.env.DEV) {
         {projects}
         {photography}
         initialProjectSlug={initialProjectSlug}
+        initialPhotographySlug={initialPhotographySlug}
+        workPlaceholders={homeData?.workPlaceholders}
       />
     </section>
 

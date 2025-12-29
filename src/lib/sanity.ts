@@ -7,10 +7,11 @@ import {
   PAGE_BY_SLUG_QUERY,
   ALL_PROJECTS_QUERY,
   ALL_PHOTOGRAPHY_QUERY,
+  PHOTOGRAPHY_BY_SLUG_QUERY,
   ALL_MIXTAPES_QUERY,
   SITE_SETTINGS_QUERY 
 } from '../sanity/queries';
-import type { SanityHome, SanityProject, SanityPage, SanitySiteSettings, SanityAllSlugs } from '../sanity/types';
+import type { SanityHome, SanityProject, SanityPage, SanitySiteSettings, SanityAllSlugs, SanityPhotography } from '../sanity/types';
 
 /**
  * Haal alle URIs op voor static path generatie
@@ -115,7 +116,6 @@ export async function getPageData(slug: string): Promise<SanityPage> {
         } as SanityPage & { work: { nodes: SanityProject[] } };
       
       case 'about':
-      case 'services':
       case 'contact':
       case 'default':
         // Standaard pagina's - geen extra data nodig
@@ -168,11 +168,10 @@ export async function getProjectData(slug: string): Promise<SanityProject> {
 
     if (import.meta.env.DEV) {
       console.log('🎨 Project data loaded:', {
-        title: data.title,
+        title: data.projectTitle || data.title,
         slug: data.slug,
-        hasHero: !!data.hero,
-        contentBlocks: data.content?.length || 0,
-        relatedProjects: data.relatedProjects?.length || 0
+        hasPreview: !!data.preview,
+        descriptionBlocks: data.description?.length || 0
       });
     }
 
@@ -192,6 +191,36 @@ export async function getAllProjects() {
     return data || [];
   } catch (error) {
     console.error('❌ Failed to load projects:', error);
+    throw error;
+  }
+}
+
+/**
+ * Haal photography data op by slug
+ */
+export async function getPhotographyData(slug: string): Promise<SanityPhotography> {
+  try {
+    const { data } = await loadQuery<SanityPhotography>({ 
+      query: PHOTOGRAPHY_BY_SLUG_QUERY, 
+      params: { slug } 
+    });
+    
+    if (!data) {
+      throw new Error(`Photography with slug "${slug}" not found`);
+    }
+
+    if (import.meta.env.DEV) {
+      console.log('📸 Photography data loaded:', {
+        title: data.projectTitle || data.title,
+        slug: data.slug,
+        hasPreview: !!data.preview,
+        descriptionBlocks: data.description?.length || 0
+      });
+    }
+
+    return data;
+  } catch (error) {
+    console.error(`❌ Failed to load photography "${slug}":`, error);
     throw error;
   }
 }
