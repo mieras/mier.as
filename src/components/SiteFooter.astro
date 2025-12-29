@@ -1,11 +1,28 @@
 ---
 import { getSiteSettings } from '../lib/sanity';
+import { parseSanityFileAsset } from '../lib/utils';
 
 const siteSettings = await getSiteSettings();
 const title = siteSettings?.title || '';
 const contact = siteSettings?.footer?.contact;
 const legal = siteSettings?.footer?.legal;
-const tAndCFile = legal?.termsAndConditions?.asset;
+const tAndCFileAsset = legal?.termsAndConditions?.asset;
+
+// Get file URL from asset (either dereferenced with url, or construct from _ref)
+let tAndCFileUrl = '';
+if (tAndCFileAsset) {
+  if ('url' in tAndCFileAsset && typeof tAndCFileAsset.url === 'string') {
+    // Asset is dereferenced and has URL
+    tAndCFileUrl = tAndCFileAsset.url;
+  } else if (
+    '_ref' in tAndCFileAsset &&
+    typeof tAndCFileAsset._ref === 'string'
+  ) {
+    // Asset is a reference, construct URL
+    const { assetId, extension } = parseSanityFileAsset(tAndCFileAsset._ref);
+    tAndCFileUrl = `https://cdn.sanity.io/files/${import.meta.env.PUBLIC_SANITY_PROJECT_ID}/${import.meta.env.PUBLIC_SANITY_DATASET}/${assetId}.${extension}`;
+  }
+}
 ---
 
 <footer class="footer" aria-label="Footer">
@@ -66,9 +83,9 @@ const tAndCFile = legal?.termsAndConditions?.asset;
     }
 
     {
-      tAndCFile?.url && (
+      tAndCFileUrl && (
         <li class="footer__item footer__item--tac">
-          <a href={tAndCFile.url} target="_blank" rel="noopener">
+          <a href={tAndCFileUrl} target="_blank" rel="noopener">
             T&C
           </a>
         </li>
