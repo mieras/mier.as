@@ -1,5 +1,6 @@
 ---
 import { urlForImage } from '../../../sanity/lib/image';
+import { parseSanityFileAsset } from '../../../lib/utils';
 
 type Project = {
   _id: string;
@@ -64,8 +65,8 @@ if (type === 'design' && project?.preview) {
     if (videoAsset.url) {
       videoUrl = videoAsset.url;
     } else if (videoAsset._ref) {
-      const assetId = videoAsset._ref.replace('file-', '').replace('-mp4', '');
-      videoUrl = `https://cdn.sanity.io/files/${import.meta.env.PUBLIC_SANITY_PROJECT_ID}/${import.meta.env.PUBLIC_SANITY_DATASET}/${assetId}.mp4`;
+      const { assetId, extension } = parseSanityFileAsset(videoAsset._ref);
+      videoUrl = `https://cdn.sanity.io/files/${import.meta.env.PUBLIC_SANITY_PROJECT_ID}/${import.meta.env.PUBLIC_SANITY_DATASET}/${assetId}.${extension}`;
     }
   }
 
@@ -101,7 +102,6 @@ const client = project?.client?.title || '';
 
 // For photography: show Project Title, Country, and Year in tile
 const country = photography?.country || '';
-
 ---
 
 <a
@@ -113,19 +113,21 @@ const country = photography?.country || '';
   tabindex="0"
   aria-label={`${type === 'design' ? client : country} - ${projectTitle}`}
 >
-  {type === 'design' ? (
-    <>
-      <p class="work-row__client">{client}</p>
-      <h3 class="work-row__title">{projectTitle}</h3>
-      {year && <p class="work-row__year">{year}</p>}
-    </>
-  ) : (
-    <>
-      <h3 class="work-row__title">{projectTitle}</h3>
-      {country && <p class="work-row__country">{country}</p>}
-      {year && <p class="work-row__year">{year}</p>}
-    </>
-  )}
+  {
+    type === 'design' ? (
+      <>
+        <p class="work-row__client">{client}</p>
+        <h3 class="work-row__title">{projectTitle}</h3>
+        {year && <p class="work-row__year">{year}</p>}
+      </>
+    ) : (
+      <>
+        <h3 class="work-row__title">{projectTitle}</h3>
+        {country && <p class="work-row__country">{country}</p>}
+        {year && <p class="work-row__year">{year}</p>}
+      </>
+    )
+  }
 </a>
 
 <style>
@@ -136,7 +138,7 @@ const country = photography?.country || '';
     padding: 0;
     text-decoration: none;
     color: inherit;
-    background: var(--section-work-bg);
+    /* background: var(--section-work-bg); */
     border-top: 1px solid var(--work-items-hover-bg);
     transition:
       background 0.2s ease,
@@ -144,7 +146,7 @@ const country = photography?.country || '';
   }
 
   .work-row--design {
-    grid-template-columns: 1.25fr 1.5fr 0.5fr;
+    grid-template-columns: 1.5fr 1.25fr 0.5fr;
   }
 
   .work-row--photography {
@@ -178,6 +180,7 @@ const country = photography?.country || '';
 
   .work-row--design .work-row__title {
     font-size: var(--fs--2);
+    font-weight: 400;
     opacity: 0.6;
     line-height: 1.2;
     margin: 0;
@@ -200,6 +203,7 @@ const country = photography?.country || '';
 
   .work-row--photography .work-row__country {
     font-size: var(--fs--2);
+    font-weight: 400;
     opacity: 0.6;
     line-height: 1.2;
     margin: 0;

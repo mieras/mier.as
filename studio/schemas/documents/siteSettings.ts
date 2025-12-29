@@ -206,6 +206,12 @@ export default defineType({
               type: 'string',
               title: 'Bank Account',
             }),
+            defineField({
+              name: 'termsAndConditions',
+              type: 'file',
+              title: 'Terms & Conditions',
+              description: 'Upload een PDF bestand met de algemene voorwaarden',
+            }),
           ],
         }),
       ],

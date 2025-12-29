@@ -192,10 +192,10 @@ export default defineType({
             defineField({
               name: 'video',
               type: 'file',
-              title: 'Video (MP4)',
-              description: 'Upload MP4 video file. Media will fill the slide (object-fit: cover).',
+              title: 'Video (MP4/MOV)',
+              description: 'Upload MP4 or MOV video file. Media will fill the slide (object-fit: cover).',
               options: {
-                accept: 'video/mp4',
+                accept: 'video/mp4,video/quicktime',
               },
               validation: (Rule) => Rule.required(),
             }),

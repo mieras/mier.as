@@ -170,6 +170,8 @@ export function initMarquees(): void {
 
     const direction = marquee.getAttribute('data-direction') || 'left';
     const speed = Math.max(0.1, getNumericAttr(marquee, 'data-speed', 1));
+    const start = marquee.getAttribute('data-start') || 'top bottom';
+    const end = marquee.getAttribute('data-end') || 'bottom top';
     const baseDirection = direction === 'right' ? -1 : 1;
 
     const tl = horizontalLoop(items, {
@@ -182,8 +184,8 @@ export function initMarquees(): void {
 
     const trigger = ScrollTrigger.create({
       trigger: marquee,
-      start: 'top bottom',
-      end: 'bottom top',
+      start,
+      end,
       onUpdate: (self) => {
         if (marquee.__marqueeSpeedTween) {
           marquee.__marqueeSpeedTween.kill();

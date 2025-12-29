@@ -297,6 +297,7 @@ export interface SanitySiteSettings {
       btw?: string;
       bank?: string;
       kvk?: string;
+      termsAndConditions?: SanityFile;
     };
   };
   openGraphSiteName?: string;

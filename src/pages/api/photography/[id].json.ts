@@ -2,6 +2,7 @@ import { loadQuery } from '../../../sanity/lib/load-query';
 import { PHOTOGRAPHY_BY_SLUG_QUERY } from '../../../sanity/queries';
 import { urlForImage } from '../../../sanity/lib/image';
 import type { SanityPhotography } from '../../../sanity/types';
+import { parseSanityFileAsset } from '../../../lib/utils';
 
 export async function GET({ params }: { params: { id: string } }) {
   try {
@@ -49,9 +50,9 @@ export async function GET({ params }: { params: { id: string } }) {
                 // Direct URL available
                 videoUrl = videoAsset.url;
               } else if (videoAsset._ref) {
-                // Construct URL from asset reference
-                const assetId = videoAsset._ref.replace('file-', '').replace('-mp4', '');
-                videoUrl = `https://cdn.sanity.io/files/${import.meta.env.PUBLIC_SANITY_PROJECT_ID}/${import.meta.env.PUBLIC_SANITY_DATASET}/${assetId}.mp4`;
+                // Construct URL from asset reference with dynamic extension
+                const { assetId, extension } = parseSanityFileAsset(videoAsset._ref);
+                videoUrl = `https://cdn.sanity.io/files/${import.meta.env.PUBLIC_SANITY_PROJECT_ID}/${import.meta.env.PUBLIC_SANITY_DATASET}/${assetId}.${extension}`;
               }
               
               processedSlide.video = {

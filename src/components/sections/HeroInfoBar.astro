@@ -1,0 +1,248 @@
+---
+import { getSiteSettings } from '../../lib/sanity';
+import 'weather-icons/css/weather-icons.css';
+
+const siteSettings = await getSiteSettings();
+const name = siteSettings?.title || 'Maarten Mieras';
+const city = siteSettings?.footer?.address?.city || 'Rotterdam';
+const weatherApiKey = import.meta.env.PUBLIC_WEATHER_API_KEY || '';
+---
+
+<aside class="hero-info-bar" aria-label="Hero information">
+  <ul class="hero-info-bar__list">
+    <li class="hero-info-bar__item">
+      <span class="hero-info-bar__name">{name.toUpperCase()}</span>
+    </li>
+    <li class="hero-info-bar__item">
+      <span class="hero-info-bar__role">DIGITAL DESIGNER</span>
+    </li>
+    <li class="hero-info-bar__item">
+      <span class="hero-info-bar__time" id="hero-time">00:00:00:000</span>
+    </li>
+    <li class="hero-info-bar__item hero-info-bar__weather">
+      <i
+        class="hero-info-bar__weather-icon wi"
+        id="hero-weather-icon"
+        aria-hidden="true"></i>
+      <span class="hero-info-bar__temperature" id="hero-temperature">--°C</span>
+    </li>
+    <li class="hero-info-bar__item">
+      <span class="hero-info-bar__city">{city.toUpperCase()}</span>
+    </li>
+  </ul>
+</aside>
+
+<script define:vars={{ city, weatherApiKey }}>
+  const API_KEY = weatherApiKey;
+  const API_URL = 'https://api.weatherapi.com/v1/current.json';
+
+  // Map WeatherAPI condition codes to weather-icons classes
+  function getWeatherIconClass(conditionCode) {
+    const iconMap = {
+      1000: 'wi-day-sunny',
+      1003: 'wi-day-cloudy',
+      1006: 'wi-cloudy',
+      1009: 'wi-cloudy',
+      1063: 'wi-day-rain',
+      1087: 'wi-day-thunderstorm',
+      1150: 'wi-sprinkle',
+      1153: 'wi-sprinkle',
+      1168: 'wi-rain-mix',
+      1171: 'wi-rain-mix',
+      1180: 'wi-day-rain',
+      1183: 'wi-rain',
+      1186: 'wi-rain',
+      1189: 'wi-rain',
+      1192: 'wi-rain',
+      1195: 'wi-rain',
+      1198: 'wi-rain-mix',
+      1201: 'wi-rain-mix',
+      1204: 'wi-sleet',
+      1207: 'wi-sleet',
+      1240: 'wi-day-showers',
+      1243: 'wi-showers',
+      1246: 'wi-showers',
+      1249: 'wi-sleet',
+      1252: 'wi-sleet',
+      1255: 'wi-day-snow',
+      1258: 'wi-snow',
+      1066: 'wi-day-snow',
+      1069: 'wi-sleet',
+      1072: 'wi-rain-mix',
+      1114: 'wi-snow-wind',
+      1117: 'wi-snow-wind',
+      1210: 'wi-day-snow',
+      1213: 'wi-snow',
+      1216: 'wi-snow',
+      1219: 'wi-snow',
+      1222: 'wi-snow',
+      1225: 'wi-snow',
+      1237: 'wi-hail',
+      1261: 'wi-hail',
+      1264: 'wi-hail',
+      1030: 'wi-fog',
+      1135: 'wi-fog',
+      1147: 'wi-fog',
+    };
+
+    return iconMap[conditionCode] || 'wi-cloudy';
+  }
+
+  // Update time with milliseconds
+  function updateTime() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+
+    const timeElement = document.getElementById('hero-time');
+    if (timeElement) {
+      timeElement.textContent = `${hours}:${minutes}:${seconds}:${milliseconds}`;
+    }
+  }
+
+  // Update time every frame for smooth millisecond updates
+  function animateTime() {
+    updateTime();
+    requestAnimationFrame(animateTime);
+  }
+
+  // Start time animation
+  animateTime();
+
+  // Fetch weather
+  async function fetchTemperature() {
+    if (!API_KEY) {
+      console.warn(
+        '⚠️ Weather API key not configured. Set PUBLIC_WEATHER_API_KEY environment variable.',
+      );
+      const tempElement = document.getElementById('hero-temperature');
+      if (tempElement) {
+        tempElement.textContent = '--°C';
+      }
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${API_URL}?key=${API_KEY}&q=${city}&aqi=no`,
+      );
+
+      if (!response.ok) {
+        throw new Error('Weather API request failed');
+      }
+
+      const data = await response.json();
+      const temperature = Math.round(data.current.temp_c);
+      const conditionCode = data.current.condition.code;
+
+      const tempElement = document.getElementById('hero-temperature');
+      const iconElement = document.getElementById('hero-weather-icon');
+
+      if (tempElement) {
+        tempElement.textContent = `${temperature}°C`;
+      }
+
+      if (iconElement) {
+        iconElement.className = 'hero-info-bar__weather-icon wi';
+        const iconClass = getWeatherIconClass(conditionCode);
+        iconElement.classList.add(iconClass);
+      }
+    } catch (error) {
+      console.error('Error fetching temperature:', error);
+      const tempElement = document.getElementById('hero-temperature');
+      const iconElement = document.getElementById('hero-weather-icon');
+
+      if (tempElement) {
+        tempElement.textContent = '--°C';
+      }
+
+      if (iconElement) {
+        iconElement.className = 'hero-info-bar__weather-icon wi wi-cloudy';
+      }
+    }
+  }
+
+  // Fetch temperature on load
+  fetchTemperature();
+
+  // Update every 10 minutes
+  setInterval(fetchTemperature, 600000);
+</script>
+
+<style>
+  .hero-info-bar {
+    display: flex;
+    position: absolute;
+    right: 0;
+
+    top: 0;
+    width: 2rem;
+    height: 100%;
+    padding: var(--space-xs) 0;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    overflow: hidden;
+    z-index: 10;
+  }
+
+  .hero-info-bar__list {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
+    gap: var(--space-xs);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .hero-info-bar__item {
+    font-size: var(--fs--3);
+    color: var(--text-light, #ffffff);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .hero-info-bar__name,
+  .hero-info-bar__role,
+  .hero-info-bar__city {
+    display: block;
+  }
+
+  .hero-info-bar__time {
+    font-variant-numeric: tabular-nums;
+    font-family: var(--font-family-default, monospace);
+  }
+
+  .hero-info-bar__weather {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-3xs);
+  }
+
+  .hero-info-bar__weather-icon {
+    font-size: 1em;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    width: 1em;
+    height: 1em;
+  }
+
+  .hero-info-bar__temperature {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Mobile: hide on small screens */
+  @media (max-width: 899px) {
+    .hero-info-bar {
+      display: none;
+    }
+  }
+</style>

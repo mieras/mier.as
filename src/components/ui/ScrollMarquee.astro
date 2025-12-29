@@ -6,6 +6,8 @@ interface Props {
   direction?: 'left' | 'right';
   speed?: number;
   variant?: 'light' | 'dark';
+  start?: string;
+  end?: string;
   ariaLabel?: string;
 }
 
@@ -16,6 +18,8 @@ const {
   direction = 'left',
   speed = 1,
   variant = 'dark',
+  start,
+  end,
   ariaLabel,
 } = Astro.props;
 
@@ -28,6 +32,8 @@ const safeRepeat = Math.max(2, repeat);
   data-marquee
   data-direction={direction}
   data-speed={speed}
+  data-start={start}
+  data-end={end}
   aria-label={ariaLabel || `Section title: ${label}`}
 >
   <div class="mq__viewport">

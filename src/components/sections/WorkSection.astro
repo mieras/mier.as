@@ -92,7 +92,7 @@ const tabs = [
     />
   </div>
 
-  <div class="work__grid" aria-label="Work grid">
+  <div class="work__grid" id="work__grid" aria-label="Work grid">
     <div class="work__left" aria-label="Project list">
       <div class="work__tabs">
         <TabGroup
@@ -129,7 +129,6 @@ const tabs = [
 
 <style>
   .work {
-    height: 100dvh;
     display: grid;
     grid-template-rows: auto 1fr;
     overflow: hidden;
@@ -153,7 +152,7 @@ const tabs = [
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 34rem), 1fr));
     align-items: start;
     min-width: 0;
-    min-height: 0;
+    min-height: 100dvh;
   }
 
   .work__cursor {

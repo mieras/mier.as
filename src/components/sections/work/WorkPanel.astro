@@ -1,6 +1,7 @@
 ---
 import WorkPreview from './WorkPreview.astro';
 import ProjectViewer from './ProjectViewer.astro';
+import { parseSanityFileAsset } from '../../../lib/utils';
 
 type Props = {
   mode?: 'preview' | 'detail';
@@ -418,12 +419,10 @@ const {
         let videoUrl = slide?.video?.url || slide?.video?.asset?.url || null;
 
         if (!videoUrl && slide?.video?.asset?._ref) {
-          const assetId = slide.video.asset._ref
-            .replace('file-', '')
-            .replace('-mp4', '');
+          const { assetId, extension } = parseSanityFileAsset(slide.video.asset._ref);
           const projectId = import.meta.env.PUBLIC_SANITY_PROJECT_ID;
           const dataset = import.meta.env.PUBLIC_SANITY_DATASET;
-          videoUrl = `https://cdn.sanity.io/files/${projectId}/${dataset}/${assetId}.mp4`;
+          videoUrl = `https://cdn.sanity.io/files/${projectId}/${dataset}/${assetId}.${extension}`;
         }
 
         return {

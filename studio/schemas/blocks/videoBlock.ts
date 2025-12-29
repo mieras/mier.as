@@ -105,13 +105,13 @@ export default defineType({
       },
       initialValue: 'inline',
     }),
-    // Upload fields (MP4)
+    // Upload fields (MP4/MOV)
     defineField({
       name: 'videoFile',
       type: 'file',
       title: 'Video File',
       options: {
-        accept: 'video/mp4',
+        accept: 'video/mp4,video/quicktime',
       },
       hidden: ({ parent }) => parent?.videoType !== 'upload',
     }),
