@@ -66,14 +66,18 @@ let videoFileUrl = '';
 let videoMimeType = 'video/mp4'; // Default
 if (videoFile?.asset) {
   try {
+    const asset = videoFile.asset;
     // For Sanity files, we need to construct the URL manually with dynamic extension
-    if (videoFile.asset.url) {
-      videoFileUrl = videoFile.asset.url;
+    // Check if asset is dereferenced (has url) or is a reference (has _ref)
+    if ('url' in asset && typeof asset.url === 'string') {
+      // Asset is dereferenced and has URL
+      videoFileUrl = asset.url;
       // Try to determine MIME type from URL extension
       const urlExtension = videoFileUrl.split('.').pop()?.toLowerCase();
       videoMimeType = urlExtension === 'mov' ? 'video/quicktime' : 'video/mp4';
-    } else if (videoFile.asset._ref) {
-      const { assetId, extension } = parseSanityFileAsset(videoFile.asset._ref);
+    } else if ('_ref' in asset && typeof asset._ref === 'string') {
+      // Asset is a reference, construct URL
+      const { assetId, extension } = parseSanityFileAsset(asset._ref);
       videoFileUrl = `https://cdn.sanity.io/files/${import.meta.env.PUBLIC_SANITY_PROJECT_ID}/${import.meta.env.PUBLIC_SANITY_DATASET}/${assetId}.${extension}`;
       videoMimeType = extension === 'mov' ? 'video/quicktime' : 'video/mp4';
     }
